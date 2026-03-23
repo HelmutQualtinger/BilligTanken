@@ -721,8 +721,7 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
   function addMarker(fkey, lat, lon, popup, color, label, rank) {{
     const m = L.marker([lat, lon], {{ icon: makeIcon(color, label) }})
       .bindPopup(popup);
-    allMarkers[fkey][rank] = m;
-    if (fkey === currentFuel) m.addTo(map);
+    allMarkers[fkey][rank] = m;  // always store; initFuel() adds to map
 
     m.on('click', () => {{
       const card = document.getElementById('card-' + fkey + '-' + rank);
@@ -765,8 +764,6 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     localStorage.setItem('fuel', fuel);
   }}
 
-  // Apply saved fuel choice on load (markers already added correctly above)
-  if (currentFuel !== 'sup') switchFuel(currentFuel);
 
   // ── Theme ────────────────────────────────────────────────────────────────
   function setTheme(t) {{
@@ -849,9 +846,24 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
   // (homeMarker wird durch updateWithLocation gesetzt)
   updateWithLocation({HOME_LAT}, {HOME_LON}, false); // initial render
 
-  // Draw all markers (SUP first, DIE hidden until switched)
+  // Register all markers (none added to map yet)
   {map_js_sup}
   {map_js_die}
+
+  // Properly initialize fuel state from localStorage (handles all UI + markers)
+  (function initFuel() {{
+    Object.values(allMarkers[currentFuel]).forEach(m => m.addTo(map));
+    if (currentFuel !== 'sup') {{
+      document.getElementById('grid-sup').style.display = 'none';
+      document.getElementById('grid-' + currentFuel).style.display = '';
+      document.getElementById('stats-sup').style.display = 'none';
+      document.getElementById('stats-' + currentFuel).style.display = '';
+      document.getElementById('fuel-sub-sup').style.display = 'none';
+      document.getElementById('fuel-sub-' + currentFuel).style.display = '';
+      document.getElementById('btn-sup').classList.remove('active');
+      document.getElementById('btn-' + currentFuel).classList.add('active');
+    }}
+  }})();
 </script>
 
 </body>
