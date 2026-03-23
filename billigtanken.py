@@ -14,7 +14,6 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
-FUEL_TYPE  = "SUP"
 TOP_N      = 80
 _web_root  = Path(os.environ.get("WEB_ROOT", "."))
 OUTPUT     = _web_root / "index.html"
@@ -48,15 +47,15 @@ LAT_MIN, LAT_MAX = 47.20, 47.55
 LON_MIN, LON_MAX =  9.50,  9.80
 
 # ── Daten holen ───────────────────────────────────────────────────────────────
-def fetch_stations() -> list[dict]:
-    print("⛽  Lade Tankstellendaten von E-Control API …")
+def fetch_stations(fuel_type: str) -> list[dict]:
+    print(f"⛽  Lade Tankstellendaten ({fuel_type}) von E-Control API …")
     seen_ids: set = set()
     combined: list[dict] = []
     for lat, lon in QUERY_POINTS:
         try:
             url = (
                 f"{API_BASE}?latitude={lat}&longitude={lon}"
-                f"&fuelType={FUEL_TYPE}&includeClosed=false"
+                f"&fuelType={fuel_type}&includeClosed=false"
             )
             resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
@@ -78,9 +77,9 @@ def haversine(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     a = math.sin(d_lat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(d_lon/2)**2
     return R * 2 * math.asin(math.sqrt(a))
 
-def extract_price(station: dict) -> float | None:
+def extract_price(station: dict, fuel_type: str) -> float | None:
     for p in station.get("prices", []):
-        if p.get("fuelType") == FUEL_TYPE and p.get("amount"):
+        if p.get("fuelType") == fuel_type and p.get("amount"):
             return float(p["amount"])
     return None
 
@@ -91,12 +90,12 @@ def in_corridor(station: dict) -> bool:
         return False
     return LAT_MIN <= lat <= LAT_MAX and LON_MIN <= lon <= LON_MAX
 
-def process(data: list[dict]) -> list[dict]:
+def process(data: list[dict], fuel_type: str) -> list[dict]:
     result = []
     for s in data:
         if not in_corridor(s):
             continue
-        price = extract_price(s)
+        price = extract_price(s, fuel_type)
         if price is None:
             continue
         loc = s.get("location", {})
@@ -215,13 +214,13 @@ def marker_color(rank: int, total: int) -> str:
     hue = int(120 * (1 - (rank - 1) / max(total - 1, 1)))
     return f"hsl({hue},80%,45%)"
 
-def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float) -> str:
+def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float, fkey: str) -> str:
     color           = brand_color(s["name"])
     logo_url        = brand_logo_url(s["name"])
     is_eni          = "eni" in s["name"].lower()
     is_bp           = "bp" in s["name"].lower()
     rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
-    home = f'<span class="dist home-dist" id="dist-{rank}">📍 {s["home_dist"]} km</span>' if s["home_dist"] else f'<span class="dist home-dist" id="dist-{rank}">📍 –</span>'
+    home = f'<span class="dist home-dist" id="dist-{fkey}-{rank}">📍 {s["home_dist"]} km</span>' if s["home_dist"] else f'<span class="dist home-dist" id="dist-{fkey}-{rank}">📍 –</span>'
 
     if logo_url:
         extra_cls = 'brand-eni' if is_eni else ('brand-bp' if is_bp else '')
@@ -233,7 +232,7 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
         avatar_html = f'<div class="avatar" style="background:{color}">{brand_initial(s["name"])}</div>'
 
     return f"""
-    <article class="card {rclass}" id="card-{rank}" style="--brand:{color}"
+    <article class="card {rclass}" id="card-{fkey}-{rank}" style="--brand:{color}"
              data-lat="{s['lat']}" data-lon="{s['lon']}" data-rank="{rank}">
       <div class="card-header">
         {avatar_html}
@@ -245,7 +244,7 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
       </div>
       <div class="card-body">
         <h2 class="station-name">{s['name']}</h2>
-        <a class="address" onclick="focusMarker({rank}); return false;" href="#">
+        <a class="address" onclick="focusMarker('{fkey}', {rank}); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -263,7 +262,7 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
           {price_bar(s['price'], min_p, max_p)}
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-{rank}"
+          <a class="map-btn route-btn" id="route-{fkey}-{rank}"
              href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -276,7 +275,7 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
       </div>
     </article>"""
 
-def build_map_js(stations: list[dict]) -> str:
+def build_map_js(stations: list[dict], fkey: str) -> str:
     total = len(stations)
     markers = []
     for i, s in enumerate(stations):
@@ -291,23 +290,35 @@ def build_map_js(stations: list[dict]) -> str:
             f"{dist_str}"
         )
         markers.append(
-            f"addMarker({s['lat']}, {s['lon']}, {json.dumps(popup)}, "
+            f"addMarker({json.dumps(fkey)}, {s['lat']}, {s['lon']}, {json.dumps(popup)}, "
             f"{json.dumps(color)}, {label}, {rank});"
         )
     return "\n    ".join(markers)
 
-def generate_html(stations: list[dict], fetched_at: str) -> str:
-    prices    = sorted(set(s["price"] for s in stations))
-    min_p     = prices[0]
-    second_p  = prices[1] if len(prices) > 1 else prices[0]
-    max_p     = stations[-1]["price"]
-    avg       = sum(s["price"] for s in stations) / len(stations)
-    span      = max_p - min_p
-    cards     = "\n".join(render_card(s, i + 1, min_p, max_p, second_p) for i, s in enumerate(stations))
-    map_js = build_map_js(stations)
-    # center map on centroid of stations
-    clat   = sum(s["lat"] for s in stations) / len(stations)
-    clon   = sum(s["lon"] for s in stations) / len(stations)
+def _stats(stations: list[dict]) -> dict:
+    prices = sorted(set(s["price"] for s in stations))
+    return {
+        "min_p":    prices[0],
+        "second_p": prices[1] if len(prices) > 1 else prices[0],
+        "max_p":    stations[-1]["price"],
+        "avg":      sum(s["price"] for s in stations) / len(stations),
+        "span":     stations[-1]["price"] - prices[0],
+        "count":    len(stations),
+    }
+
+def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at: str) -> str:
+    st_sup = _stats(stations_sup)
+    st_die = _stats(stations_die)
+    cards_sup  = "\n".join(render_card(s, i+1, st_sup["min_p"], st_sup["max_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup))
+    cards_die  = "\n".join(render_card(s, i+1, st_die["min_p"], st_die["max_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die))
+    map_js_sup = build_map_js(stations_sup, "sup")
+    map_js_die = build_map_js(stations_die, "die")
+    all_stations = stations_sup  # for map center
+    clat = sum(s["lat"] for s in all_stations) / len(all_stations)
+    clon = sum(s["lon"] for s in all_stations) / len(all_stations)
+    # backward-compat aliases used in the template below
+    stations = stations_sup
+    min_p, max_p, avg, span = st_sup["min_p"], st_sup["max_p"], st_sup["avg"], st_sup["span"]
 
     return f"""<!DOCTYPE html>
 <html lang="de">
@@ -415,6 +426,24 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
       box-shadow: 0 1px 3px rgba(0,0,0,.2);
     }}
     .theme-toggle button:hover:not(.active) {{ color: var(--text); }}
+
+    /* ── Fuel toggle ── */
+    .fuel-toggle {{
+      display: inline-flex; gap: 0; margin-bottom: .6rem;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 999px; padding: .2rem;
+    }}
+    .fuel-btn {{
+      background: none; border: none; cursor: pointer;
+      padding: .35rem .9rem; border-radius: 999px;
+      font-size: .82rem; font-weight: 600; color: var(--muted);
+      transition: background .15s, color .15s;
+    }}
+    .fuel-btn.active {{
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }}
+    .fuel-btn:hover:not(.active) {{ color: var(--text); }}
 
     .pill {{
       display: inline-block;
@@ -618,25 +647,39 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
   <div class="left-col">
     <header>
       <h1>⛽ BilligTanken Vorarlberg</h1>
-      <p class="sub">Top {len(stations)} gemeldete E5 · Super 95 · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
+      <div class="fuel-toggle">
+        <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
+        <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
+      </div>
+      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
       <div class="pills">
         <span class="pill time">Aktualisiert: {fetched_at}</span>
         <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
         <span class="pill time" id="geo-pill" style="color:#a78bfa">🏠 Standort wird ermittelt …</span>
       </div>
     </header>
-    <div class="stats">
-      <div class="stat"><div class="val">{min_p:.3f} €</div><div class="lbl">Günstigster Preis</div></div>
-      <div class="stat"><div class="val neu">{avg:.3f} €</div><div class="lbl">Ø Top {len(stations)}</div></div>
-      <div class="stat"><div class="val hi">{max_p:.3f} €</div><div class="lbl">Tageshöchstpreis</div></div>
-      <div class="stat"><div class="val">{span:.3f} €</div><div class="lbl">Max. Ersparnis</div></div>
+    <div class="stats" id="stats-sup">
+      <div class="stat"><div class="val">{st_sup["min_p"]:.3f} €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">{st_sup["avg"]:.3f} €</div><div class="lbl">Ø Top {st_sup["count"]}</div></div>
+      <div class="stat"><div class="val hi">{st_sup["max_p"]:.3f} €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">{st_sup["span"]:.3f} €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+    <div class="stats" id="stats-die" style="display:none">
+      <div class="stat"><div class="val">{st_die["min_p"]:.3f} €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">{st_die["avg"]:.3f} €</div><div class="lbl">Ø Top {st_die["count"]}</div></div>
+      <div class="stat"><div class="val hi">{st_die["max_p"]:.3f} €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">{st_die["span"]:.3f} €</div><div class="lbl">Max. Ersparnis</div></div>
     </div>
   </div>
   <div id="map"></div>
 </div>
 
-<main class="grid">
-{cards}
+<main class="grid" id="grid-sup">
+{cards_sup}
+</main>
+<main class="grid" id="grid-die" style="display:none">
+{cards_die}
 </main>
 
 <footer class="pf">
@@ -654,7 +697,8 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     subdomains: 'abcd', maxZoom: 19
   }}).addTo(map);
 
-  const markers = {{}};
+  const allMarkers = {{ sup: {{}}, die: {{}} }};
+  let currentFuel = localStorage.getItem('fuel') || 'sup';
 
   function makeIcon(color, label) {{
     return L.divIcon({{
@@ -674,14 +718,14 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     }});
   }}
 
-  function addMarker(lat, lon, popup, color, label, rank) {{
+  function addMarker(fkey, lat, lon, popup, color, label, rank) {{
     const m = L.marker([lat, lon], {{ icon: makeIcon(color, label) }})
-      .addTo(map)
       .bindPopup(popup);
-    markers[rank] = m;
+    allMarkers[fkey][rank] = m;
+    if (fkey === currentFuel) m.addTo(map);
 
     m.on('click', () => {{
-      const card = document.getElementById('card-' + rank);
+      const card = document.getElementById('card-' + fkey + '-' + rank);
       if (card) {{
         document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
         card.classList.add('highlighted');
@@ -690,15 +734,39 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     }});
   }}
 
-  function focusMarker(rank) {{
-    const m = markers[rank];
+  function focusMarker(fkey, rank) {{
+    const m = allMarkers[fkey][rank];
     if (!m) return;
     map.setView(m.getLatLng(), 15, {{ animate: true }});
     m.openPopup();
     window.scrollTo({{ top: 0, behavior: 'smooth' }});
     document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
-    document.getElementById('card-' + rank)?.classList.add('highlighted');
+    document.getElementById('card-' + fkey + '-' + rank)?.classList.add('highlighted');
   }}
+
+  function switchFuel(fuel) {{
+    if (fuel === currentFuel) return;
+    // swap markers
+    Object.values(allMarkers[currentFuel]).forEach(m => map.removeLayer(m));
+    Object.values(allMarkers[fuel]).forEach(m => m.addTo(map));
+    // swap grids
+    document.getElementById('grid-' + currentFuel).style.display = 'none';
+    document.getElementById('grid-' + fuel).style.display = '';
+    // swap stats
+    document.getElementById('stats-' + currentFuel).style.display = 'none';
+    document.getElementById('stats-' + fuel).style.display = '';
+    // swap subtitle
+    document.getElementById('fuel-sub-' + currentFuel).style.display = 'none';
+    document.getElementById('fuel-sub-' + fuel).style.display = '';
+    // toggle buttons
+    document.getElementById('btn-' + currentFuel).classList.remove('active');
+    document.getElementById('btn-' + fuel).classList.add('active');
+    currentFuel = fuel;
+    localStorage.setItem('fuel', fuel);
+  }}
+
+  // Apply saved fuel choice on load (markers already added correctly above)
+  if (currentFuel !== 'sup') switchFuel(currentFuel);
 
   // ── Theme ────────────────────────────────────────────────────────────────
   function setTheme(t) {{
@@ -717,7 +785,10 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
   }})();
 
   // ── Geolocation ──────────────────────────────────────────────────────────
-  const stationCoords = {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations))}}};
+  const stationCoords = {{
+    sup: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_sup))}}},
+    die: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_die))}}}
+  }};
 
   function haversineJS(lat1, lon1, lat2, lon2) {{
     const R = 6371;
@@ -731,18 +802,13 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
   let homeMarker = null;
 
   function updateWithLocation(lat, lon, isLive) {{
-    // Update distance badges
-    for (const [rank, coords] of Object.entries(stationCoords)) {{
-      const d = haversineJS(lat, lon, coords[0], coords[1]);
-      const el = document.getElementById('dist-' + rank);
-      if (el) el.textContent = '📍 ' + d.toFixed(1) + ' km';
-    }}
-    // Update route links
-    for (const [rank] of Object.entries(stationCoords)) {{
-      const btn = document.getElementById('route-' + rank);
-      if (btn) {{
-        const coords = stationCoords[rank];
-        btn.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
+    // Update distance badges and route links for both fuel sets
+    for (const fkey of ['sup', 'die']) {{
+      for (const [rank, coords] of Object.entries(stationCoords[fkey])) {{
+        const distEl = document.getElementById('dist-' + fkey + '-' + rank);
+        if (distEl) distEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
+        const routeEl = document.getElementById('route-' + fkey + '-' + rank);
+        if (routeEl) routeEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
       }}
     }}
     // Update home marker on map
@@ -783,8 +849,9 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
   // (homeMarker wird durch updateWithLocation gesetzt)
   updateWithLocation({HOME_LAT}, {HOME_LON}, false); // initial render
 
-  // Draw all markers
-  {map_js}
+  // Draw all markers (SUP first, DIE hidden until switched)
+  {map_js_sup}
+  {map_js_die}
 </script>
 
 </body>
@@ -792,24 +859,30 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    data       = fetch_stations()
-    stations   = process(data)
     fetched_at = datetime.now().strftime("%d.%m.%Y %H:%M Uhr")
 
-    if not stations:
+    data_sup    = fetch_stations("SUP")
+    stations_sup = process(data_sup, "SUP")
+    data_die    = fetch_stations("DIE")
+    stations_die = process(data_die, "DIE")
+
+    if not stations_sup and not stations_die:
         print("Keine Tankstellen mit Preisdaten gefunden.", file=sys.stderr)
         sys.exit(1)
 
-    max_p = stations[-1]["price"]
-    print(f"   → {len(stations)} Stationen mit gemeldeten Preisen\n")
-    print(f"{'#':>2}  {'Preis':>8}  {'Ersparnis':>10}  {'Luftlinie':>10}  {'Name':<32}  {'Ort'}")
-    print("─" * 85)
-    for i, s in enumerate(stations, 1):
-        sav  = max_p - s["price"]
-        dist = f"{s['home_dist']} km" if s["home_dist"] else "–"
-        print(f"{i:>2}  {s['price']:.3f} €  {'−'+f'{sav:.3f} €':>10}  {dist:>10}  {s['name']:<32}  {s['city']}")
+    for label, stations in [("E5/SUP", stations_sup), ("Diesel/DIE", stations_die)]:
+        if not stations:
+            continue
+        max_p = stations[-1]["price"]
+        print(f"\n── {label} ─────────────────────────────")
+        print(f"{'#':>2}  {'Preis':>8}  {'Ersparnis':>10}  {'Luftlinie':>10}  {'Name':<32}  {'Ort'}")
+        print("─" * 85)
+        for i, s in enumerate(stations, 1):
+            sav  = max_p - s["price"]
+            dist = f"{s['home_dist']} km" if s["home_dist"] else "–"
+            print(f"{i:>2}  {s['price']:.3f} €  {'−'+f'{sav:.3f} €':>10}  {dist:>10}  {s['name']:<32}  {s['city']}")
 
-    html = generate_html(stations, fetched_at)
+    html = generate_html(stations_sup, stations_die, fetched_at)
     OUTPUT_NEW.write_text(html, encoding="utf-8")
     OUTPUT_NEW.rename(OUTPUT)   # atomic swap – kein halb-fertiges index.html
     print(f"\n✅  HTML gespeichert → {OUTPUT.resolve()}")
