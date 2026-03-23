@@ -245,14 +245,14 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
       </div>
       <div class="card-body">
         <h2 class="station-name">{s['name']}</h2>
-        <p class="address">
+        <a class="address" onclick="focusMarker({rank}); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
             <circle cx="12" cy="10" r="3"/>
           </svg>
           {s['street']}, {s['zip']} {s['city']}
-        </p>
+        </a>
       </div>
       <div class="card-footer">
         <div class="price-block">
@@ -263,14 +263,6 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
           {price_bar(s['price'], min_p, max_p)}
         </div>
         <div class="btn-group">
-          <button class="map-btn" onclick="focusMarker({rank})">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-              <circle cx="12" cy="10" r="3"/>
-            </svg>
-            Karte
-          </button>
           <a class="map-btn route-btn" id="route-{rank}"
              href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}&travelmode=driving"
              target="_blank" rel="noopener">
@@ -553,7 +545,10 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     .address {{
       font-size: .78rem; color: var(--muted);
       display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
+      text-decoration: none; cursor: pointer;
     }}
+    .address:hover {{ color: #60a5fa; }}
+    .address:hover svg {{ stroke: #60a5fa; }}
     .address svg {{ flex-shrink: 0; margin-top: .15rem; }}
 
     .card-footer {{
