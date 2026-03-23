@@ -1,0 +1,12 @@
+services:
+  billigtanken:
+    build: .
+    container_name: billigtanken
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    volumes:
+      - logs:/var/log
+
+volumes:
+  logs:
