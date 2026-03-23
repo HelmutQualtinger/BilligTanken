@@ -220,6 +220,7 @@ def render_mini_card(s: dict, rank: int, min_p: float, second_p: float, fkey: st
     is_eni            = "eni" in s["name"].lower()
     is_bp             = "bp" in s["name"].lower()
     rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
+    home_dist_str = f"{s['home_dist']} km" if s["home_dist"] else "–"
     if logo_url:
         extra_cls   = 'brand-eni' if is_eni else ('brand-bp' if is_bp else '')
         avatar_html = (f'<div class="mini-avatar avatar-logo {extra_cls}" style="--brand:{color}">'
@@ -229,7 +230,7 @@ def render_mini_card(s: dict, rank: int, min_p: float, second_p: float, fkey: st
     else:
         avatar_html = f'<div class="mini-avatar" style="background:{color}">{brand_initial(s["name"])}</div>'
     return f"""<div class="mini-card {rclass}" onclick="document.getElementById('card-{fkey}-{rank}').scrollIntoView({{behavior:'smooth',block:'center'}})">
-  <div class="mini-top">{avatar_html}<span class="mini-rank">{rank_html}</span></div>
+  <div class="mini-top">{avatar_html}<span class="mini-rank">{rank_html}</span><span class="mini-badges">{open_badge(s['open'])}<span class="dist mini-dist" id="mdist-{fkey}-{rank}">📍 {home_dist_str}</span></span></div>
   <div class="mini-name">{s['name']}</div>
   <a class="mini-address address" onclick="focusMarker('{fkey}', {rank}); return false;" href="#">
     <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
@@ -549,6 +550,10 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     .mini-rank .medal {{ font-size: .6rem; padding: .1rem .35rem; }}
     .mini-rank .rank-num {{ font-size: .65rem; }}
     .mini-name {{ font-size: .72rem; font-weight: 600; line-height: 1.3; color: var(--text); }}
+    .mini-badges {{
+      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; margin-left: auto;
+    }}
+    .mini-dist {{ font-size: .62rem; }}
     .mini-address {{
       font-size: .65rem; line-height: 1.3; display: flex; align-items: flex-start; gap: .25rem;
     }}
@@ -909,6 +914,8 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
         if (routeEl) routeEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
         const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
         if (mRouteEl) mRouteEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
+        const mDistEl = document.getElementById('mdist-' + fkey + '-' + rank);
+        if (mDistEl) mDistEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
       }}
     }}
     // Update home marker on map
