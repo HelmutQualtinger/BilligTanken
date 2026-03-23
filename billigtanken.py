@@ -556,7 +556,7 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     }}
     .price-block {{ display: flex; flex-direction: column; gap: .22rem; min-width: 0; }}
     .price-row {{ display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; }}
-    .price {{ font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; }}
+    .price {{ font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }}
     .price small {{ font-size: .82rem; font-weight: 500; color: var(--muted); }}
     .savings {{
       font-size: .72rem; font-weight: 700; padding: .14rem .48rem;
