@@ -219,11 +219,13 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
     color           = brand_color(s["name"])
     logo_url        = brand_logo_url(s["name"])
     is_eni          = "eni" in s["name"].lower()
+    is_bp           = "bp" in s["name"].lower()
     rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
     home = f'<span class="dist home-dist" id="dist-{rank}">📍 {s["home_dist"]} km</span>' if s["home_dist"] else f'<span class="dist home-dist" id="dist-{rank}">📍 –</span>'
 
     if logo_url:
-        avatar_html = f"""<div class="avatar avatar-logo {'brand-eni' if is_eni else ''}" style="--brand:{color}">
+        extra_cls = 'brand-eni' if is_eni else ('brand-bp' if is_bp else '')
+        avatar_html = f"""<div class="avatar avatar-logo {extra_cls}" style="--brand:{color}">
           <img src="{logo_url}" alt="{s['name']}"
                onerror="this.parentElement.innerHTML='<span>{brand_initial(s["name"])}</span>'">
         </div>"""
@@ -520,6 +522,10 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     /* Specific fix for Eni logo (often appears small) */
     .brand-eni img {{
       transform: scale(1.4);
+    }}
+    /* BP logo needs scaling up */
+    .brand-bp img {{
+      transform: scale(1.5);
     }}
     .card-meta {{ display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }}
     .medal {{
