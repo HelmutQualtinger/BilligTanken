@@ -356,6 +356,8 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
       --popup-border:#d0d0e0;
       --popup-text:#1a1a2e;
       --map-filter: none;
+      --link-color: #1a4fa8;
+      --link-weight: 700;
     }}
 
     /* ── System preference ── */
@@ -370,16 +372,20 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
         --popup-bg:#ffffff;
         --popup-border:#d0d0e0;
         --popup-text:#1a1a2e;
+        --link-color: #1a4fa8;
+        --link-weight: 700;
         --map-filter: none;
       }}
     }}
 
     :root {{
-      --green:   #22c55e;
-      --gold:    #fbbf24;
-      --silver:  #94a3b8;
-      --bronze:  #cd7f32;
-      --r:       16px;
+      --green:      #22c55e;
+      --gold:       #fbbf24;
+      --silver:     #94a3b8;
+      --bronze:     #cd7f32;
+      --r:          16px;
+      --link-color: #60a5fa;
+      --link-weight: 400;
     }}
 
     body {{
@@ -543,11 +549,11 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     .card-body {{ flex: 1; }}
     .station-name {{ font-size: .93rem; font-weight: 700; line-height: 1.3; margin-bottom: .2rem; }}
     .address {{
-      font-size: .78rem; color: #60a5fa;
+      font-size: .78rem; color: var(--link-color); font-weight: var(--link-weight);
       display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
       text-decoration: underline; cursor: pointer;
     }}
-    .address:hover {{ color: #93c5fd; }}
+    .address:hover {{ opacity: .75; }}
     .address svg {{ flex-shrink: 0; margin-top: .15rem; stroke: #ef4444; }}
 
     .card-footer {{
