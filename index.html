@@ -391,9 +391,9 @@
         <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
       </div>
       <p class="sub" id="fuel-sub-sup">Top 33 gemeldete E5 · Super 95 · ~40 km rund um Neudauberg · Luftlinie ab Neudauberg</p>
-      <p class="sub" id="fuel-sub-die" style="display:none">Top 34 gemeldete Diesel · ~40 km rund um Neudauberg · Luftlinie ab Neudauberg</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top 33 gemeldete Diesel · ~40 km rund um Neudauberg · Luftlinie ab Neudauberg</p>
       <div class="pills">
-        <span class="pill time">Aktualisiert: 23.03.2026 19:10 Uhr</span>
+        <span class="pill time">Aktualisiert: 23.03.2026 19:16 Uhr</span>
         <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
         <span class="pill time" id="geo-pill" style="color:#a78bfa">🏠 Standort wird ermittelt …</span>
       </div>
@@ -406,7 +406,7 @@
     </div>
     <div class="stats" id="stats-die" style="display:none">
       <div class="stat"><div class="val">1.749 €</div><div class="lbl">Günstigster Preis</div></div>
-      <div class="stat"><div class="val neu">2.124 €</div><div class="lbl">Ø Top 34</div></div>
+      <div class="stat"><div class="val neu">2.122 €</div><div class="lbl">Ø Top 33</div></div>
       <div class="stat"><div class="val hi">2.182 €</div><div class="lbl">Tageshöchstpreis</div></div>
       <div class="stat"><div class="val">0.433 €</div><div class="lbl">Max. Ersparnis</div></div>
     </div>
@@ -1680,22 +1680,108 @@
       </div>
     </article>
 
-    <article class="card " id="card-sup-25" style="--brand:#ff6b00"
-             data-lat="47.27573" data-lon="16.15609" data-rank="25">
+    <article class="card " id="card-sup-25" style="--brand:#4f46e5"
+             data-lat="47.292944" data-lon="16.20678" data-rank="25">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">TQ</div>
+        <div class="card-meta">
+          <span class="rank-num">#25</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-25">📍 17.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Turmöl Quick</h2>
+        <a class="address" onclick="focusMarker('sup', 25); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Wienerstraße 52, 7400 Oberwart
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.863 <small>€/L</small></span>
+            <span class="savings">− 0.022 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:90%; background:hsl(11,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-25"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.292944,16.20678&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-26" style="--brand:#4f46e5"
+             data-lat="47.3629773" data-lon="16.240665" data-rank="26">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">TQ</div>
+        <div class="card-meta">
+          <span class="rank-num">#26</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-26">📍 25.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Turmöl Quick</h2>
+        <a class="address" onclick="focusMarker('sup', 26); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Mariasdorf 54, 7433 Mariasdorf
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.863 <small>€/L</small></span>
+            <span class="savings">− 0.022 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:90%; background:hsl(11,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-26"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.3629773,16.240665&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-27" style="--brand:#ff6b00"
+             data-lat="47.27573" data-lon="16.15609" data-rank="27">
       <div class="card-header">
         <div class="avatar avatar-logo " style="--brand:#ff6b00">
           <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Kemeten Steinbrückl 12a"
                onerror="this.parentElement.innerHTML='<span>A-</span>'">
         </div>
         <div class="card-meta">
-          <span class="rank-num">#25</span>
+          <span class="rank-num">#27</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-sup-25">📍 14.4 km</span>
+          <span class="dist home-dist" id="dist-sup-27">📍 14.4 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">AVANTI - Kemeten Steinbrückl 12a</h2>
-        <a class="address" onclick="focusMarker('sup', 25); return false;" href="#">
+        <a class="address" onclick="focusMarker('sup', 27); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -1713,7 +1799,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:92%; background:hsl(9,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-sup-25"
+          <a class="map-btn route-btn" id="route-sup-27"
              href="https://www.google.com/maps/dir/?api=1&destination=47.27573,16.15609&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -1726,22 +1812,22 @@
       </div>
     </article>
 
-    <article class="card " id="card-sup-26" style="--brand:#e30613"
-             data-lat="47.273995" data-lon="16.234408" data-rank="26">
+    <article class="card " id="card-sup-28" style="--brand:#e30613"
+             data-lat="47.273995" data-lon="16.234408" data-rank="28">
       <div class="card-header">
         <div class="avatar avatar-logo " style="--brand:#e30613">
           <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
                onerror="this.parentElement.innerHTML='<span>JT</span>'">
         </div>
         <div class="card-meta">
-          <span class="rank-num">#26</span>
+          <span class="rank-num">#28</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-sup-26">📍 16.2 km</span>
+          <span class="dist home-dist" id="dist-sup-28">📍 16.2 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">JET TANKSTELLE</h2>
-        <a class="address" onclick="focusMarker('sup', 26); return false;" href="#">
+        <a class="address" onclick="focusMarker('sup', 28); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -1759,7 +1845,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:92%; background:hsl(9,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-sup-26"
+          <a class="map-btn route-btn" id="route-sup-28"
              href="https://www.google.com/maps/dir/?api=1&destination=47.273995,16.234408&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -1772,65 +1858,22 @@
       </div>
     </article>
 
-    <article class="card " id="card-sup-27" style="--brand:#4f46e5"
-             data-lat="47.292944" data-lon="16.20678" data-rank="27">
-      <div class="card-header">
-        <div class="avatar" style="background:#4f46e5">TQ</div>
-        <div class="card-meta">
-          <span class="rank-num">#27</span>
-          <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-sup-27">📍 17.2 km</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <h2 class="station-name">Turmöl Quick</h2>
-        <a class="address" onclick="focusMarker('sup', 27); return false;" href="#">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          Wienerstraße 52, 7400 Oberwart
-        </a>
-      </div>
-      <div class="card-footer">
-        <div class="price-block">
-          <div class="price-row">
-            <span class="price">1.867 <small>€/L</small></span>
-            <span class="savings">− 0.018 €</span>
-          </div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:92%; background:hsl(9,70%,45%)"></div></div>
-        </div>
-        <div class="btn-group">
-          <a class="map-btn route-btn" id="route-sup-27"
-             href="https://www.google.com/maps/dir/?api=1&destination=47.292944,16.20678&travelmode=driving"
-             target="_blank" rel="noopener">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-            </svg>
-            Route
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article class="card " id="card-sup-28" style="--brand:#006db7"
-             data-lat="47.305433994269244" data-lon="16.19182024620484" data-rank="28">
+    <article class="card " id="card-sup-29" style="--brand:#006db7"
+             data-lat="47.305433994269244" data-lon="16.19182024620484" data-rank="29">
       <div class="card-header">
         <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
           <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="ENI Oberwart"
                onerror="this.parentElement.innerHTML='<span>EO</span>'">
         </div>
         <div class="card-meta">
-          <span class="rank-num">#28</span>
+          <span class="rank-num">#29</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-sup-28">📍 18.2 km</span>
+          <span class="dist home-dist" id="dist-sup-29">📍 18.2 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">ENI Oberwart</h2>
-        <a class="address" onclick="focusMarker('sup', 28); return false;" href="#">
+        <a class="address" onclick="focusMarker('sup', 29); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -1848,51 +1891,8 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:92%; background:hsl(9,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-sup-28"
-             href="https://www.google.com/maps/dir/?api=1&destination=47.305433994269244,16.19182024620484&travelmode=driving"
-             target="_blank" rel="noopener">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-            </svg>
-            Route
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article class="card " id="card-sup-29" style="--brand:#4f46e5"
-             data-lat="47.3629773" data-lon="16.240665" data-rank="29">
-      <div class="card-header">
-        <div class="avatar" style="background:#4f46e5">TQ</div>
-        <div class="card-meta">
-          <span class="rank-num">#29</span>
-          <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-sup-29">📍 25.4 km</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <h2 class="station-name">Turmöl Quick</h2>
-        <a class="address" onclick="focusMarker('sup', 29); return false;" href="#">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          Mariasdorf 54, 7433 Mariasdorf
-        </a>
-      </div>
-      <div class="card-footer">
-        <div class="price-block">
-          <div class="price-row">
-            <span class="price">1.867 <small>€/L</small></span>
-            <span class="savings">− 0.018 €</span>
-          </div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:92%; background:hsl(9,70%,45%)"></div></div>
-        </div>
-        <div class="btn-group">
           <a class="map-btn route-btn" id="route-sup-29"
-             href="https://www.google.com/maps/dir/?api=1&destination=47.3629773,16.240665&travelmode=driving"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.305433994269244,16.19182024620484&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2">
@@ -2949,10 +2949,10 @@
       <div class="card-footer">
         <div class="price-block">
           <div class="price-row">
-            <span class="price">2.167 <small>€/L</small></span>
-            <span class="savings">− 0.015 €</span>
+            <span class="price">2.164 <small>€/L</small></span>
+            <span class="savings">− 0.018 €</span>
           </div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:96%; background:hsl(4,70%,45%)"></div></div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:95%; background:hsl(6,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
           <a class="map-btn route-btn" id="route-die-20"
@@ -2968,41 +2968,38 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-21" style="--brand:#e30613"
-             data-lat="47.273995" data-lon="16.234408" data-rank="21">
+    <article class="card " id="card-die-21" style="--brand:#4f46e5"
+             data-lat="47.292944" data-lon="16.20678" data-rank="21">
       <div class="card-header">
-        <div class="avatar avatar-logo " style="--brand:#e30613">
-          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
-               onerror="this.parentElement.innerHTML='<span>JT</span>'">
-        </div>
+        <div class="avatar" style="background:#4f46e5">TQ</div>
         <div class="card-meta">
           <span class="rank-num">#21</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-21">📍 16.2 km</span>
+          <span class="dist home-dist" id="dist-die-21">📍 17.2 km</span>
         </div>
       </div>
       <div class="card-body">
-        <h2 class="station-name">JET TANKSTELLE</h2>
+        <h2 class="station-name">Turmöl Quick</h2>
         <a class="address" onclick="focusMarker('die', 21); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
             <circle cx="12" cy="10" r="3"/>
           </svg>
-          STEINAMANGERERSTRASSE 189, 7400 OBERWART
+          Wienerstraße 52, 7400 Oberwart
         </a>
       </div>
       <div class="card-footer">
         <div class="price-block">
           <div class="price-row">
-            <span class="price">2.169 <small>€/L</small></span>
-            <span class="savings">− 0.013 €</span>
+            <span class="price">2.168 <small>€/L</small></span>
+            <span class="savings">− 0.014 €</span>
           </div>
           <div class="price-bar-wrap"><div class="price-bar" style="width:96%; background:hsl(4,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
           <a class="map-btn route-btn" id="route-die-21"
-             href="https://www.google.com/maps/dir/?api=1&destination=47.273995,16.234408&travelmode=driving"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.292944,16.20678&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2">
@@ -3015,18 +3012,61 @@
     </article>
 
     <article class="card " id="card-die-22" style="--brand:#4f46e5"
-             data-lat="46.9376143" data-lon="16.0040279" data-rank="22">
+             data-lat="47.3629773" data-lon="16.240665" data-rank="22">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">TQ</div>
         <div class="card-meta">
           <span class="rank-num">#22</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-22">📍 25.2 km</span>
+          <span class="dist home-dist" id="dist-die-22">📍 25.4 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">Turmöl Quick</h2>
         <a class="address" onclick="focusMarker('die', 22); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Mariasdorf 54, 7433 Mariasdorf
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.168 <small>€/L</small></span>
+            <span class="savings">− 0.014 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:96%; background:hsl(4,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-22"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.3629773,16.240665&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-23" style="--brand:#4f46e5"
+             data-lat="46.9376143" data-lon="16.0040279" data-rank="23">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">TQ</div>
+        <div class="card-meta">
+          <span class="rank-num">#23</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-23">📍 25.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Turmöl Quick</h2>
+        <a class="address" onclick="focusMarker('die', 23); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3044,7 +3084,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:96%; background:hsl(4,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-22"
+          <a class="map-btn route-btn" id="route-die-23"
              href="https://www.google.com/maps/dir/?api=1&destination=46.9376143,16.0040279&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3057,105 +3097,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-23" style="--brand:#4f46e5"
-             data-lat="47.292944" data-lon="16.20678" data-rank="23">
-      <div class="card-header">
-        <div class="avatar" style="background:#4f46e5">TQ</div>
-        <div class="card-meta">
-          <span class="rank-num">#23</span>
-          <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-23">📍 17.2 km</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <h2 class="station-name">Turmöl Quick</h2>
-        <a class="address" onclick="focusMarker('die', 23); return false;" href="#">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          Wienerstraße 52, 7400 Oberwart
-        </a>
-      </div>
-      <div class="card-footer">
-        <div class="price-block">
-          <div class="price-row">
-            <span class="price">2.172 <small>€/L</small></span>
-            <span class="savings">− 0.010 €</span>
-          </div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:97%; background:hsl(3,70%,45%)"></div></div>
-        </div>
-        <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-23"
-             href="https://www.google.com/maps/dir/?api=1&destination=47.292944,16.20678&travelmode=driving"
-             target="_blank" rel="noopener">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-            </svg>
-            Route
-          </a>
-        </div>
-      </div>
-    </article>
-
     <article class="card " id="card-die-24" style="--brand:#4f46e5"
-             data-lat="47.3629773" data-lon="16.240665" data-rank="24">
-      <div class="card-header">
-        <div class="avatar" style="background:#4f46e5">TQ</div>
-        <div class="card-meta">
-          <span class="rank-num">#24</span>
-          <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-24">📍 25.4 km</span>
-        </div>
-      </div>
-      <div class="card-body">
-        <h2 class="station-name">Turmöl Quick</h2>
-        <a class="address" onclick="focusMarker('die', 24); return false;" href="#">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          Mariasdorf 54, 7433 Mariasdorf
-        </a>
-      </div>
-      <div class="card-footer">
-        <div class="price-block">
-          <div class="price-row">
-            <span class="price">2.172 <small>€/L</small></span>
-            <span class="savings">− 0.010 €</span>
-          </div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:97%; background:hsl(3,70%,45%)"></div></div>
-        </div>
-        <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-24"
-             href="https://www.google.com/maps/dir/?api=1&destination=47.3629773,16.240665&travelmode=driving"
-             target="_blank" rel="noopener">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-            </svg>
-            Route
-          </a>
-        </div>
-      </div>
-    </article>
-
-    <article class="card " id="card-die-25" style="--brand:#4f46e5"
-             data-lat="46.958" data-lon="15.9496" data-rank="25">
+             data-lat="46.958" data-lon="15.9496" data-rank="24">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">ML</div>
         <div class="card-meta">
-          <span class="rank-num">#25</span>
+          <span class="rank-num">#24</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-25">📍 25.1 km</span>
+          <span class="dist home-dist" id="dist-die-24">📍 25.1 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">M3 Lödersdorf</h2>
-        <a class="address" onclick="focusMarker('die', 25); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 24); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3173,7 +3127,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:97%; background:hsl(3,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-25"
+          <a class="map-btn route-btn" id="route-die-24"
              href="https://www.google.com/maps/dir/?api=1&destination=46.958,15.9496&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3186,22 +3140,22 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-26" style="--brand:#005baa"
-             data-lat="46.9523" data-lon="15.8702" data-rank="26">
+    <article class="card " id="card-die-25" style="--brand:#005baa"
+             data-lat="46.9523" data-lon="15.8702" data-rank="25">
       <div class="card-header">
         <div class="avatar avatar-logo " style="--brand:#005baa">
           <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
                onerror="this.parentElement.innerHTML='<span>DT</span>'">
         </div>
         <div class="card-meta">
-          <span class="rank-num">#26</span>
+          <span class="rank-num">#25</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-26">📍 29.2 km</span>
+          <span class="dist home-dist" id="dist-die-25">📍 29.2 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">Diskont Tankstelle</h2>
-        <a class="address" onclick="focusMarker('die', 26); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 25); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3219,7 +3173,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:97%; background:hsl(3,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-26"
+          <a class="map-btn route-btn" id="route-die-25"
              href="https://www.google.com/maps/dir/?api=1&destination=46.9523,15.8702&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3232,19 +3186,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-27" style="--brand:#4f46e5"
-             data-lat="46.9672942" data-lon="15.8414639" data-rank="27">
+    <article class="card " id="card-die-26" style="--brand:#4f46e5"
+             data-lat="46.9672942" data-lon="15.8414639" data-rank="26">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">SP</div>
         <div class="card-meta">
-          <span class="rank-num">#27</span>
+          <span class="rank-num">#26</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-27">📍 29.6 km</span>
+          <span class="dist home-dist" id="dist-die-26">📍 29.6 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">SOCAR Paurach</h2>
-        <a class="address" onclick="focusMarker('die', 27); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 26); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3256,13 +3210,13 @@
       <div class="card-footer">
         <div class="price-block">
           <div class="price-row">
-            <span class="price">2.174 <small>€/L</small></span>
-            <span class="savings">− 0.008 €</span>
+            <span class="price">2.173 <small>€/L</small></span>
+            <span class="savings">− 0.009 €</span>
           </div>
-          <div class="price-bar-wrap"><div class="price-bar" style="width:98%; background:hsl(2,70%,45%)"></div></div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:97%; background:hsl(3,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-27"
+          <a class="map-btn route-btn" id="route-die-26"
              href="https://www.google.com/maps/dir/?api=1&destination=46.9672942,15.8414639&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3275,22 +3229,22 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-28" style="--brand:#e30613"
-             data-lat="46.94948" data-lon="15.909504" data-rank="28">
+    <article class="card " id="card-die-27" style="--brand:#e30613"
+             data-lat="46.94948" data-lon="15.909504" data-rank="27">
       <div class="card-header">
         <div class="avatar avatar-logo " style="--brand:#e30613">
           <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
                onerror="this.parentElement.innerHTML='<span>JT</span>'">
         </div>
         <div class="card-meta">
-          <span class="rank-num">#28</span>
+          <span class="rank-num">#27</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-28">📍 27.6 km</span>
+          <span class="dist home-dist" id="dist-die-27">📍 27.6 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">JET TANKSTELLE</h2>
-        <a class="address" onclick="focusMarker('die', 28); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 27); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3308,7 +3262,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-28"
+          <a class="map-btn route-btn" id="route-die-27"
              href="https://www.google.com/maps/dir/?api=1&destination=46.94948,15.909504&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3321,19 +3275,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-29" style="--brand:#4f46e5"
-             data-lat="47.32786092847619" data-lon="15.991220646103233" data-rank="29">
+    <article class="card " id="card-die-28" style="--brand:#4f46e5"
+             data-lat="47.32786092847619" data-lon="15.991220646103233" data-rank="28">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">SS</div>
         <div class="card-meta">
-          <span class="rank-num">#29</span>
+          <span class="rank-num">#28</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-29">📍 22.5 km</span>
+          <span class="dist home-dist" id="dist-die-28">📍 22.5 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">SOCAR Seibersdorf</h2>
-        <a class="address" onclick="focusMarker('die', 29); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 28); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3351,7 +3305,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-29"
+          <a class="map-btn route-btn" id="route-die-28"
              href="https://www.google.com/maps/dir/?api=1&destination=47.32786092847619,15.991220646103233&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3364,19 +3318,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-30" style="--brand:#4f46e5"
-             data-lat="46.9495027" data-lon="15.9075026" data-rank="30">
+    <article class="card " id="card-die-29" style="--brand:#4f46e5"
+             data-lat="46.9495027" data-lon="15.9075026" data-rank="29">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">TU</div>
         <div class="card-meta">
-          <span class="rank-num">#30</span>
+          <span class="rank-num">#29</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-30">📍 27.7 km</span>
+          <span class="dist home-dist" id="dist-die-29">📍 27.7 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">Turmöl</h2>
-        <a class="address" onclick="focusMarker('die', 30); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 29); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3394,7 +3348,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-30"
+          <a class="map-btn route-btn" id="route-die-29"
              href="https://www.google.com/maps/dir/?api=1&destination=46.9495027,15.9075026&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3407,19 +3361,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-31" style="--brand:#4f46e5"
-             data-lat="46.954399" data-lon="15.883552" data-rank="31">
+    <article class="card " id="card-die-30" style="--brand:#4f46e5"
+             data-lat="46.954399" data-lon="15.883552" data-rank="30">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">RU</div>
         <div class="card-meta">
-          <span class="rank-num">#31</span>
+          <span class="rank-num">#30</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-31">📍 28.4 km</span>
+          <span class="dist home-dist" id="dist-die-30">📍 28.4 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">Rumpold</h2>
-        <a class="address" onclick="focusMarker('die', 31); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 30); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3437,7 +3391,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-31"
+          <a class="map-btn route-btn" id="route-die-30"
              href="https://www.google.com/maps/dir/?api=1&destination=46.954399,15.883552&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3450,19 +3404,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-32" style="--brand:#4f46e5"
-             data-lat="47.28049617547305" data-lon="16.00657404169231" data-rank="32">
+    <article class="card " id="card-die-31" style="--brand:#4f46e5"
+             data-lat="47.28049617547305" data-lon="16.00657404169231" data-rank="31">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">FL</div>
         <div class="card-meta">
-          <span class="rank-num">#32</span>
+          <span class="rank-num">#31</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-32">📍 17.4 km</span>
+          <span class="dist home-dist" id="dist-die-31">📍 17.4 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">F. LEITNER</h2>
-        <a class="address" onclick="focusMarker('die', 32); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 31); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3480,7 +3434,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-32"
+          <a class="map-btn route-btn" id="route-die-31"
              href="https://www.google.com/maps/dir/?api=1&destination=47.28049617547305,16.00657404169231&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3493,22 +3447,22 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-33" style="--brand:#005baa"
-             data-lat="47.2854" data-lon="15.9916" data-rank="33">
+    <article class="card " id="card-die-32" style="--brand:#005baa"
+             data-lat="47.2854" data-lon="15.9916" data-rank="32">
       <div class="card-header">
         <div class="avatar avatar-logo " style="--brand:#005baa">
           <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
                onerror="this.parentElement.innerHTML='<span>DT</span>'">
         </div>
         <div class="card-meta">
-          <span class="rank-num">#33</span>
+          <span class="rank-num">#32</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-33">📍 18.4 km</span>
+          <span class="dist home-dist" id="dist-die-32">📍 18.4 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">Diskont Tankstelle</h2>
-        <a class="address" onclick="focusMarker('die', 33); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 32); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3526,7 +3480,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-33"
+          <a class="map-btn route-btn" id="route-die-32"
              href="https://www.google.com/maps/dir/?api=1&destination=47.2854,15.9916&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3539,19 +3493,19 @@
       </div>
     </article>
 
-    <article class="card " id="card-die-34" style="--brand:#4f46e5"
-             data-lat="47.3279528" data-lon="15.9907409" data-rank="34">
+    <article class="card " id="card-die-33" style="--brand:#4f46e5"
+             data-lat="47.3279528" data-lon="15.9907409" data-rank="33">
       <div class="card-header">
         <div class="avatar" style="background:#4f46e5">FU</div>
         <div class="card-meta">
-          <span class="rank-num">#34</span>
+          <span class="rank-num">#33</span>
           <span class="badge open">Offen</span>
-          <span class="dist home-dist" id="dist-die-34">📍 22.5 km</span>
+          <span class="dist home-dist" id="dist-die-33">📍 22.5 km</span>
         </div>
       </div>
       <div class="card-body">
         <h2 class="station-name">Fuchs</h2>
-        <a class="address" onclick="focusMarker('die', 34); return false;" href="#">
+        <a class="address" onclick="focusMarker('die', 33); return false;" href="#">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                fill="none" stroke="currentColor" stroke-width="2.2">
             <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
@@ -3569,7 +3523,7 @@
           <div class="price-bar-wrap"><div class="price-bar" style="width:100%; background:hsl(0,70%,45%)"></div></div>
         </div>
         <div class="btn-group">
-          <a class="map-btn route-btn" id="route-die-34"
+          <a class="map-btn route-btn" id="route-die-33"
              href="https://www.google.com/maps/dir/?api=1&destination=47.3279528,15.9907409&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
@@ -3678,8 +3632,8 @@
 
   // ── Geolocation ──────────────────────────────────────────────────────────
   const stationCoords = {
-    sup: {1: [47.00569, 16.11257], 2: [47.136327, 16.272085], 3: [47.0370799, 16.0571029], 4: [47.1155, 16.058492], 5: [47.184775, 16.248481], 6: [47.119516, 16.274524], 7: [47.04744, 16.31829], 8: [47.2339552, 15.9964327], 9: [47.16299, 16.01469], 10: [46.958, 15.9496], 11: [46.9376143, 16.0040279], 12: [47.0576297, 16.069798], 13: [47.04909, 16.08948], 14: [46.976247, 15.878982], 15: [46.9523, 15.8702], 16: [46.9672942, 15.8414639], 17: [46.9515668, 16.0100281], 18: [47.21238492, 16.16281215], 19: [47.06547, 16.08011], 20: [46.94948, 15.909504], 21: [46.938042, 16.1487458], 22: [46.9882286, 16.2576195], 23: [47.3454259, 16.2241246], 24: [47.2714106, 16.2388066], 25: [47.27573, 16.15609], 26: [47.273995, 16.234408], 27: [47.292944, 16.20678], 28: [47.305433994269244, 16.19182024620484], 29: [47.3629773, 16.240665], 30: [47.28049617547305, 16.00657404169231], 31: [47.2854, 15.9916], 32: [47.28266, 15.975332], 33: [47.282788, 15.975247]},
-    die: {1: [47.00569, 16.11257], 2: [47.055172, 16.1089281], 3: [47.0393225, 16.0852794], 4: [47.2339552, 15.9964327], 5: [47.04909, 16.08948], 6: [47.0781445, 16.3201416], 7: [47.06547, 16.08011], 8: [47.16113, 16.16488], 9: [47.168488, 16.163935], 10: [47.1443074, 16.1891661], 11: [47.136327, 16.272085], 12: [47.119516, 16.274524], 13: [47.0368461, 16.0931036], 14: [47.012098, 16.184278], 15: [47.04744, 16.31829], 16: [46.9882286, 16.2576195], 17: [47.14749, 16.102583], 18: [47.3454259, 16.2241246], 19: [47.27573, 16.15609], 20: [47.2714106, 16.2388066], 21: [47.273995, 16.234408], 22: [46.9376143, 16.0040279], 23: [47.292944, 16.20678], 24: [47.3629773, 16.240665], 25: [46.958, 15.9496], 26: [46.9523, 15.8702], 27: [46.9672942, 15.8414639], 28: [46.94948, 15.909504], 29: [47.32786092847619, 15.991220646103233], 30: [46.9495027, 15.9075026], 31: [46.954399, 15.883552], 32: [47.28049617547305, 16.00657404169231], 33: [47.2854, 15.9916], 34: [47.3279528, 15.9907409]}
+    sup: {1: [47.00569, 16.11257], 2: [47.136327, 16.272085], 3: [47.0370799, 16.0571029], 4: [47.1155, 16.058492], 5: [47.184775, 16.248481], 6: [47.119516, 16.274524], 7: [47.04744, 16.31829], 8: [47.2339552, 15.9964327], 9: [47.16299, 16.01469], 10: [46.958, 15.9496], 11: [46.9376143, 16.0040279], 12: [47.0576297, 16.069798], 13: [47.04909, 16.08948], 14: [46.976247, 15.878982], 15: [46.9523, 15.8702], 16: [46.9672942, 15.8414639], 17: [46.9515668, 16.0100281], 18: [47.21238492, 16.16281215], 19: [47.06547, 16.08011], 20: [46.94948, 15.909504], 21: [46.938042, 16.1487458], 22: [46.9882286, 16.2576195], 23: [47.3454259, 16.2241246], 24: [47.2714106, 16.2388066], 25: [47.292944, 16.20678], 26: [47.3629773, 16.240665], 27: [47.27573, 16.15609], 28: [47.273995, 16.234408], 29: [47.305433994269244, 16.19182024620484], 30: [47.28049617547305, 16.00657404169231], 31: [47.2854, 15.9916], 32: [47.28266, 15.975332], 33: [47.282788, 15.975247]},
+    die: {1: [47.00569, 16.11257], 2: [47.055172, 16.1089281], 3: [47.0393225, 16.0852794], 4: [47.2339552, 15.9964327], 5: [47.04909, 16.08948], 6: [47.0781445, 16.3201416], 7: [47.06547, 16.08011], 8: [47.16113, 16.16488], 9: [47.168488, 16.163935], 10: [47.1443074, 16.1891661], 11: [47.136327, 16.272085], 12: [47.119516, 16.274524], 13: [47.0368461, 16.0931036], 14: [47.012098, 16.184278], 15: [47.04744, 16.31829], 16: [46.9882286, 16.2576195], 17: [47.14749, 16.102583], 18: [47.3454259, 16.2241246], 19: [47.27573, 16.15609], 20: [47.2714106, 16.2388066], 21: [47.292944, 16.20678], 22: [47.3629773, 16.240665], 23: [46.9376143, 16.0040279], 24: [46.958, 15.9496], 25: [46.9523, 15.8702], 26: [46.9672942, 15.8414639], 27: [46.94948, 15.909504], 28: [47.32786092847619, 15.991220646103233], 29: [46.9495027, 15.9075026], 30: [46.954399, 15.883552], 31: [47.28049617547305, 16.00657404169231], 32: [47.2854, 15.9916], 33: [47.3279528, 15.9907409]}
   };
 
   function haversineJS(lat1, lon1, lat2, lon2) {
@@ -3770,11 +3724,11 @@
     addMarker("sup", 46.9882286, 16.2576195, "<b>#22 AVIA</b><br>Obere Hauptstrasse 9, 7561 Heiligenkreuz im Lafnitzal<br><span style='font-size:1.2em;font-weight:700'>1.859 \u20ac/L</span><br>\ud83d\udccd 20.3 km ab Neudauberg", "hsl(41,80%,45%)", 22, 22);
     addMarker("sup", 47.3454259, 16.2241246, "<b>#23 Shell</b><br>Jormannsdorferstra\u00dfe 52, 7431 Bad Tatzmannsdorf<br><span style='font-size:1.2em;font-weight:700'>1.859 \u20ac/L</span><br>\ud83d\udccd 23.1 km ab Neudauberg", "hsl(37,80%,45%)", 23, 23);
     addMarker("sup", 47.2714106, 16.2388066, "<b>#24 SOCAR Unterwart</b><br>Steinamangerer Stra\u00dfe 349, 7501 Unterwart<br><span style='font-size:1.2em;font-weight:700'>1.862 \u20ac/L</span><br>\ud83d\udccd 16.1 km ab Neudauberg", "hsl(33,80%,45%)", 24, 24);
-    addMarker("sup", 47.27573, 16.15609, "<b>#25 AVANTI - Kemeten Steinbr\u00fcckl 12a</b><br>Steinbrueckl 12a, 7531 Kemeten<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 14.4 km ab Neudauberg", "hsl(30,80%,45%)", 25, 25);
-    addMarker("sup", 47.273995, 16.234408, "<b>#26 JET TANKSTELLE</b><br>STEINAMANGERERSTRASSE 189, 7400 OBERWART<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 16.2 km ab Neudauberg", "hsl(26,80%,45%)", 26, 26);
-    addMarker("sup", 47.292944, 16.20678, "<b>#27 Turm\u00f6l Quick</b><br>Wienerstra\u00dfe 52, 7400 Oberwart<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 17.2 km ab Neudauberg", "hsl(22,80%,45%)", 27, 27);
-    addMarker("sup", 47.305433994269244, 16.19182024620484, "<b>#28 ENI Oberwart</b><br>Industriestra\u00dfe 49, 7400 Oberwart<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 18.2 km ab Neudauberg", "hsl(18,80%,45%)", 28, 28);
-    addMarker("sup", 47.3629773, 16.240665, "<b>#29 Turm\u00f6l Quick</b><br>Mariasdorf 54, 7433 Mariasdorf<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 25.4 km ab Neudauberg", "hsl(15,80%,45%)", 29, 29);
+    addMarker("sup", 47.292944, 16.20678, "<b>#25 Turm\u00f6l Quick</b><br>Wienerstra\u00dfe 52, 7400 Oberwart<br><span style='font-size:1.2em;font-weight:700'>1.863 \u20ac/L</span><br>\ud83d\udccd 17.2 km ab Neudauberg", "hsl(30,80%,45%)", 25, 25);
+    addMarker("sup", 47.3629773, 16.240665, "<b>#26 Turm\u00f6l Quick</b><br>Mariasdorf 54, 7433 Mariasdorf<br><span style='font-size:1.2em;font-weight:700'>1.863 \u20ac/L</span><br>\ud83d\udccd 25.4 km ab Neudauberg", "hsl(26,80%,45%)", 26, 26);
+    addMarker("sup", 47.27573, 16.15609, "<b>#27 AVANTI - Kemeten Steinbr\u00fcckl 12a</b><br>Steinbrueckl 12a, 7531 Kemeten<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 14.4 km ab Neudauberg", "hsl(22,80%,45%)", 27, 27);
+    addMarker("sup", 47.273995, 16.234408, "<b>#28 JET TANKSTELLE</b><br>STEINAMANGERERSTRASSE 189, 7400 OBERWART<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 16.2 km ab Neudauberg", "hsl(18,80%,45%)", 28, 28);
+    addMarker("sup", 47.305433994269244, 16.19182024620484, "<b>#29 ENI Oberwart</b><br>Industriestra\u00dfe 49, 7400 Oberwart<br><span style='font-size:1.2em;font-weight:700'>1.867 \u20ac/L</span><br>\ud83d\udccd 18.2 km ab Neudauberg", "hsl(15,80%,45%)", 29, 29);
     addMarker("sup", 47.28049617547305, 16.00657404169231, "<b>#30 F. LEITNER</b><br>Rathstrasse 1, 8295 St.Johann i.d.Haide<br><span style='font-size:1.2em;font-weight:700'>1.880 \u20ac/L</span><br>\ud83d\udccd 17.4 km ab Neudauberg", "hsl(11,80%,45%)", 30, 30);
     addMarker("sup", 47.2854, 15.9916, "<b>#31 Diskont Tankstelle</b><br>Ferdinand-Leihs-Strasse 53 (am HOFER Parkplatz), 8230 Hartberg<br><span style='font-size:1.2em;font-weight:700'>1.881 \u20ac/L</span><br>\ud83d\udccd 18.4 km ab Neudauberg", "hsl(7,80%,45%)", 31, 31);
     addMarker("sup", 47.28266, 15.975332, "<b>#32 M3 Hartberg + Spar \"Express\"</b><br>Reservarstra\u00dfe 50, 8230 Hartberg<br><span style='font-size:1.2em;font-weight:700'>1.884 \u20ac/L</span><br>\ud83d\udccd 18.9 km ab Neudauberg", "hsl(3,80%,45%)", 32, 32);
@@ -3782,37 +3736,36 @@
   addMarker("die", 47.00569, 16.11257, "<b>#1 PRORast Loipersdorf</b><br>Loipersdorfer Hauptstra\u00dfe, 8282 Bad Loipersdorf<br><span style='font-size:1.2em;font-weight:700'>1.749 \u20ac/L</span><br>\ud83d\udccd 15.9 km ab Neudauberg", "hsl(120,80%,45%)", 1, 1);
     addMarker("die", 47.055172, 16.1089281, "<b>#2 Landestankstelle Rdf. Partner Luisser</b><br>Grazer Stra\u00dfe 34, 7571 Rudersdorf<br><span style='font-size:1.2em;font-weight:700'>2.029 \u20ac/L</span><br>\ud83d\udccd 10.4 km ab Neudauberg", "hsl(116,80%,45%)", 2, 2);
     addMarker("die", 47.0393225, 16.0852794, "<b>#3 Genol-Lagerhaus Thermenland F\u00fcrstenfeld</b><br> F\u00fcrstenfeld Jahnstrasse 5, 8280 F\u00fcrstenfeld<br><span style='font-size:1.2em;font-weight:700'>2.038 \u20ac/L</span><br>\ud83d\udccd 12.5 km ab Neudauberg", "hsl(112,80%,45%)", 3, 3);
-    addMarker("die", 47.2339552, 15.9964327, "<b>#4 Marken-Diskont Franz Falk</b><br>Oberbuch 9, 8274 Buch<br><span style='font-size:1.2em;font-weight:700'>2.088 \u20ac/L</span><br>\ud83d\udccd 13.8 km ab Neudauberg", "hsl(109,80%,45%)", 4, 4);
+    addMarker("die", 47.2339552, 15.9964327, "<b>#4 Marken-Diskont Franz Falk</b><br>Oberbuch 9, 8274 Buch<br><span style='font-size:1.2em;font-weight:700'>2.088 \u20ac/L</span><br>\ud83d\udccd 13.8 km ab Neudauberg", "hsl(108,80%,45%)", 4, 4);
     addMarker("die", 47.04909, 16.08948, "<b>#5 AVANTI - F\u00fcrstenfeld K\u00f6rmender Stra\u00dfe 30</b><br>K\u00f6rmender Strasse 30, 8280 Fuerstenfeld<br><span style='font-size:1.2em;font-weight:700'>2.089 \u20ac/L</span><br>\ud83d\udccd 11.4 km ab Neudauberg", "hsl(105,80%,45%)", 5, 5);
     addMarker("die", 47.0781445, 16.3201416, "<b>#6 Landestankstelle G\u00fcssing Partner Luisser</b><br>Wiener Stra\u00dfe 62, 7540 G\u00fcssing <br><span style='font-size:1.2em;font-weight:700'>2.089 \u20ac/L</span><br>\ud83d\udccd 16.5 km ab Neudauberg", "hsl(101,80%,45%)", 6, 6);
-    addMarker("die", 47.06547, 16.08011, "<b>#7 JET TANKSTELLE</b><br>FLUGPLATZSTRASSE 1, 8280 FUERSTENFELD<br><span style='font-size:1.2em;font-weight:700'>2.094 \u20ac/L</span><br>\ud83d\udccd 9.9 km ab Neudauberg", "hsl(98,80%,45%)", 7, 7);
-    addMarker("die", 47.16113, 16.16488, "<b>#8 AVANTI - Stegersbach Wiener Stra\u00dfe 3</b><br>Wiener Strasse 3, 7551 Stegersbach<br><span style='font-size:1.2em;font-weight:700'>2.098 \u20ac/L</span><br>\ud83d\udccd 3.1 km ab Neudauberg", "hsl(94,80%,45%)", 8, 8);
+    addMarker("die", 47.06547, 16.08011, "<b>#7 JET TANKSTELLE</b><br>FLUGPLATZSTRASSE 1, 8280 FUERSTENFELD<br><span style='font-size:1.2em;font-weight:700'>2.094 \u20ac/L</span><br>\ud83d\udccd 9.9 km ab Neudauberg", "hsl(97,80%,45%)", 7, 7);
+    addMarker("die", 47.16113, 16.16488, "<b>#8 AVANTI - Stegersbach Wiener Stra\u00dfe 3</b><br>Wiener Strasse 3, 7551 Stegersbach<br><span style='font-size:1.2em;font-weight:700'>2.098 \u20ac/L</span><br>\ud83d\udccd 3.1 km ab Neudauberg", "hsl(93,80%,45%)", 8, 8);
     addMarker("die", 47.168488, 16.163935, "<b>#9 Turm\u00f6l Quick</b><br>Wienerstra\u00dfe 56, 7551 Stegersbach<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 3.5 km ab Neudauberg", "hsl(90,80%,45%)", 9, 9);
-    addMarker("die", 47.1443074, 16.1891661, "<b>#10 SPRITK\u00d6NIG</b><br>Gewerbegebiet 1, 7551 Bocksdorf<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 4.6 km ab Neudauberg", "hsl(87,80%,45%)", 10, 10);
-    addMarker("die", 47.136327, 16.272085, "<b>#11 Welog - Landespartner des Burgenlands</b><br>Obere Hauptstra\u00dfe 230, 7535 St. Michael im Burgenland<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 11.0 km ab Neudauberg", "hsl(83,80%,45%)", 11, 11);
-    addMarker("die", 47.119516, 16.274524, "<b>#12 SHELL</b><br>G\u00fcssinger Str. 384, 7535 St. Michael<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 11.5 km ab Neudauberg", "hsl(80,80%,45%)", 12, 12);
-    addMarker("die", 47.0368461, 16.0931036, "<b>#13 SPRITK\u00d6NIG</b><br>Flurstr. 57, 8280 F\u00fcrstenfeld<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 12.6 km ab Neudauberg", "hsl(76,80%,45%)", 13, 13);
-    addMarker("die", 47.012098, 16.184278, "<b>#14 SPRITK\u00d6NIG </b><br>Gewerbepark 1, 7563 K\u00f6nigsdorf<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 15.7 km ab Neudauberg", "hsl(72,80%,45%)", 14, 14);
-    addMarker("die", 47.04744, 16.31829, "<b>#15 Turm\u00f6l</b><br>Grazer Stra\u00dfe 54-56, 7540 G\u00fcssing<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 18.2 km ab Neudauberg", "hsl(69,80%,45%)", 15, 15);
-    addMarker("die", 46.9882286, 16.2576195, "<b>#16 AVIA</b><br>Obere Hauptstrasse 9, 7561 Heiligenkreuz im Lafnitzal<br><span style='font-size:1.2em;font-weight:700'>2.129 \u20ac/L</span><br>\ud83d\udccd 20.3 km ab Neudauberg", "hsl(65,80%,45%)", 16, 16);
-    addMarker("die", 47.14749, 16.102583, "<b>#17 SOCAR Burgau</b><br>Neudauerstra\u00dfe 270, 8291 Burgau<br><span style='font-size:1.2em;font-weight:700'>2.154 \u20ac/L</span><br>\ud83d\udccd 1.9 km ab Neudauberg", "hsl(61,80%,45%)", 17, 17);
-    addMarker("die", 47.3454259, 16.2241246, "<b>#18 Shell</b><br>Jormannsdorferstra\u00dfe 52, 7431 Bad Tatzmannsdorf<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 23.1 km ab Neudauberg", "hsl(58,80%,45%)", 18, 18);
-    addMarker("die", 47.27573, 16.15609, "<b>#19 AVANTI - Kemeten Steinbr\u00fcckl 12a</b><br>Steinbrueckl 12a, 7531 Kemeten<br><span style='font-size:1.2em;font-weight:700'>2.164 \u20ac/L</span><br>\ud83d\udccd 14.4 km ab Neudauberg", "hsl(54,80%,45%)", 19, 19);
-    addMarker("die", 47.2714106, 16.2388066, "<b>#20 SOCAR Unterwart</b><br>Steinamangerer Stra\u00dfe 349, 7501 Unterwart<br><span style='font-size:1.2em;font-weight:700'>2.167 \u20ac/L</span><br>\ud83d\udccd 16.1 km ab Neudauberg", "hsl(50,80%,45%)", 20, 20);
-    addMarker("die", 47.273995, 16.234408, "<b>#21 JET TANKSTELLE</b><br>STEINAMANGERERSTRASSE 189, 7400 OBERWART<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 16.2 km ab Neudauberg", "hsl(47,80%,45%)", 21, 21);
-    addMarker("die", 46.9376143, 16.0040279, "<b>#22 Turm\u00f6l Quick</b><br>Hoeflach 109, 8350 Fehring<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 25.2 km ab Neudauberg", "hsl(43,80%,45%)", 22, 22);
-    addMarker("die", 47.292944, 16.20678, "<b>#23 Turm\u00f6l Quick</b><br>Wienerstra\u00dfe 52, 7400 Oberwart<br><span style='font-size:1.2em;font-weight:700'>2.172 \u20ac/L</span><br>\ud83d\udccd 17.2 km ab Neudauberg", "hsl(40,80%,45%)", 23, 23);
-    addMarker("die", 47.3629773, 16.240665, "<b>#24 Turm\u00f6l Quick</b><br>Mariasdorf 54, 7433 Mariasdorf<br><span style='font-size:1.2em;font-weight:700'>2.172 \u20ac/L</span><br>\ud83d\udccd 25.4 km ab Neudauberg", "hsl(36,80%,45%)", 24, 24);
-    addMarker("die", 46.958, 15.9496, "<b>#25 M3 L\u00f6dersdorf</b><br>L\u00f6dersdorf 54, 8334 L\u00f6dersdorf<br><span style='font-size:1.2em;font-weight:700'>2.173 \u20ac/L</span><br>\ud83d\udccd 25.1 km ab Neudauberg", "hsl(32,80%,45%)", 25, 25);
-    addMarker("die", 46.9523, 15.8702, "<b>#26 Diskont Tankstelle</b><br>Gnaserstrasse 26 (am HOFER Parkplatz), 8330 Feldbach<br><span style='font-size:1.2em;font-weight:700'>2.173 \u20ac/L</span><br>\ud83d\udccd 29.2 km ab Neudauberg", "hsl(29,80%,45%)", 26, 26);
-    addMarker("die", 46.9672942, 15.8414639, "<b>#27 SOCAR Paurach</b><br>Paurach 49, 8330 Paurach<br><span style='font-size:1.2em;font-weight:700'>2.174 \u20ac/L</span><br>\ud83d\udccd 29.6 km ab Neudauberg", "hsl(25,80%,45%)", 27, 27);
-    addMarker("die", 46.94948, 15.909504, "<b>#28 JET TANKSTELLE</b><br>GLEICHENBERGER STRASSE 75, 8330 FELDBACH<br><span style='font-size:1.2em;font-weight:700'>2.178 \u20ac/L</span><br>\ud83d\udccd 27.6 km ab Neudauberg", "hsl(21,80%,45%)", 28, 28);
-    addMarker("die", 47.32786092847619, 15.991220646103233, "<b>#29 SOCAR Seibersdorf</b><br>Grazer Stra\u00dfe 97, 8232 Seibersdorf<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 22.5 km ab Neudauberg", "hsl(18,80%,45%)", 29, 29);
-    addMarker("die", 46.9495027, 15.9075026, "<b>#30 Turm\u00f6l</b><br>M\u00fchldorf 300, 8330 Feldbach<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 27.7 km ab Neudauberg", "hsl(14,80%,45%)", 30, 30);
-    addMarker("die", 46.954399, 15.883552, "<b>#31 Rumpold</b><br>Grazer Stra\u00dfe 25, 8330 Feldbach<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 28.4 km ab Neudauberg", "hsl(10,80%,45%)", 31, 31);
-    addMarker("die", 47.28049617547305, 16.00657404169231, "<b>#32 F. LEITNER</b><br>Rathstrasse 1, 8295 St.Johann i.d.Haide<br><span style='font-size:1.2em;font-weight:700'>2.180 \u20ac/L</span><br>\ud83d\udccd 17.4 km ab Neudauberg", "hsl(7,80%,45%)", 32, 32);
-    addMarker("die", 47.2854, 15.9916, "<b>#33 Diskont Tankstelle</b><br>Ferdinand-Leihs-Strasse 53 (am HOFER Parkplatz), 8230 Hartberg<br><span style='font-size:1.2em;font-weight:700'>2.181 \u20ac/L</span><br>\ud83d\udccd 18.4 km ab Neudauberg", "hsl(3,80%,45%)", 33, 33);
-    addMarker("die", 47.3279528, 15.9907409, "<b>#34 Fuchs</b><br>Grazerst. 85, 8232 Grafendorf<br><span style='font-size:1.2em;font-weight:700'>2.182 \u20ac/L</span><br>\ud83d\udccd 22.5 km ab Neudauberg", "hsl(0,80%,45%)", 34, 34);
+    addMarker("die", 47.1443074, 16.1891661, "<b>#10 SPRITK\u00d6NIG</b><br>Gewerbegebiet 1, 7551 Bocksdorf<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 4.6 km ab Neudauberg", "hsl(86,80%,45%)", 10, 10);
+    addMarker("die", 47.136327, 16.272085, "<b>#11 Welog - Landespartner des Burgenlands</b><br>Obere Hauptstra\u00dfe 230, 7535 St. Michael im Burgenland<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 11.0 km ab Neudauberg", "hsl(82,80%,45%)", 11, 11);
+    addMarker("die", 47.119516, 16.274524, "<b>#12 SHELL</b><br>G\u00fcssinger Str. 384, 7535 St. Michael<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 11.5 km ab Neudauberg", "hsl(78,80%,45%)", 12, 12);
+    addMarker("die", 47.0368461, 16.0931036, "<b>#13 SPRITK\u00d6NIG</b><br>Flurstr. 57, 8280 F\u00fcrstenfeld<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 12.6 km ab Neudauberg", "hsl(75,80%,45%)", 13, 13);
+    addMarker("die", 47.012098, 16.184278, "<b>#14 SPRITK\u00d6NIG </b><br>Gewerbepark 1, 7563 K\u00f6nigsdorf<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 15.7 km ab Neudauberg", "hsl(71,80%,45%)", 14, 14);
+    addMarker("die", 47.04744, 16.31829, "<b>#15 Turm\u00f6l</b><br>Grazer Stra\u00dfe 54-56, 7540 G\u00fcssing<br><span style='font-size:1.2em;font-weight:700'>2.099 \u20ac/L</span><br>\ud83d\udccd 18.2 km ab Neudauberg", "hsl(67,80%,45%)", 15, 15);
+    addMarker("die", 46.9882286, 16.2576195, "<b>#16 AVIA</b><br>Obere Hauptstrasse 9, 7561 Heiligenkreuz im Lafnitzal<br><span style='font-size:1.2em;font-weight:700'>2.129 \u20ac/L</span><br>\ud83d\udccd 20.3 km ab Neudauberg", "hsl(63,80%,45%)", 16, 16);
+    addMarker("die", 47.14749, 16.102583, "<b>#17 SOCAR Burgau</b><br>Neudauerstra\u00dfe 270, 8291 Burgau<br><span style='font-size:1.2em;font-weight:700'>2.154 \u20ac/L</span><br>\ud83d\udccd 1.9 km ab Neudauberg", "hsl(60,80%,45%)", 17, 17);
+    addMarker("die", 47.3454259, 16.2241246, "<b>#18 Shell</b><br>Jormannsdorferstra\u00dfe 52, 7431 Bad Tatzmannsdorf<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 23.1 km ab Neudauberg", "hsl(56,80%,45%)", 18, 18);
+    addMarker("die", 47.27573, 16.15609, "<b>#19 AVANTI - Kemeten Steinbr\u00fcckl 12a</b><br>Steinbrueckl 12a, 7531 Kemeten<br><span style='font-size:1.2em;font-weight:700'>2.164 \u20ac/L</span><br>\ud83d\udccd 14.4 km ab Neudauberg", "hsl(52,80%,45%)", 19, 19);
+    addMarker("die", 47.2714106, 16.2388066, "<b>#20 SOCAR Unterwart</b><br>Steinamangerer Stra\u00dfe 349, 7501 Unterwart<br><span style='font-size:1.2em;font-weight:700'>2.164 \u20ac/L</span><br>\ud83d\udccd 16.1 km ab Neudauberg", "hsl(48,80%,45%)", 20, 20);
+    addMarker("die", 47.292944, 16.20678, "<b>#21 Turm\u00f6l Quick</b><br>Wienerstra\u00dfe 52, 7400 Oberwart<br><span style='font-size:1.2em;font-weight:700'>2.168 \u20ac/L</span><br>\ud83d\udccd 17.2 km ab Neudauberg", "hsl(45,80%,45%)", 21, 21);
+    addMarker("die", 47.3629773, 16.240665, "<b>#22 Turm\u00f6l Quick</b><br>Mariasdorf 54, 7433 Mariasdorf<br><span style='font-size:1.2em;font-weight:700'>2.168 \u20ac/L</span><br>\ud83d\udccd 25.4 km ab Neudauberg", "hsl(41,80%,45%)", 22, 22);
+    addMarker("die", 46.9376143, 16.0040279, "<b>#23 Turm\u00f6l Quick</b><br>Hoeflach 109, 8350 Fehring<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 25.2 km ab Neudauberg", "hsl(37,80%,45%)", 23, 23);
+    addMarker("die", 46.958, 15.9496, "<b>#24 M3 L\u00f6dersdorf</b><br>L\u00f6dersdorf 54, 8334 L\u00f6dersdorf<br><span style='font-size:1.2em;font-weight:700'>2.173 \u20ac/L</span><br>\ud83d\udccd 25.1 km ab Neudauberg", "hsl(33,80%,45%)", 24, 24);
+    addMarker("die", 46.9523, 15.8702, "<b>#25 Diskont Tankstelle</b><br>Gnaserstrasse 26 (am HOFER Parkplatz), 8330 Feldbach<br><span style='font-size:1.2em;font-weight:700'>2.173 \u20ac/L</span><br>\ud83d\udccd 29.2 km ab Neudauberg", "hsl(30,80%,45%)", 25, 25);
+    addMarker("die", 46.9672942, 15.8414639, "<b>#26 SOCAR Paurach</b><br>Paurach 49, 8330 Paurach<br><span style='font-size:1.2em;font-weight:700'>2.173 \u20ac/L</span><br>\ud83d\udccd 29.6 km ab Neudauberg", "hsl(26,80%,45%)", 26, 26);
+    addMarker("die", 46.94948, 15.909504, "<b>#27 JET TANKSTELLE</b><br>GLEICHENBERGER STRASSE 75, 8330 FELDBACH<br><span style='font-size:1.2em;font-weight:700'>2.178 \u20ac/L</span><br>\ud83d\udccd 27.6 km ab Neudauberg", "hsl(22,80%,45%)", 27, 27);
+    addMarker("die", 47.32786092847619, 15.991220646103233, "<b>#28 SOCAR Seibersdorf</b><br>Grazer Stra\u00dfe 97, 8232 Seibersdorf<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 22.5 km ab Neudauberg", "hsl(18,80%,45%)", 28, 28);
+    addMarker("die", 46.9495027, 15.9075026, "<b>#29 Turm\u00f6l</b><br>M\u00fchldorf 300, 8330 Feldbach<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 27.7 km ab Neudauberg", "hsl(15,80%,45%)", 29, 29);
+    addMarker("die", 46.954399, 15.883552, "<b>#30 Rumpold</b><br>Grazer Stra\u00dfe 25, 8330 Feldbach<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 28.4 km ab Neudauberg", "hsl(11,80%,45%)", 30, 30);
+    addMarker("die", 47.28049617547305, 16.00657404169231, "<b>#31 F. LEITNER</b><br>Rathstrasse 1, 8295 St.Johann i.d.Haide<br><span style='font-size:1.2em;font-weight:700'>2.180 \u20ac/L</span><br>\ud83d\udccd 17.4 km ab Neudauberg", "hsl(7,80%,45%)", 31, 31);
+    addMarker("die", 47.2854, 15.9916, "<b>#32 Diskont Tankstelle</b><br>Ferdinand-Leihs-Strasse 53 (am HOFER Parkplatz), 8230 Hartberg<br><span style='font-size:1.2em;font-weight:700'>2.181 \u20ac/L</span><br>\ud83d\udccd 18.4 km ab Neudauberg", "hsl(3,80%,45%)", 32, 32);
+    addMarker("die", 47.3279528, 15.9907409, "<b>#33 Fuchs</b><br>Grazerst. 85, 8232 Grafendorf<br><span style='font-size:1.2em;font-weight:700'>2.182 \u20ac/L</span><br>\ud83d\udccd 22.5 km ab Neudauberg", "hsl(0,80%,45%)", 33, 33);
 
   // Properly initialize fuel state from localStorage (handles all UI + markers)
   (function initFuel() {
