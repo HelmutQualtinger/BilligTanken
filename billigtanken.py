@@ -494,10 +494,10 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 
     /* Top-4 mini-card panel */
     .top4-panel {{
-      display: flex; flex-direction: column; gap: .5rem;
+      display: flex; flex-direction: column; gap: .5rem; align-self: start;
     }}
     .top4-grid {{
-      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; height: 100%;
+      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
     }}
     .top4-label {{
       font-size: .72rem; font-weight: 700; color: var(--muted);
