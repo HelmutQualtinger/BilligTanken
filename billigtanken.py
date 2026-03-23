@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-BilligTanken – Günstigste E5 Tankstellen in Vorarlberg zwischen Bregenz und Feldkirch
+BilligTanken – Günstigste E5 Tankstellen rund um Neudauberg im Burgenland (~40 km)
 Quelle: E-Control Austria API (spritpreisrechner.at)
 """
 
@@ -19,32 +19,26 @@ _web_root  = Path(os.environ.get("WEB_ROOT", "."))
 OUTPUT     = _web_root / "index.html"
 OUTPUT_NEW = _web_root / "index_new.html"
 
-# Referenzpunkt Rebstein SG, Schweiz (47°23'53"N 9°34'56"E)
-HOME_LAT  = 47.3983
-HOME_LON  =  9.5824
-HOME_NAME = "Rebstein CH"
+# Referenzpunkt Burgauberg-Neudauberg, Burgenland
+HOME_LAT  = 47.148
+HOME_LON  = 16.128
+HOME_NAME = "Neudauberg"
 
 API_BASE = "https://api.e-control.at/sprit/1.0/search/gas-stations/by-address"
 HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 
 QUERY_POINTS = [
-    (47.505, 9.747),   # Bregenz
-    (47.474, 9.751),   # Wolfurt
-    (47.478, 9.664),   # Fußach
-    (47.460, 9.730),   # Lauterach / Hard
-    (47.427, 9.661),   # Lustenau
-    (47.413, 9.743),   # Dornbirn
-    (47.367, 9.697),   # Hohenems
-    (47.370, 9.680),   # Götzis
-    (47.311, 9.646),   # Klaus
-    (47.300, 9.610),   # Weiler
-    (47.274, 9.576),   # Meiningen
-    (47.271, 9.617),   # Rankweil
-    (47.238, 9.596),   # Feldkirch
+    (47.148, 16.128),   # Burgauberg-Neudauberg (Zentrum)
+    (47.059, 16.324),   # Güssing (~18 km O)
+    (47.050, 16.083),   # Fürstenfeld (~12 km SW)
+    (46.937, 16.130),   # Jennersdorf (~23 km S)
+    (47.290, 16.206),   # Oberwart (~16 km N)
+    (47.282, 15.973),   # Hartberg (~32 km NW)
+    (46.953, 15.889),   # Feldbach (~35 km WSW)
 ]
 
-LAT_MIN, LAT_MAX = 47.20, 47.55
-LON_MIN, LON_MAX =  9.50,  9.80
+LAT_MIN, LAT_MAX = 46.85, 47.40
+LON_MIN, LON_MAX = 15.75, 16.45
 
 # ── Daten holen ───────────────────────────────────────────────────────────────
 def fetch_stations(fuel_type: str) -> list[dict]:
@@ -367,13 +361,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BilligTanken Vorarlberg – E5 Super 95</title>
-  
-  <meta name="description" content="Aktuelle Benzinpreise (E5 Super 95) in Vorarlberg. Günstigste Tankstellen zwischen Bregenz und Feldkirch im Preisvergleich." />
-  <meta name="keywords" content="Tanken, Benzinpreise, Vorarlberg, E5, Super 95, Bregenz, Dornbirn, Feldkirch, Lustenau, billig tanken" />
-  
-  <meta property="og:title" content="BilligTanken Vorarlberg – E5 Super 95" />
-  <meta property="og:description" content="Günstigste Tankstellen in Vorarlberg. Echtzeit-Preise von E-Control." />
+  <title>BilligTanken Neudauberg – E5 Super 95</title>
+
+  <meta name="description" content="Aktuelle Benzinpreise (E5 Super 95) rund um Neudauberg im Burgenland. Günstigste Tankstellen im Umkreis ~40 km im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Burgenland, E5, Super 95, Neudauberg, Güssing, Oberwart, Jennersdorf, Fürstenfeld, billig tanken" />
+
+  <meta property="og:title" content="BilligTanken Neudauberg – E5 Super 95" />
+  <meta property="og:description" content="Günstigste Tankstellen rund um Neudauberg. Echtzeit-Preise von E-Control." />
   <meta property="og:image" content="screenshots/preview.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -749,13 +743,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 <div class="overview">
   <div class="left-col">
     <header>
-      <h1>⛽ BilligTanken Vorarlberg</h1>
+      <h1>⛽ BilligTanken Neudauberg</h1>
       <div class="fuel-toggle">
         <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
         <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
       </div>
-      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
-      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · ~40 km rund um {HOME_NAME} · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · ~40 km rund um {HOME_NAME} · Luftlinie ab {HOME_NAME}</p>
       <div class="pills">
         <span class="pill time">Aktualisiert: {fetched_at}</span>
         <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
