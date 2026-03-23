@@ -14,7 +14,7 @@ docker compose up -d --build
 # View live logs (including cron runs)
 docker compose logs -f
 
-# Rebuild after code changes
+# Rebuild after code changes (ALWAYS do this after editing any project file)
 docker compose up -d --build
 
 # Stop container
@@ -41,6 +41,16 @@ Single-file Python app (`billigtanken.py`) that fetches fuel price data and gene
 **Output path** is controlled by `WEB_ROOT` environment variable. Atomic swap prevents serving a half-written file.
 
 **Docker setup:** Single Alpine container (~88 MB) with python3 + py3-requests + apache2 + dcron. Cron triggers the script every full hour (`0 * * * *`). Apache serves the static HTML on port 80 (mapped to 8080 externally). Logs at `/var/log/billigtanken.log` inside the container.
+
+## Workflow
+
+- After every code change: run `docker compose up -d --build` to rebuild and restart the container
+- After every code change: commit and push to GitHub (`HelmutQualtinger/BilligTanken`)
+
+## Design Decisions
+
+- **Map tiles**: Use CARTO Voyager (light/colorful) tiles — dark tiles were rejected by user
+- **Price ranking**: All stations tied at the same price get the same medal rank (all 🥇, all 🥈, etc.); distance from reference point is the tiebreaker within each price tier
 
 **E-Control API notes:**
 - Only `SUP` (Super 95) and `DIE` (Diesel) are valid fuel types – E10 is not sold in Austria
