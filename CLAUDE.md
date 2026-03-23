@@ -51,6 +51,7 @@ Single-file Python app (`billigtanken.py`) that fetches fuel price data and gene
 
 - **Map tiles**: Use CARTO Voyager (light/colorful) tiles — dark tiles were rejected by user
 - **Price ranking**: All stations tied at the same price get the same medal rank (all 🥇, all 🥈, etc.); distance from reference point is the tiebreaker within each price tier
+- **CSS theme variables**: Place default CSS variables (e.g. `--link-color`) inside `:root, [data-theme="dark"]` — never in a standalone `:root` block that appears after `[data-theme="light"]`, as equal specificity means last declaration wins and will override the light theme values
 
 **E-Control API notes:**
 - Only `SUP` (Super 95) and `DIE` (Diesel) are valid fuel types – E10 is not sold in Austria
