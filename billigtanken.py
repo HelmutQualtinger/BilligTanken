@@ -342,6 +342,8 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
       --popup-border:#2e2e40;
       --popup-text:#e8e8f0;
       --map-filter: none;
+      --link-color: #60a5fa;
+      --link-weight: 400;
     }}
 
     /* ── Light theme ── */
@@ -379,13 +381,11 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     }}
 
     :root {{
-      --green:      #22c55e;
-      --gold:       #fbbf24;
-      --silver:     #94a3b8;
-      --bronze:     #cd7f32;
-      --r:          16px;
-      --link-color: #60a5fa;
-      --link-weight: 400;
+      --green:  #22c55e;
+      --gold:   #fbbf24;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+      --r:      16px;
     }}
 
     body {{
