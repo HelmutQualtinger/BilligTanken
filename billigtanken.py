@@ -253,7 +253,7 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
             Karte
           </button>
           <a class="map-btn route-btn" id="route-{rank}"
-             href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}"
+             href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}&travelmode=driving"
              target="_blank" rel="noopener">
             <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
                  fill="none" stroke="currentColor" stroke-width="2">
@@ -703,7 +703,7 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
       const btn = document.getElementById('route-' + rank);
       if (btn) {{
         const coords = stationCoords[rank];
-        btn.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}`;
+        btn.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
       }}
     }}
     // Update home marker on map
