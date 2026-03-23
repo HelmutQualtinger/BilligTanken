@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 BilligTanken – Günstigste E5 Tankstellen in Vorarlberg zwischen Bregenz und Feldkirch
 Quelle: E-Control Austria API (spritpreisrechner.at)
@@ -14,7 +15,7 @@ from pathlib import Path
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
 FUEL_TYPE  = "SUP"
-TOP_N      = 20
+TOP_N      = 80
 _web_root  = Path(os.environ.get("WEB_ROOT", "."))
 OUTPUT     = _web_root / "index.html"
 OUTPUT_NEW = _web_root / "index_new.html"
@@ -29,10 +30,17 @@ HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 
 QUERY_POINTS = [
     (47.505, 9.747),   # Bregenz
+    (47.474, 9.751),   # Wolfurt
+    (47.478, 9.664),   # Fußach
     (47.460, 9.730),   # Lauterach / Hard
+    (47.427, 9.661),   # Lustenau
     (47.413, 9.743),   # Dornbirn
     (47.367, 9.697),   # Hohenems
     (47.370, 9.680),   # Götzis
+    (47.311, 9.646),   # Klaus
+    (47.300, 9.610),   # Weiler
+    (47.274, 9.576),   # Meiningen
+    (47.271, 9.617),   # Rankweil
     (47.238, 9.596),   # Feldkirch
 ]
 
@@ -128,21 +136,21 @@ BRAND_COLORS = {
     "gutmann": "#e87722",
 }
 
-# Domain → Google S2 Favicon (128px) als zuverlässige Logos
+# Domain → Google Favicon Service (128px) - robuster für regionale Domains
 BRAND_DOMAINS = {
-    "jet":     "jet.de",
+    "jet":     "jet-tankstellen.at",
     "avanti":  "avanti.at",
     "disk":    "diskonttanken.at",
     "diskont": "diskonttanken.at",
-    "eni":     "eni.com",
-    "omv":     "omv.com",
-    "shell":   "shell.com",
+    "eni":     "eni.at",
+    "omv":     "omv.at",
+    "shell":   "shell.at",
     "bp":      "bp.com",
     "esso":    "esso.de",
-    "avia":    "avia.de",
-    "oil!":    "oil.at",
+    "avia":    "avia.at",
+    "oil!":    "oil-energy.at",
     "baywa":   "baywa.de",
-    "loacker": "loacker.com",
+    "loacker": "loacker-recycling.com",
     "gutmann": "gutmann.at",
 }
 
@@ -155,6 +163,12 @@ def brand_color(name: str) -> str:
 
 def brand_logo_url(name: str) -> str | None:
     n = name.lower()
+    # Direct high-quality logos for iconic brands
+    if "eni" in n:
+        return "https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png"
+    if "bp" in n:
+        return "https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png"
+    
     for key, domain in BRAND_DOMAINS.items():
         if key in n:
             return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
@@ -204,11 +218,12 @@ def marker_color(rank: int, total: int) -> str:
 def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float) -> str:
     color           = brand_color(s["name"])
     logo_url        = brand_logo_url(s["name"])
+    is_eni          = "eni" in s["name"].lower()
     rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
     home = f'<span class="dist home-dist" id="dist-{rank}">📍 {s["home_dist"]} km</span>' if s["home_dist"] else f'<span class="dist home-dist" id="dist-{rank}">📍 –</span>'
 
     if logo_url:
-        avatar_html = f"""<div class="avatar avatar-logo" style="--brand:{color}">
+        avatar_html = f"""<div class="avatar avatar-logo {'brand-eni' if is_eni else ''}" style="--brand:{color}">
           <img src="{logo_url}" alt="{s['name']}"
                onerror="this.parentElement.innerHTML='<span>{brand_initial(s["name"])}</span>'">
         </div>"""
@@ -239,8 +254,10 @@ def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float)
       </div>
       <div class="card-footer">
         <div class="price-block">
-          <span class="price">{s['price']:.3f} <small>€/L</small></span>
-          {savings_badge(s['price'], max_p)}
+          <div class="price-row">
+            <span class="price">{s['price']:.3f} <small>€/L</small></span>
+            {savings_badge(s['price'], max_p)}
+          </div>
           {price_bar(s['price'], min_p, max_p)}
         </div>
         <div class="btn-group">
@@ -304,6 +321,16 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BilligTanken Vorarlberg – E5 Super 95</title>
+  
+  <meta name="description" content="Aktuelle Benzinpreise (E5 Super 95) in Vorarlberg. Günstigste Tankstellen zwischen Bregenz und Feldkirch im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Vorarlberg, E5, Super 95, Bregenz, Dornbirn, Feldkirch, Lustenau, billig tanken" />
+  
+  <meta property="og:title" content="BilligTanken Vorarlberg – E5 Super 95" />
+  <meta property="og:description" content="Günstigste Tankstellen in Vorarlberg. Echtzeit-Preise von E-Control." />
+  <meta property="og:image" content="screenshots/preview.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -453,8 +480,8 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     /* Card */
     .card {{
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--r); padding: 1.2rem;
-      display: flex; flex-direction: column; gap: .85rem;
+      border-radius: var(--r); padding: .85rem;
+      display: flex; flex-direction: column; gap: .55rem;
       position: relative; overflow: hidden;
       transition: transform .2s, box-shadow .2s;
       cursor: default;
@@ -475,7 +502,7 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
 
     .card-header {{ display: flex; align-items: center; justify-content: space-between; }}
     .avatar {{
-      width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
+      width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
       font-weight: 800; font-size: .83rem; color: #fff;
       text-shadow: 0 1px 3px rgba(0,0,0,.4);
@@ -485,9 +512,14 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
       padding: 4px;
       box-shadow: 0 1px 4px rgba(0,0,0,.3);
     }}
+    /* ── Logo Sizing ── */
     .avatar-logo img {{
       width: 100%; height: 100%;
       object-fit: contain; border-radius: 6px;
+    }}
+    /* Specific fix for Eni logo (often appears small) */
+    .brand-eni img {{
+      transform: scale(1.4);
     }}
     .card-meta {{ display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }}
     .medal {{
@@ -511,7 +543,7 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     }}
 
     .card-body {{ flex: 1; }}
-    .station-name {{ font-size: .97rem; font-weight: 700; line-height: 1.3; margin-bottom: .35rem; }}
+    .station-name {{ font-size: .93rem; font-weight: 700; line-height: 1.3; margin-bottom: .2rem; }}
     .address {{
       font-size: .78rem; color: var(--muted);
       display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
@@ -519,12 +551,13 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     .address svg {{ flex-shrink: 0; margin-top: .15rem; }}
 
     .card-footer {{
-      display: flex; align-items: flex-end; justify-content: space-between;
-      padding-top: .75rem; border-top: 1px solid var(--border); gap: .5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: .5rem; border-top: 1px solid var(--border); gap: .5rem;
     }}
-    .price-block {{ display: flex; flex-direction: column; gap: .28rem; min-width: 0; }}
-    .price {{ font-size: 1.7rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; }}
-    .price small {{ font-size: .7rem; font-weight: 400; color: var(--muted); }}
+    .price-block {{ display: flex; flex-direction: column; gap: .22rem; min-width: 0; }}
+    .price-row {{ display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; }}
+    .price {{ font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; }}
+    .price small {{ font-size: .82rem; font-weight: 500; color: var(--muted); }}
     .savings {{
       font-size: .72rem; font-weight: 700; padding: .14rem .48rem;
       border-radius: 999px; align-self: flex-start;
