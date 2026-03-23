@@ -228,11 +228,29 @@ def render_mini_card(s: dict, rank: int, min_p: float, second_p: float, fkey: st
                        f'</div>')
     else:
         avatar_html = f'<div class="mini-avatar" style="background:{color}">{brand_initial(s["name"])}</div>'
-    name_short = s["name"][:22] + ("…" if len(s["name"]) > 22 else "")
     return f"""<div class="mini-card {rclass}" onclick="document.getElementById('card-{fkey}-{rank}').scrollIntoView({{behavior:'smooth',block:'center'}})">
   <div class="mini-top">{avatar_html}<span class="mini-rank">{rank_html}</span></div>
-  <div class="mini-name">{name_short}</div>
-  <div class="mini-price">{s['price']:.3f} <small>€/L</small></div>
+  <div class="mini-name">{s['name']}</div>
+  <a class="mini-address address" onclick="focusMarker('{fkey}', {rank}); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    {s['street']}, {s['zip']} {s['city']}
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">{s['price']:.3f} <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-{fkey}-{rank}"
+       href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
 </div>"""
 
 def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float, fkey: str) -> str:
@@ -531,11 +549,19 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     .mini-rank .medal {{ font-size: .6rem; padding: .1rem .35rem; }}
     .mini-rank .rank-num {{ font-size: .65rem; }}
     .mini-name {{ font-size: .72rem; font-weight: 600; line-height: 1.3; color: var(--text); }}
+    .mini-address {{
+      font-size: .65rem; line-height: 1.3; display: flex; align-items: flex-start; gap: .25rem;
+    }}
+    .mini-address svg {{ flex-shrink: 0; margin-top: .1rem; }}
+    .mini-footer {{
+      display: flex; align-items: center; justify-content: space-between; gap: .4rem; margin-top: .1rem;
+    }}
     .mini-price {{
-      font-size: 1.15rem; font-weight: 800; letter-spacing: -.02em;
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em;
       line-height: 1; white-space: nowrap;
     }}
-    .mini-price small {{ font-size: .65rem; font-weight: 500; color: var(--muted); }}
+    .mini-price small {{ font-size: .6rem; font-weight: 500; color: var(--muted); }}
+    .mini-route {{ font-size: .65rem; padding: .2rem .45rem; }}
 
     /* Left column: header + stats */
     .left-col {{
@@ -881,6 +907,8 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
         if (distEl) distEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
         const routeEl = document.getElementById('route-' + fkey + '-' + rank);
         if (routeEl) routeEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
+        const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
+        if (mRouteEl) mRouteEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
       }}
     }}
     // Update home marker on map
