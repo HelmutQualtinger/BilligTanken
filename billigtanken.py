@@ -543,13 +543,12 @@ def generate_html(stations: list[dict], fetched_at: str) -> str:
     .card-body {{ flex: 1; }}
     .station-name {{ font-size: .93rem; font-weight: 700; line-height: 1.3; margin-bottom: .2rem; }}
     .address {{
-      font-size: .78rem; color: var(--muted);
+      font-size: .78rem; color: #60a5fa;
       display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
-      text-decoration: none; cursor: pointer;
+      text-decoration: underline; cursor: pointer;
     }}
-    .address:hover {{ color: #60a5fa; }}
-    .address:hover svg {{ stroke: #60a5fa; }}
-    .address svg {{ flex-shrink: 0; margin-top: .15rem; }}
+    .address:hover {{ color: #93c5fd; }}
+    .address svg {{ flex-shrink: 0; margin-top: .15rem; stroke: #ef4444; }}
 
     .card-footer {{
       display: flex; align-items: center; justify-content: space-between;
