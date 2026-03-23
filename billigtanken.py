@@ -214,6 +214,27 @@ def marker_color(rank: int, total: int) -> str:
     hue = int(120 * (1 - (rank - 1) / max(total - 1, 1)))
     return f"hsl({hue},80%,45%)"
 
+def render_mini_card(s: dict, rank: int, min_p: float, second_p: float, fkey: str) -> str:
+    color             = brand_color(s["name"])
+    logo_url          = brand_logo_url(s["name"])
+    is_eni            = "eni" in s["name"].lower()
+    is_bp             = "bp" in s["name"].lower()
+    rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
+    if logo_url:
+        extra_cls   = 'brand-eni' if is_eni else ('brand-bp' if is_bp else '')
+        avatar_html = (f'<div class="mini-avatar avatar-logo {extra_cls}" style="--brand:{color}">'
+                       f'<img src="{logo_url}" alt="{s["name"]}"'
+                       f' onerror="this.parentElement.innerHTML=\'<span>{brand_initial(s["name"])}</span>\'">'
+                       f'</div>')
+    else:
+        avatar_html = f'<div class="mini-avatar" style="background:{color}">{brand_initial(s["name"])}</div>'
+    name_short = s["name"][:22] + ("…" if len(s["name"]) > 22 else "")
+    return f"""<div class="mini-card {rclass}" onclick="document.getElementById('card-{fkey}-{rank}').scrollIntoView({{behavior:'smooth',block:'center'}})">
+  <div class="mini-top">{avatar_html}<span class="mini-rank">{rank_html}</span></div>
+  <div class="mini-name">{name_short}</div>
+  <div class="mini-price">{s['price']:.3f} <small>€/L</small></div>
+</div>"""
+
 def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float, fkey: str) -> str:
     color           = brand_color(s["name"])
     logo_url        = brand_logo_url(s["name"])
@@ -311,6 +332,8 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     st_die = _stats(stations_die)
     cards_sup  = "\n".join(render_card(s, i+1, st_sup["min_p"], st_sup["max_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup))
     cards_die  = "\n".join(render_card(s, i+1, st_die["min_p"], st_die["max_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die))
+    top4_sup   = "\n".join(render_mini_card(s, i+1, st_sup["min_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup[:4]))
+    top4_die   = "\n".join(render_mini_card(s, i+1, st_die["min_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die[:4]))
     map_js_sup = build_map_js(stations_sup, "sup")
     map_js_die = build_map_js(stations_die, "die")
     all_stations = stations_sup  # for map center
@@ -452,18 +475,67 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     .pill.time {{ color: var(--muted); background: var(--surf2); border: 1px solid var(--border); }}
     .pill.note {{ color: #f59e0b; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); }}
 
-    /* Overview row: left col + map */
+    /* Overview row: left col + map + top-4 */
     .overview {{
       display: grid;
-      grid-template-columns: 260px 1fr;
+      grid-template-columns: 260px 1fr 430px;
       gap: 1rem;
-      max-width: 1400px;
+      max-width: 1500px;
       margin: 0 auto 2rem;
       align-items: stretch;
+    }}
+    @media (max-width: 1100px) {{
+      .overview {{ grid-template-columns: 260px 1fr; }}
+      .top4-panel {{ display: none; }}
     }}
     @media (max-width: 800px) {{
       .overview {{ grid-template-columns: 1fr; }}
     }}
+
+    /* Top-4 mini-card panel */
+    .top4-panel {{
+      display: flex; flex-direction: column; gap: .5rem;
+    }}
+    .top4-grid {{
+      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem; height: 100%;
+    }}
+    .top4-label {{
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: .1rem;
+    }}
+    .mini-card {{
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .6rem .7rem;
+      display: flex; flex-direction: column; gap: .25rem;
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+      position: relative; overflow: hidden;
+    }}
+    .mini-card::before {{
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }}
+    .mini-card.rank-gold::before  {{ background: var(--gold); }}
+    .mini-card.rank-silver::before {{ background: var(--silver); }}
+    .mini-card:hover {{ transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }}
+    .mini-top {{
+      display: flex; align-items: center; gap: .4rem;
+    }}
+    .mini-avatar {{
+      width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .6rem; color: #fff;
+    }}
+    .mini-avatar.avatar-logo {{ background: #fff; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.25); }}
+    .mini-avatar.avatar-logo img {{ width: 100%; height: 100%; object-fit: contain; border-radius: 4px; }}
+    .mini-avatar.brand-eni img, .mini-avatar.brand-bp img {{ transform: scale(1.3); }}
+    .mini-rank .medal {{ font-size: .6rem; padding: .1rem .35rem; }}
+    .mini-rank .rank-num {{ font-size: .65rem; }}
+    .mini-name {{ font-size: .72rem; font-weight: 600; line-height: 1.3; color: var(--text); }}
+    .mini-price {{
+      font-size: 1.15rem; font-weight: 800; letter-spacing: -.02em;
+      line-height: 1; white-space: nowrap;
+    }}
+    .mini-price small {{ font-size: .65rem; font-weight: 500; color: var(--muted); }}
 
     /* Left column: header + stats */
     .left-col {{
@@ -673,6 +745,15 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     </div>
   </div>
   <div id="map"></div>
+  <div class="top4-panel">
+    <div class="top4-label">Top 4</div>
+    <div id="top4-sup" class="top4-grid">
+{top4_sup}
+    </div>
+    <div id="top4-die" class="top4-grid" style="display:none">
+{top4_die}
+    </div>
+  </div>
 </div>
 
 <main class="grid" id="grid-sup">
@@ -745,19 +826,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 
   function switchFuel(fuel) {{
     if (fuel === currentFuel) return;
-    // swap markers
+    const ids = ['grid', 'stats', 'fuel-sub', 'top4'];
+    ids.forEach(id => {{
+      document.getElementById(id + '-' + currentFuel).style.display = 'none';
+      document.getElementById(id + '-' + fuel).style.display = '';
+    }});
     Object.values(allMarkers[currentFuel]).forEach(m => map.removeLayer(m));
     Object.values(allMarkers[fuel]).forEach(m => m.addTo(map));
-    // swap grids
-    document.getElementById('grid-' + currentFuel).style.display = 'none';
-    document.getElementById('grid-' + fuel).style.display = '';
-    // swap stats
-    document.getElementById('stats-' + currentFuel).style.display = 'none';
-    document.getElementById('stats-' + fuel).style.display = '';
-    // swap subtitle
-    document.getElementById('fuel-sub-' + currentFuel).style.display = 'none';
-    document.getElementById('fuel-sub-' + fuel).style.display = '';
-    // toggle buttons
     document.getElementById('btn-' + currentFuel).classList.remove('active');
     document.getElementById('btn-' + fuel).classList.add('active');
     currentFuel = fuel;
@@ -854,12 +929,10 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
   (function initFuel() {{
     Object.values(allMarkers[currentFuel]).forEach(m => m.addTo(map));
     if (currentFuel !== 'sup') {{
-      document.getElementById('grid-sup').style.display = 'none';
-      document.getElementById('grid-' + currentFuel).style.display = '';
-      document.getElementById('stats-sup').style.display = 'none';
-      document.getElementById('stats-' + currentFuel).style.display = '';
-      document.getElementById('fuel-sub-sup').style.display = 'none';
-      document.getElementById('fuel-sub-' + currentFuel).style.display = '';
+      ['grid', 'stats', 'fuel-sub', 'top4'].forEach(id => {{
+        document.getElementById(id + '-sup').style.display = 'none';
+        document.getElementById(id + '-' + currentFuel).style.display = '';
+      }});
       document.getElementById('btn-sup').classList.remove('active');
       document.getElementById('btn-' + currentFuel).classList.add('active');
     }}
