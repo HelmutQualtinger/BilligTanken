@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-BilligTanken – Günstigste E5 Tankstellen in Vorarlberg zwischen Bregenz und Feldkirch
+SchärdingTanken – Günstigste Tankstellen rund um Schärding (Innviertel, OÖ)
 Quelle: E-Control Austria API (spritpreisrechner.at)
 """
 
@@ -14,37 +14,28 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
-TOP_N      = 80
+TOP_N      = 250
 _web_root  = Path(os.environ.get("WEB_ROOT", "."))
-OUTPUT     = _web_root / "index.html"
-OUTPUT_NEW = _web_root / "index_new.html"
+OUTPUT     = _web_root / "schaerding-tanken.html"
+OUTPUT_NEW = _web_root / "schaerding-tanken_new.html"
 
-# Referenzpunkt Rebstein SG, Schweiz (47°23'53"N 9°34'56"E)
-HOME_LAT  = 47.3983
-HOME_LON  =  9.5824
-HOME_NAME = "Rebstein CH"
+# Referenzpunkt Schärding (48°27'16"N 13°26'15"E)
+HOME_LAT  = 48.4545
+HOME_LON  = 13.4375
+HOME_NAME = "Schärding"
 
 API_BASE = "https://api.e-control.at/sprit/1.0/search/gas-stations/by-address"
 HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 
-QUERY_POINTS = [
-    (47.505, 9.747),   # Bregenz
-    (47.474, 9.751),   # Wolfurt
-    (47.478, 9.664),   # Fußach
-    (47.460, 9.730),   # Lauterach / Hard
-    (47.427, 9.661),   # Lustenau
-    (47.413, 9.743),   # Dornbirn
-    (47.367, 9.697),   # Hohenems
-    (47.370, 9.680),   # Götzis
-    (47.311, 9.646),   # Klaus
-    (47.300, 9.610),   # Weiler
-    (47.274, 9.576),   # Meiningen
-    (47.271, 9.617),   # Rankweil
-    (47.238, 9.596),   # Feldkirch
-]
+# 0.12°×0.20°-Raster über Schärding / Innviertel + Umland (OÖ, Teile von Bayern)
+LAT_MIN, LAT_MAX = 48.10, 48.75
+LON_MIN, LON_MAX = 12.80, 14.10
 
-LAT_MIN, LAT_MAX = 47.20, 47.55
-LON_MIN, LON_MAX =  9.50,  9.80
+QUERY_POINTS = [
+    (round(lat, 3), round(lon, 3))
+    for lat in [48.10 + i * 0.12 for i in range(int((48.75 - 48.10) / 0.12) + 1)]
+    for lon in [12.80 + j * 0.20 for j in range(int((14.10 - 12.80) / 0.20) + 1)]
+]
 
 # ── Daten holen ───────────────────────────────────────────────────────────────
 def fetch_stations(fuel_type: str) -> list[dict]:
@@ -120,19 +111,19 @@ def process(data: list[dict], fuel_type: str) -> list[dict]:
 # ── HTML-Hilfsfunktionen ───────────────────────────────────────────────────────
 BRAND_COLORS = {
     "jet":     "#e30613",
-    "avanti":  "#ff6b00",
+    "avanti":  "#ccff00",
     "disk":    "#005baa",
     "diskont": "#005baa",
     "eni":     "#006db7",
-    "omv":     "#e30613",
+    "omv":     "#012606",
     "shell":   "#c8a800",
     "bp":      "#009a44",
     "esso":    "#003087",
     "avia":    "#e2001a",
-    "oil!":    "#555",
+    "oil!":       "#00555",
     "baywa":   "#007db5",
     "loacker": "#6db33f",
-    "gutmann": "#e87722",
+    "gutmann": "#070605",
 }
 
 # Domain → Google Favicon Service (128px) - robuster für regionale Domains
@@ -367,13 +358,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>BilligTanken Vorarlberg – E5 Super 95</title>
-  
-  <meta name="description" content="Aktuelle Benzinpreise (E5 Super 95) in Vorarlberg. Günstigste Tankstellen zwischen Bregenz und Feldkirch im Preisvergleich." />
-  <meta name="keywords" content="Tanken, Benzinpreise, Vorarlberg, E5, Super 95, Bregenz, Dornbirn, Feldkirch, Lustenau, billig tanken" />
-  
-  <meta property="og:title" content="BilligTanken Vorarlberg – E5 Super 95" />
-  <meta property="og:description" content="Günstigste Tankstellen in Vorarlberg. Echtzeit-Preise von E-Control." />
+  <title>SchärdingTanken – Günstigste Tankstellen</title>
+
+  <meta name="description" content="Aktuelle Spritpreise rund um Schärding und das Innviertel. Günstigste Tankstellen in Oberösterreich im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Schärding, Innviertel, Oberösterreich, E5, Super 95, Diesel, Ried, Braunau, billig tanken" />
+
+  <meta property="og:title" content="SchärdingTanken – Günstigste Tankstellen" />
+  <meta property="og:description" content="Günstigste Tankstellen rund um Schärding. Echtzeit-Preise von E-Control." />
   <meta property="og:image" content="screenshots/preview.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -749,13 +740,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 <div class="overview">
   <div class="left-col">
     <header>
-      <h1>⛽ BilligTanken Vorarlberg</h1>
+      <h1>⛽ SchärdingTanken</h1>
       <div class="fuel-toggle">
         <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
         <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
       </div>
-      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
-      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · Großraum Schärding / Innviertel · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · Großraum Schärding / Innviertel · Luftlinie ab {HOME_NAME}</p>
       <div class="pills">
         <span class="pill time">Aktualisiert: {fetched_at}</span>
         <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
@@ -922,6 +913,7 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     if (homeMarker) map.removeLayer(homeMarker);
     const label = isLive ? 'Ihr Standort (GPS)' : '{HOME_NAME} (Fallback)';
     homeMarker = L.marker([lat, lon], {{
+      zIndexOffset: 1000,
       icon: L.divIcon({{
         className: '',
         html: `<div style="background:${{isLive ? '#22c55e' : '#6366f1'}};width:36px;height:36px;
@@ -1005,4 +997,4 @@ if __name__ == "__main__":
     html = generate_html(stations_sup, stations_die, fetched_at)
     OUTPUT_NEW.write_text(html, encoding="utf-8")
     OUTPUT_NEW.rename(OUTPUT)   # atomic swap – kein halb-fertiges index.html
-    print(f"\n✅  HTML gespeichert → {OUTPUT.resolve()}")
+    print(f"✅  HTML gespeichert → {OUTPUT}")

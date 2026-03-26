@@ -27,14 +27,14 @@ HOME_NAME = "Alt-Erlaa Wien"
 API_BASE = "https://api.e-control.at/sprit/1.0/search/gas-stations/by-address"
 HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 
-# 0.05°-Raster über Großraum Wien + NÖ-Umgebung → ~300 Punkte → genug für 250 eindeutige Stationen
+# 0.10°-Raster über Großraum Wien + NÖ-Umgebung → ~100 Punkte → genug für 250 eindeutige Stationen
 LAT_MIN, LAT_MAX = 47.65, 48.50
 LON_MIN, LON_MAX = 15.70, 17.10
 
 QUERY_POINTS = [
     (round(lat, 3), round(lon, 3))
-    for lat in [47.65 + i * 0.05 for i in range(int((48.50 - 47.65) / 0.05) + 1)]
-    for lon in [15.70 + j * 0.07 for j in range(int((17.10 - 15.70) / 0.07) + 1)]
+    for lat in [47.65 + i * 0.10 for i in range(int((48.50 - 47.65) / 0.10) + 1)]
+    for lon in [15.70 + j * 0.14 for j in range(int((17.10 - 15.70) / 0.14) + 1)]
 ]
 
 # ── Daten holen ───────────────────────────────────────────────────────────────
@@ -913,6 +913,7 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
     if (homeMarker) map.removeLayer(homeMarker);
     const label = isLive ? 'Ihr Standort (GPS)' : '{HOME_NAME} (Fallback)';
     homeMarker = L.marker([lat, lon], {{
+      zIndexOffset: 1000,
       icon: L.divIcon({{
         className: '',
         html: `<div style="background:${{isLive ? '#22c55e' : '#6366f1'}};width:36px;height:36px;

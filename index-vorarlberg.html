@@ -1,0 +1,3743 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BilligTanken Vorarlberg – E5 Super 95</title>
+  
+  <meta name="description" content="Aktuelle Benzinpreise (E5 Super 95) in Vorarlberg. Günstigste Tankstellen zwischen Bregenz und Feldkirch im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Vorarlberg, E5, Super 95, Bregenz, Dornbirn, Feldkirch, Lustenau, billig tanken" />
+  
+  <meta property="og:title" content="BilligTanken Vorarlberg – E5 Super 95" />
+  <meta property="og:description" content="Günstigste Tankstellen in Vorarlberg. Echtzeit-Preise von E-Control." />
+  <meta property="og:image" content="screenshots/preview.png" />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Dark theme (default) ── */
+    :root, [data-theme="dark"] {
+      --bg:      #0f0f13;
+      --surface: #1a1a24;
+      --surf2:   #22222f;
+      --border:  #2e2e40;
+      --text:    #e8e8f0;
+      --muted:   #8888aa;
+      --popup-bg:#1a1a24;
+      --popup-border:#2e2e40;
+      --popup-text:#e8e8f0;
+      --map-filter: none;
+      --link-color: #60a5fa;
+      --link-weight: 400;
+    }
+
+    /* ── Light theme ── */
+    [data-theme="light"] {
+      --bg:      #f4f4f8;
+      --surface: #ffffff;
+      --surf2:   #eeeef4;
+      --border:  #d0d0e0;
+      --text:    #1a1a2e;
+      --muted:   #666688;
+      --popup-bg:#ffffff;
+      --popup-border:#d0d0e0;
+      --popup-text:#1a1a2e;
+      --map-filter: none;
+      --link-color: #1a4fa8;
+      --link-weight: 700;
+    }
+
+    /* ── System preference ── */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]):not([data-theme="light"]) {
+        --bg:      #f4f4f8;
+        --surface: #ffffff;
+        --surf2:   #eeeef4;
+        --border:  #d0d0e0;
+        --text:    #1a1a2e;
+        --muted:   #666688;
+        --popup-bg:#ffffff;
+        --popup-border:#d0d0e0;
+        --popup-text:#1a1a2e;
+        --link-color: #1a4fa8;
+        --link-weight: 700;
+        --map-filter: none;
+      }
+    }
+
+    :root {
+      --green:  #22c55e;
+      --gold:   #fbbf24;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+      --r:      16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 2rem 1rem 4rem;
+      transition: background .25s, color .25s;
+    }
+
+    /* ── Theme toggle button ── */
+    .theme-toggle {
+      position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+      display: flex; align-items: center; gap: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: .25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .theme-toggle button {
+      background: none; border: none; cursor: pointer;
+      padding: .3rem .55rem; border-radius: 999px;
+      font-size: .8rem; color: var(--muted);
+      transition: background .15s, color .15s;
+      line-height: 1;
+    }
+    .theme-toggle button.active {
+      background: var(--surf2); color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .theme-toggle button:hover:not(.active) { color: var(--text); }
+
+    /* ── Fuel toggle ── */
+    .fuel-toggle {
+      display: inline-flex; gap: 0; margin-bottom: .6rem;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 999px; padding: .2rem;
+    }
+    .fuel-btn {
+      background: none; border: none; cursor: pointer;
+      padding: .35rem .9rem; border-radius: 999px;
+      font-size: .82rem; font-weight: 600; color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+    .fuel-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .fuel-btn:hover:not(.active) { color: var(--text); }
+
+    .pill {
+      display: inline-block;
+      font-size: .72rem; padding: .28rem .75rem; border-radius: 999px;
+    }
+    .pill.time { color: var(--muted); background: var(--surf2); border: 1px solid var(--border); }
+    .pill.note { color: #f59e0b; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); }
+
+    /* Overview row: left col + map + top-4 */
+    .overview {
+      display: grid;
+      grid-template-columns: 260px 1fr 430px;
+      gap: 1rem;
+      max-width: 1500px;
+      margin: 0 auto 2rem;
+      align-items: stretch;
+    }
+    @media (max-width: 1100px) {
+      .overview { grid-template-columns: 260px 1fr; }
+      .top4-panel { display: none; }
+    }
+    @media (max-width: 800px) {
+      .overview { grid-template-columns: 1fr; }
+    }
+
+    /* Top-4 mini-card panel */
+    .top4-panel {
+      display: flex; flex-direction: column; gap: .5rem; align-self: start;
+    }
+    .top4-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+    }
+    .top4-label {
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: .1rem;
+    }
+    .mini-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .6rem .7rem;
+      display: flex; flex-direction: column; gap: .25rem;
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+      position: relative; overflow: hidden;
+    }
+    .mini-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }
+    .mini-card.rank-gold::before  { background: var(--gold); }
+    .mini-card.rank-silver::before { background: var(--silver); }
+    .mini-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+    .mini-top {
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .mini-avatar {
+      width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .6rem; color: #fff;
+    }
+    .mini-avatar.avatar-logo { background: #fff; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .mini-avatar.avatar-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 4px; }
+    .mini-avatar.brand-eni img, .mini-avatar.brand-bp img { transform: scale(1.3); }
+    .mini-rank .medal { font-size: .6rem; padding: .1rem .35rem; }
+    .mini-rank .rank-num { font-size: .65rem; }
+    .mini-name { font-size: .72rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .mini-badges {
+      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; margin-left: auto;
+    }
+    .mini-dist { font-size: .62rem; }
+    .mini-address {
+      font-size: .65rem; line-height: 1.3; display: flex; align-items: flex-start; gap: .25rem;
+    }
+    .mini-address svg { flex-shrink: 0; margin-top: .1rem; }
+    .mini-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: .4rem; margin-top: .1rem;
+    }
+    .mini-price {
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em;
+      line-height: 1; white-space: nowrap;
+    }
+    .mini-price small { font-size: .6rem; font-weight: 500; color: var(--muted); }
+    .mini-route { font-size: .65rem; padding: .2rem .45rem; }
+
+    /* Left column: header + stats */
+    .left-col {
+      display: flex; flex-direction: column; gap: .9rem;
+    }
+
+    /* Header (now inside left col) */
+    header { text-align: left; }
+    header h1 {
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      font-weight: 800; letter-spacing: -.03em;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    header p.sub { color: var(--muted); margin-top: .3rem; font-size: .8rem; line-height: 1.4; }
+    .pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+
+    /* Stats */
+    .stats { display: flex; flex-direction: column; gap: .6rem; flex: 1; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .7rem 1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    }
+    .stat .val { font-size: 1.2rem; font-weight: 700; color: var(--green); }
+    .stat .val.hi { color: #f87171; }
+    .stat .val.neu { color: var(--text); }
+    .stat .lbl { font-size: .73rem; color: var(--muted); }
+
+    /* MAP */
+    #map {
+      height: 100%; min-height: 340px; border-radius: var(--r);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 250px));
+      gap: 1.1rem; max-width: 1400px; margin: 0 auto;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .85rem;
+      display: flex; flex-direction: column; gap: .55rem;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+      cursor: default;
+    }
+    .card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+    .card.highlighted { box-shadow: 0 0 0 2px #60a5fa, 0 12px 32px rgba(0,0,0,.5); }
+
+    .rank-gold   { border-color: var(--gold);   }
+    .rank-silver { border-color: var(--silver); }
+    .rank-bronze { border-color: var(--bronze); }
+    .rank-gold::before   { background: var(--gold); height: 4px; }
+    .rank-silver::before { background: var(--silver); }
+    .rank-bronze::before { background: var(--bronze); }
+
+    .card-header { display: flex; align-items: center; justify-content: space-between; }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .83rem; color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+    .avatar-logo {
+      background: #fff;
+      padding: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    }
+    /* ── Logo Sizing ── */
+    .avatar-logo img {
+      width: 100%; height: 100%;
+      object-fit: contain; border-radius: 6px;
+    }
+    /* Specific fix for Eni logo (often appears small) */
+    .brand-eni img {
+      transform: scale(1.4);
+    }
+    /* BP logo needs scaling up */
+    .brand-bp img {
+      transform: scale(1.5);
+    }
+    .card-meta { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }
+    .medal {
+      font-size: .72rem; font-weight: 700; padding: .22rem .55rem; border-radius: 999px;
+    }
+    .medal.gold   { background: rgba(251,191,36,.15); color: var(--gold);   border: 1px solid rgba(251,191,36,.3); }
+    .medal.silver { background: rgba(148,163,184,.12); color: var(--silver); border: 1px solid rgba(148,163,184,.25); }
+    .medal.bronze { background: rgba(205,127,50,.12);  color: var(--bronze); border: 1px solid rgba(205,127,50,.25); }
+    .rank-num { font-size: .78rem; color: var(--muted); font-weight: 600; }
+    .badge {
+      font-size: .67rem; font-weight: 600; padding: .2rem .5rem; border-radius: 999px;
+    }
+    .badge.open   { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+    .badge.closed { background: rgba(239,68,68,.15);  color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+    .dist {
+      font-size: .7rem; color: var(--muted); background: var(--surf2);
+      padding: .18rem .48rem; border-radius: 999px; border: 1px solid var(--border);
+    }
+    .home-dist {
+      color: #a78bfa; background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.25);
+    }
+
+    .card-body { flex: 1; }
+    .station-name { font-size: .93rem; font-weight: 700; line-height: 1.3; margin-bottom: .2rem; }
+    .address {
+      font-size: .78rem; color: var(--link-color); font-weight: var(--link-weight);
+      display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
+      text-decoration: underline; cursor: pointer;
+    }
+    .address:hover { opacity: .75; }
+    .address svg { flex-shrink: 0; margin-top: .15rem; stroke: #ef4444; }
+
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: .5rem; border-top: 1px solid var(--border); gap: .5rem;
+    }
+    .price-block { display: flex; flex-direction: column; gap: .22rem; min-width: 0; }
+    .price-row { display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; }
+    .price { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+    .price small { font-size: .82rem; font-weight: 500; color: var(--muted); }
+    .savings {
+      font-size: .72rem; font-weight: 700; padding: .14rem .48rem;
+      border-radius: 999px; align-self: flex-start;
+      background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.22);
+    }
+    .savings.maxprice {
+      background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.2);
+    }
+    .price-bar-wrap {
+      height: 4px; background: var(--border); border-radius: 999px;
+      width: 110px; overflow: hidden;
+    }
+    .price-bar { height: 100%; border-radius: 999px; }
+
+    .btn-group { display: flex; gap: .4rem; flex-shrink: 0; }
+    .map-btn {
+      display: inline-flex; align-items: center; gap: .32rem;
+      font-size: .78rem; font-weight: 600; color: var(--text);
+      background: var(--surf2); border: 1px solid var(--border);
+      padding: .42rem .85rem; border-radius: 8px;
+      cursor: pointer; flex-shrink: 0; text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+    .map-btn:hover { background: var(--border); border-color: var(--muted); }
+    .route-btn { border-color: rgba(96,165,250,.3); color: #60a5fa; }
+    .route-btn:hover { background: rgba(96,165,250,.1); border-color: #60a5fa; color: #60a5fa; }
+
+    /* Leaflet popup themed */
+    .leaflet-popup-content-wrapper {
+      background: var(--popup-bg) !important; color: var(--popup-text) !important;
+      border: 1px solid var(--popup-border) !important; border-radius: 10px !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+    }
+    .leaflet-popup-tip { background: var(--popup-bg) !important; }
+    .leaflet-popup-content { font-size: .85rem; line-height: 1.5; }
+
+    footer.pf {
+      text-align: center; margin-top: 3rem; font-size: .76rem; color: var(--muted);
+    }
+    footer.pf a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="theme-toggle" id="theme-toggle">
+  <button onclick="setTheme('light')" title="Hell">☀️</button>
+  <button onclick="setTheme('system')" title="System">💻</button>
+  <button onclick="setTheme('dark')" title="Dunkel">🌙</button>
+</div>
+
+<div class="overview">
+  <div class="left-col">
+    <header>
+      <h1>⛽ BilligTanken Vorarlberg</h1>
+      <div class="fuel-toggle">
+        <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
+        <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
+      </div>
+      <p class="sub" id="fuel-sub-sup">Top 30 gemeldete E5 · Super 95 · Korridor Bregenz – Feldkirch · Luftlinie ab Rebstein CH</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top 33 gemeldete Diesel · Korridor Bregenz – Feldkirch · Luftlinie ab Rebstein CH</p>
+      <div class="pills">
+        <span class="pill time">Aktualisiert: 26.03.2026 21:57 Uhr</span>
+        <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
+        <span class="pill time" id="geo-pill" style="color:#a78bfa">🏠 Standort wird ermittelt …</span>
+      </div>
+    </header>
+    <div class="stats" id="stats-sup">
+      <div class="stat"><div class="val">1.806 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">1.841 €</div><div class="lbl">Ø Top 30</div></div>
+      <div class="stat"><div class="val hi">1.879 €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">0.073 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+    <div class="stats" id="stats-die" style="display:none">
+      <div class="stat"><div class="val">2.064 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">2.153 €</div><div class="lbl">Ø Top 33</div></div>
+      <div class="stat"><div class="val hi">2.189 €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">0.125 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+  </div>
+  <div id="map"></div>
+  <div class="top4-panel">
+    <div class="top4-label">Top 4</div>
+    <div id="top4-sup" class="top4-grid">
+<div class="mini-card rank-gold" onclick="document.getElementById('card-sup-1').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar avatar-logo " style="--brand:#005baa"><img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK" onerror="this.parentElement.innerHTML='<span>DI</span>'"></div><span class="mini-rank"><span class="medal gold">🥇 Günstigste</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-sup-1">📍 20.7 km</span></span></div>
+  <div class="mini-name">DISK</div>
+  <a class="mini-address address" onclick="focusMarker('sup', 1); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Alte Schlinserstraße 2, 6822 Satteins
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">1.806 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-sup-1"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.22179,9.67132&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+<div class="mini-card rank-silver" onclick="document.getElementById('card-sup-2').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar avatar-logo " style="--brand:#ccff00"><img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Dornbirn Lustenauer Straße 24" onerror="this.parentElement.innerHTML='<span>A-</span>'"></div><span class="mini-rank"><span class="medal silver">🥈 2. Preis</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-sup-2">📍 11.5 km</span></span></div>
+  <div class="mini-name">AVANTI - Dornbirn Lustenauer Straße 24</div>
+  <a class="mini-address address" onclick="focusMarker('sup', 2); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Lustenauer Strasse 24, 6850 Dornbirn
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">1.810 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-sup-2"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.40698,9.73476&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+<div class="mini-card " onclick="document.getElementById('card-sup-3').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar avatar-logo " style="--brand:#e30613"><img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE" onerror="this.parentElement.innerHTML='<span>JT</span>'"></div><span class="mini-rank"><span class="rank-num">#3</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-sup-3">📍 11.2 km</span></span></div>
+  <div class="mini-name">JET TANKSTELLE</div>
+  <a class="mini-address address" onclick="focusMarker('sup', 3); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    WALLENMAHD 22, 6850 DORNBIRN
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">1.811 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-sup-3"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.39649,9.731134&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+<div class="mini-card " onclick="document.getElementById('card-sup-4').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar avatar-logo " style="--brand:#005baa"><img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK" onerror="this.parentElement.innerHTML='<span>DI</span>'"></div><span class="mini-rank"><span class="rank-num">#4</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-sup-4">📍 11.4 km</span></span></div>
+  <div class="mini-name">DISK</div>
+  <a class="mini-address address" onclick="focusMarker('sup', 4); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Arlbergstraße 6, 6850 Dornbirn
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">1.812 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-sup-4"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.399883,9.733621&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+    </div>
+    <div id="top4-die" class="top4-grid" style="display:none">
+<div class="mini-card rank-gold" onclick="document.getElementById('card-die-1').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar" style="background:#4f46e5">ED</div><span class="mini-rank"><span class="medal gold">🥇 Günstigste</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-die-1">📍 8.3 km</span></span></div>
+  <div class="mini-name">ESW Dieselkraftstoff</div>
+  <a class="mini-address address" onclick="focusMarker('die', 1); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Hauptstraße 38, 6973 Höchst
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">2.064 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-die-1"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.459666,9.644945&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+<div class="mini-card rank-gold" onclick="document.getElementById('card-die-2').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar" style="background:#4f46e5">ED</div><span class="mini-rank"><span class="medal gold">🥇 Günstigste</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-die-2">📍 8.3 km</span></span></div>
+  <div class="mini-name">ESW Dieselkraftstoff</div>
+  <a class="mini-address address" onclick="focusMarker('die', 2); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Kaulbachstraße 6, 6845 Hohenems
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">2.064 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-die-2"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.363987,9.680457&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+<div class="mini-card rank-silver" onclick="document.getElementById('card-die-3').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar avatar-logo " style="--brand:#005baa"><img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK" onerror="this.parentElement.innerHTML='<span>DI</span>'"></div><span class="mini-rank"><span class="medal silver">🥈 2. Preis</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-die-3">📍 20.7 km</span></span></div>
+  <div class="mini-name">DISK</div>
+  <a class="mini-address address" onclick="focusMarker('die', 3); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Alte Schlinserstraße 2, 6822 Satteins
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">2.126 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-die-3"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.22179,9.67132&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+<div class="mini-card " onclick="document.getElementById('card-die-4').scrollIntoView({behavior:'smooth',block:'center'})">
+  <div class="mini-top"><div class="mini-avatar avatar-logo " style="--brand:#ccff00"><img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Dornbirn Lustenauer Straße 24" onerror="this.parentElement.innerHTML='<span>A-</span>'"></div><span class="mini-rank"><span class="rank-num">#4</span></span><span class="mini-badges"><span class="badge open">Offen</span><span class="dist mini-dist" id="mdist-die-4">📍 11.5 km</span></span></div>
+  <div class="mini-name">AVANTI - Dornbirn Lustenauer Straße 24</div>
+  <a class="mini-address address" onclick="focusMarker('die', 4); return false;" href="#">
+    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+         fill="none" stroke="currentColor" stroke-width="2.2">
+      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+      <circle cx="12" cy="10" r="3"/>
+    </svg>
+    Lustenauer Strasse 24, 6850 Dornbirn
+  </a>
+  <div class="mini-footer">
+    <div class="mini-price">2.130 <small>€/L</small></div>
+    <a class="map-btn route-btn mini-route" id="mroute-die-4"
+       href="https://www.google.com/maps/dir/?api=1&destination=47.40698,9.73476&travelmode=driving"
+       target="_blank" rel="noopener" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
+           fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+      </svg>
+      Route
+    </a>
+  </div>
+</div>
+    </div>
+  </div>
+</div>
+
+<main class="grid" id="grid-sup">
+
+    <article class="card rank-gold" id="card-sup-1" style="--brand:#005baa"
+             data-lat="47.22179" data-lon="9.67132" data-rank="1">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="medal gold">🥇 Günstigste</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-1">📍 20.7 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">DISK</h2>
+        <a class="address" onclick="focusMarker('sup', 1); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Alte Schlinserstraße 2, 6822 Satteins
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.806 <small>€/L</small></span>
+            <span class="savings">− 0.073 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:4%; background:hsl(120,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-1"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.22179,9.67132&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card rank-silver" id="card-sup-2" style="--brand:#ccff00"
+             data-lat="47.40698" data-lon="9.73476" data-rank="2">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#ccff00">
+          <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Dornbirn Lustenauer Straße 24"
+               onerror="this.parentElement.innerHTML='<span>A-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="medal silver">🥈 2. Preis</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-2">📍 11.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">AVANTI - Dornbirn Lustenauer Straße 24</h2>
+        <a class="address" onclick="focusMarker('sup', 2); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Lustenauer Strasse 24, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.810 <small>€/L</small></span>
+            <span class="savings">− 0.069 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:5%; background:hsl(114,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-2"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.40698,9.73476&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-3" style="--brand:#e30613"
+             data-lat="47.39649" data-lon="9.731134" data-rank="3">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#3</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-3">📍 11.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('sup', 3); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          WALLENMAHD 22, 6850 DORNBIRN
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.811 <small>€/L</small></span>
+            <span class="savings">− 0.068 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:6%; background:hsl(112,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-3"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.39649,9.731134&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-4" style="--brand:#005baa"
+             data-lat="47.399883" data-lon="9.733621" data-rank="4">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#4</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-4">📍 11.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">DISK</h2>
+        <a class="address" onclick="focusMarker('sup', 4); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Arlbergstraße 6, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.812 <small>€/L</small></span>
+            <span class="savings">− 0.067 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:8%; background:hsl(110,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-4"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.399883,9.733621&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-5" style="--brand:#e30613"
+             data-lat="47.426673" data-lon="9.741176" data-rank="5">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#5</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-5">📍 12.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('sup', 5); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          SCHWEFEL 44 A, 6850 DORNBIRN
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.815 <small>€/L</small></span>
+            <span class="savings">− 0.064 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:12%; background:hsl(105,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-5"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.426673,9.741176&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-6" style="--brand:#012606"
+             data-lat="47.39618" data-lon="9.73126" data-rank="6">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Dornbirn Wallenmahd 1"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#6</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-6">📍 11.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Dornbirn Wallenmahd 1</h2>
+        <a class="address" onclick="focusMarker('sup', 6); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Wallenmahd 1, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.819 <small>€/L</small></span>
+            <span class="savings">− 0.060 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:17%; background:hsl(99,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-6"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.39618,9.73126&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-7" style="--brand:#005baa"
+             data-lat="47.3666" data-lon="9.67055" data-rank="7">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>DT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#7</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-7">📍 7.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Diskont Tankstelle</h2>
+        <a class="address" onclick="focusMarker('sup', 7); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Barnabas-Fink-Strasse 1 (am HOFER Parkplatz), 6845 Hohenems
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.824 <small>€/L</small></span>
+            <span class="savings">− 0.055 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:24%; background:hsl(91,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-7"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.3666,9.67055&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-8" style="--brand:#005baa"
+             data-lat="47.343134" data-lon="9.65439" data-rank="8">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#8</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-8">📍 8.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">DISK</h2>
+        <a class="address" onclick="focusMarker('sup', 8); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Im Buch 50, 6840 Götzis
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.824 <small>€/L</small></span>
+            <span class="savings">− 0.055 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:24%; background:hsl(91,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-8"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.343134,9.65439&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-9" style="--brand:#005baa"
+             data-lat="47.32574" data-lon="9.62964" data-rank="9">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>DT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#9</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-9">📍 8.8 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Diskont Tankstelle</h2>
+        <a class="address" onclick="focusMarker('sup', 9); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bundesstrasse 6 (am HOFER Parkplatz), 6842 Koblach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.824 <small>€/L</small></span>
+            <span class="savings">− 0.055 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:24%; background:hsl(91,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-9"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.32574,9.62964&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-10" style="--brand:#007db5"
+             data-lat="47.46296" data-lon="9.72747" data-rank="10">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#007db5">
+          <img src="https://www.google.com/s2/favicons?domain=baywa.de&sz=128" alt="BayWa Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>BT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#10</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-10">📍 13.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BayWa Tankstelle</h2>
+        <a class="address" onclick="focusMarker('sup', 10); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Scheibenstraße 2, 6923 Lauterach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.828 <small>€/L</small></span>
+            <span class="savings">− 0.051 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:30%; background:hsl(84,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-10"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.46296,9.72747&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-11" style="--brand:#6db33f"
+             data-lat="47.323657" data-lon="9.6285154" data-rank="11">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#6db33f">
+          <img src="https://www.google.com/s2/favicons?domain=loacker-recycling.com&sz=128" alt="Loacker Tours GmbH (Diesel + Super95)"
+               onerror="this.parentElement.innerHTML='<span>LT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#11</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-11">📍 9.0 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Loacker Tours GmbH (Diesel + Super95)</h2>
+        <a class="address" onclick="focusMarker('sup', 11); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bundesstraße 17, 6842 Koblach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.829 <small>€/L</small></span>
+            <span class="savings">− 0.050 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:31%; background:hsl(82,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-11"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.323657,9.6285154&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-12" style="--brand:#012606"
+             data-lat="47.42804" data-lon="9.73995" data-rank="12">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Dornbirn Schwefel 53"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#12</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-12">📍 12.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Dornbirn Schwefel 53</h2>
+        <a class="address" onclick="focusMarker('sup', 12); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Schwefel 53, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.829 <small>€/L</small></span>
+            <span class="savings">− 0.050 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:31%; background:hsl(82,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-12"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.42804,9.73995&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-13" style="--brand:#006db7"
+             data-lat="47.42974" data-lon="9.73995" data-rank="13">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
+          <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="eni"
+               onerror="this.parentElement.innerHTML='<span>EN</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#13</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-13">📍 12.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">eni</h2>
+        <a class="address" onclick="focusMarker('sup', 13); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Schwefel 70a, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.829 <small>€/L</small></span>
+            <span class="savings">− 0.050 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:31%; background:hsl(82,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-13"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.42974,9.73995&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-14" style="--brand:#e30613"
+             data-lat="47.247387" data-lon="9.610381" data-rank="14">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#14</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-14">📍 16.9 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('sup', 14); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          REICHSSTRASSE 133 A, 6800 FELDKIRCH
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.839 <small>€/L</small></span>
+            <span class="savings">− 0.040 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:45%; background:hsl(66,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-14"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.247387,9.610381&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-15" style="--brand:#ccff00"
+             data-lat="47.43888" data-lon="9.65664" data-rank="15">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#ccff00">
+          <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Lustenau Bahnhofstraße 8"
+               onerror="this.parentElement.innerHTML='<span>A-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#15</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-15">📍 7.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">AVANTI - Lustenau Bahnhofstraße 8</h2>
+        <a class="address" onclick="focusMarker('sup', 15); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bahnhofstrasse 8, 6890 Lustenau
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.844 <small>€/L</small></span>
+            <span class="savings">− 0.035 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:52%; background:hsl(57,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-15"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.43888,9.65664&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-16" style="--brand:#e30613"
+             data-lat="47.419549" data-lon="9.659337" data-rank="16">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#16</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-16">📍 6.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('sup', 16); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          GRINDELSTRASSE 16, 6890 LUSTENAU
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.849 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:58%; background:hsl(50,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-16"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.419549,9.659337&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-17" style="--brand:#009a44"
+             data-lat="47.41248" data-lon="9.7145355" data-rank="17">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-bp" style="--brand:#009a44">
+          <img src="https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png" alt="BP"
+               onerror="this.parentElement.innerHTML='<span>BP</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#17</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-17">📍 10.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BP</h2>
+        <a class="address" onclick="focusMarker('sup', 17); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Lustenauerstrasse 92, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.849 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:58%; background:hsl(50,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-17"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.41248,9.7145355&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-18" style="--brand:#c8a800"
+             data-lat="47.41172" data-lon="9.71573" data-rank="18">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#c8a800">
+          <img src="https://www.google.com/s2/favicons?domain=shell.at&sz=128" alt="Shell Austria"
+               onerror="this.parentElement.innerHTML='<span>SA</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#18</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-18">📍 10.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Shell Austria</h2>
+        <a class="address" onclick="focusMarker('sup', 18); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          LUSTENAUERSTRASSE 86, 6850 DORNBIRN
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.849 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:58%; background:hsl(50,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-18"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.41172,9.71573&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-19" style="--brand:#006db7"
+             data-lat="47.4104" data-lon="9.72079" data-rank="19">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
+          <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="eni"
+               onerror="this.parentElement.innerHTML='<span>EN</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#19</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-19">📍 10.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">eni</h2>
+        <a class="address" onclick="focusMarker('sup', 19); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Lustenauerstrasse 52, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.849 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:58%; background:hsl(50,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-19"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.4104,9.72079&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-20" style="--brand:#c8a800"
+             data-lat="47.2468" data-lon="9.60984" data-rank="20">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#c8a800">
+          <img src="https://www.google.com/s2/favicons?domain=shell.at&sz=128" alt="Shell Austria"
+               onerror="this.parentElement.innerHTML='<span>SA</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#20</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-20">📍 17.0 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Shell Austria</h2>
+        <a class="address" onclick="focusMarker('sup', 20); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          REICHSSTRASSE 137, 6800 FELDKIRCH-LEVIS
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.849 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:58%; background:hsl(50,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-20"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.2468,9.60984&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-21" style="--brand:#009a44"
+             data-lat="47.2413165" data-lon="9.5914922" data-rank="21">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-bp" style="--brand:#009a44">
+          <img src="https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png" alt="BP"
+               onerror="this.parentElement.innerHTML='<span>BP</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#21</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-21">📍 17.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BP</h2>
+        <a class="address" onclick="focusMarker('sup', 21); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Haemmerlestrasse 99 , 6805 Feldkirch-Gisingen
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.849 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:58%; background:hsl(50,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-21"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.2413165,9.5914922&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-22" style="--brand:#ccff00"
+             data-lat="47.49046" data-lon="9.70295" data-rank="22">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#ccff00">
+          <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Hard Hofsteigstraße 85"
+               onerror="this.parentElement.innerHTML='<span>A-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#22</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-22">📍 13.7 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">AVANTI - Hard Hofsteigstraße 85</h2>
+        <a class="address" onclick="focusMarker('sup', 22); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Hofsteigstrasse 85, 6971 Hard
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.854 <small>€/L</small></span>
+            <span class="savings">− 0.025 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:65%; background:hsl(42,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-22"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.49046,9.70295&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-23" style="--brand:#c8a800"
+             data-lat="47.45928" data-lon="9.64407" data-rank="23">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#c8a800">
+          <img src="https://www.google.com/s2/favicons?domain=shell.at&sz=128" alt="Shell Austria"
+               onerror="this.parentElement.innerHTML='<span>SA</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#23</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-23">📍 8.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Shell Austria</h2>
+        <a class="address" onclick="focusMarker('sup', 23); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          HAUPTSTR 32, 6973 HOECHST
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.859 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:72%; background:hsl(33,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-23"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.45928,9.64407&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-24" style="--brand:#e30613"
+             data-lat="47.47757" data-lon="9.679413" data-rank="24">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#24</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-24">📍 11.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('sup', 24); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          RHEINSTRASSE 99, 6971 HARD
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.859 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:72%; background:hsl(33,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-24"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.47757,9.679413&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-25" style="--brand:#005baa"
+             data-lat="47.4702303" data-lon="9.7287983" data-rank="25">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Disk"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#25</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-25">📍 13.6 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Disk</h2>
+        <a class="address" onclick="focusMarker('sup', 25); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bundesstraße 97, 6923 Lauterach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.859 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:72%; background:hsl(33,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-25"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.4702303,9.7287983&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-26" style="--brand:#006db7"
+             data-lat="47.440047" data-lon="9.756718" data-rank="26">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
+          <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="Gutmann ENI Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>GE</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#26</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-26">📍 13.9 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Gutmann ENI Tankstelle</h2>
+        <a class="address" onclick="focusMarker('sup', 26); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Gutenbergstraße 6, 6858 Schwarzach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.859 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:72%; background:hsl(33,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-26"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.440047,9.756718&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-27" style="--brand:#009a44"
+             data-lat="47.5111513" data-lon="9.7530777" data-rank="27">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-bp" style="--brand:#009a44">
+          <img src="https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png" alt="BP"
+               onerror="this.parentElement.innerHTML='<span>BP</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#27</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-27">📍 17.9 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BP</h2>
+        <a class="address" onclick="focusMarker('sup', 27); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bregenzerstr. 63 , 6900 Bregenz/Lochau
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.879 <small>€/L</small></span>
+            <span class="savings maxprice">Höchstpreis</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:100%; background:hsl(0,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-27"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.5111513,9.7530777&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-28" style="--brand:#4f46e5"
+             data-lat="47.5333189" data-lon="9.7393838" data-rank="28">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">SH</div>
+        <div class="card-meta">
+          <span class="rank-num">#28</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-28">📍 19.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Schindele, Hörbranz</h2>
+        <a class="address" onclick="focusMarker('sup', 28); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Seestr. 14a, 6912 Hörbranz
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.879 <small>€/L</small></span>
+            <span class="savings maxprice">Höchstpreis</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:100%; background:hsl(0,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-28"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.5333189,9.7393838&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-29" style="--brand:#4f46e5"
+             data-lat="47.534922" data-lon="9.7377447" data-rank="29">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">DE</div>
+        <div class="card-meta">
+          <span class="rank-num">#29</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-29">📍 19.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Deuring</h2>
+        <a class="address" onclick="focusMarker('sup', 29); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Seestrasse 10, 6912 Hörbranz
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.879 <small>€/L</small></span>
+            <span class="savings maxprice">Höchstpreis</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:100%; background:hsl(0,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-29"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.534922,9.7377447&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-sup-30" style="--brand:#012606"
+             data-lat="47.5347" data-lon="9.75204" data-rank="30">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Lochau Hofriedenstraße 17"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#30</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-sup-30">📍 19.8 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Lochau Hofriedenstraße 17</h2>
+        <a class="address" onclick="focusMarker('sup', 30); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Hofriedenstrasse 17, 6911 Lochau
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">1.879 <small>€/L</small></span>
+            <span class="savings maxprice">Höchstpreis</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:100%; background:hsl(0,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-sup-30"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.5347,9.75204&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+</main>
+<main class="grid" id="grid-die" style="display:none">
+
+    <article class="card rank-gold" id="card-die-1" style="--brand:#4f46e5"
+             data-lat="47.459666" data-lon="9.644945" data-rank="1">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">ED</div>
+        <div class="card-meta">
+          <span class="medal gold">🥇 Günstigste</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-1">📍 8.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">ESW Dieselkraftstoff</h2>
+        <a class="address" onclick="focusMarker('die', 1); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Hauptstraße 38, 6973 Höchst
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.064 <small>€/L</small></span>
+            <span class="savings">− 0.125 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:4%; background:hsl(120,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-1"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.459666,9.644945&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card rank-gold" id="card-die-2" style="--brand:#4f46e5"
+             data-lat="47.363987" data-lon="9.680457" data-rank="2">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">ED</div>
+        <div class="card-meta">
+          <span class="medal gold">🥇 Günstigste</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-2">📍 8.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">ESW Dieselkraftstoff</h2>
+        <a class="address" onclick="focusMarker('die', 2); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Kaulbachstraße 6, 6845 Hohenems
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.064 <small>€/L</small></span>
+            <span class="savings">− 0.125 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:4%; background:hsl(120,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-2"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.363987,9.680457&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card rank-silver" id="card-die-3" style="--brand:#005baa"
+             data-lat="47.22179" data-lon="9.67132" data-rank="3">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="medal silver">🥈 2. Preis</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-3">📍 20.7 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">DISK</h2>
+        <a class="address" onclick="focusMarker('die', 3); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Alte Schlinserstraße 2, 6822 Satteins
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.126 <small>€/L</small></span>
+            <span class="savings">− 0.063 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:49%; background:hsl(61,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-3"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.22179,9.67132&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-4" style="--brand:#ccff00"
+             data-lat="47.40698" data-lon="9.73476" data-rank="4">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#ccff00">
+          <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Dornbirn Lustenauer Straße 24"
+               onerror="this.parentElement.innerHTML='<span>A-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#4</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-4">📍 11.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">AVANTI - Dornbirn Lustenauer Straße 24</h2>
+        <a class="address" onclick="focusMarker('die', 4); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Lustenauer Strasse 24, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.130 <small>€/L</small></span>
+            <span class="savings">− 0.059 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:52%; background:hsl(57,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-4"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.40698,9.73476&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-5" style="--brand:#e30613"
+             data-lat="47.39649" data-lon="9.731134" data-rank="5">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#5</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-5">📍 11.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('die', 5); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          WALLENMAHD 22, 6850 DORNBIRN
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.131 <small>€/L</small></span>
+            <span class="savings">− 0.058 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:53%; background:hsl(56,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-5"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.39649,9.731134&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-6" style="--brand:#005baa"
+             data-lat="47.399883" data-lon="9.733621" data-rank="6">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#6</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-6">📍 11.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">DISK</h2>
+        <a class="address" onclick="focusMarker('die', 6); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Arlbergstraße 6, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.132 <small>€/L</small></span>
+            <span class="savings">− 0.057 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:54%; background:hsl(55,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-6"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.399883,9.733621&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-7" style="--brand:#e30613"
+             data-lat="47.426673" data-lon="9.741176" data-rank="7">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#7</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-7">📍 12.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('die', 7); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          SCHWEFEL 44 A, 6850 DORNBIRN
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.135 <small>€/L</small></span>
+            <span class="savings">− 0.054 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:56%; background:hsl(52,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-7"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.426673,9.741176&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-8" style="--brand:#012606"
+             data-lat="47.39618" data-lon="9.73126" data-rank="8">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Dornbirn Wallenmahd 1"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#8</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-8">📍 11.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Dornbirn Wallenmahd 1</h2>
+        <a class="address" onclick="focusMarker('die', 8); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Wallenmahd 1, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.139 <small>€/L</small></span>
+            <span class="savings">− 0.050 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:59%; background:hsl(49,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-8"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.39618,9.73126&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-9" style="--brand:#005baa"
+             data-lat="47.2724" data-lon="9.60797" data-rank="9">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>DT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#9</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-9">📍 14.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Diskont Tankstelle</h2>
+        <a class="address" onclick="focusMarker('die', 9); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          St. Anna Weg 23 (am HOFER Parkplatz), 6830 Rankweil
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.147 <small>€/L</small></span>
+            <span class="savings">− 0.042 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:66%; background:hsl(40,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-9"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.2724,9.60797&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-10" style="--brand:#007db5"
+             data-lat="47.46296" data-lon="9.72747" data-rank="10">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#007db5">
+          <img src="https://www.google.com/s2/favicons?domain=baywa.de&sz=128" alt="BayWa Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>BT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#10</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-10">📍 13.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BayWa Tankstelle</h2>
+        <a class="address" onclick="focusMarker('die', 10); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Scheibenstraße 2, 6923 Lauterach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.148 <small>€/L</small></span>
+            <span class="savings">− 0.041 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:67%; background:hsl(39,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-10"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.46296,9.72747&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-11" style="--brand:#012606"
+             data-lat="47.42804" data-lon="9.73995" data-rank="11">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Dornbirn Schwefel 53"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#11</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-11">📍 12.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Dornbirn Schwefel 53</h2>
+        <a class="address" onclick="focusMarker('die', 11); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Schwefel 53, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.149 <small>€/L</small></span>
+            <span class="savings">− 0.040 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:67%; background:hsl(39,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-11"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.42804,9.73995&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-12" style="--brand:#006db7"
+             data-lat="47.42974" data-lon="9.73995" data-rank="12">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
+          <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="eni"
+               onerror="this.parentElement.innerHTML='<span>EN</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#12</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-12">📍 12.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">eni</h2>
+        <a class="address" onclick="focusMarker('die', 12); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Schwefel 70a, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.149 <small>€/L</small></span>
+            <span class="savings">− 0.040 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:67%; background:hsl(39,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-12"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.42974,9.73995&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-13" style="--brand:#e30613"
+             data-lat="47.247387" data-lon="9.610381" data-rank="13">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#13</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-13">📍 16.9 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('die', 13); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          REICHSSTRASSE 133 A, 6800 FELDKIRCH
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.149 <small>€/L</small></span>
+            <span class="savings">− 0.040 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:67%; background:hsl(39,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-13"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.247387,9.610381&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-14" style="--brand:#005baa"
+             data-lat="47.3666" data-lon="9.67055" data-rank="14">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>DT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#14</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-14">📍 7.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Diskont Tankstelle</h2>
+        <a class="address" onclick="focusMarker('die', 14); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Barnabas-Fink-Strasse 1 (am HOFER Parkplatz), 6845 Hohenems
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.154 <small>€/L</small></span>
+            <span class="savings">− 0.035 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:71%; background:hsl(34,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-14"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.3666,9.67055&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-15" style="--brand:#005baa"
+             data-lat="47.343134" data-lon="9.65439" data-rank="15">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="DISK"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#15</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-15">📍 8.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">DISK</h2>
+        <a class="address" onclick="focusMarker('die', 15); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Im Buch 50, 6840 Götzis
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.154 <small>€/L</small></span>
+            <span class="savings">− 0.035 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:71%; background:hsl(34,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-15"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.343134,9.65439&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-16" style="--brand:#005baa"
+             data-lat="47.32574" data-lon="9.62964" data-rank="16">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Diskont Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>DT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#16</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-16">📍 8.8 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Diskont Tankstelle</h2>
+        <a class="address" onclick="focusMarker('die', 16); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bundesstrasse 6 (am HOFER Parkplatz), 6842 Koblach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.154 <small>€/L</small></span>
+            <span class="savings">− 0.035 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:71%; background:hsl(34,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-16"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.32574,9.62964&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-17" style="--brand:#6db33f"
+             data-lat="47.323657" data-lon="9.6285154" data-rank="17">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#6db33f">
+          <img src="https://www.google.com/s2/favicons?domain=loacker-recycling.com&sz=128" alt="Loacker Tours GmbH (Diesel + Super95)"
+               onerror="this.parentElement.innerHTML='<span>LT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#17</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-17">📍 9.0 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Loacker Tours GmbH (Diesel + Super95)</h2>
+        <a class="address" onclick="focusMarker('die', 17); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bundesstraße 17, 6842 Koblach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.159 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:75%; background:hsl(30,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-17"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.323657,9.6285154&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-18" style="--brand:#006db7"
+             data-lat="47.27182" data-lon="9.61785" data-rank="18">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
+          <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="eni"
+               onerror="this.parentElement.innerHTML='<span>EN</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#18</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-18">📍 14.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">eni</h2>
+        <a class="address" onclick="focusMarker('die', 18); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Langgasse 118a, 6830 Rankweil
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.159 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:75%; background:hsl(30,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-18"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.27182,9.61785&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-19" style="--brand:#012606"
+             data-lat="47.26779" data-lon="9.61507" data-rank="19">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Feldkirch Königshofstraße 61"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#19</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-19">📍 14.7 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Feldkirch Königshofstraße 61</h2>
+        <a class="address" onclick="focusMarker('die', 19); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Königshofstrasse 61, 6804 Feldkirch
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.159 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:75%; background:hsl(30,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-19"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.26779,9.61507&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-20" style="--brand:#c8a800"
+             data-lat="47.2468" data-lon="9.60984" data-rank="20">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#c8a800">
+          <img src="https://www.google.com/s2/favicons?domain=shell.at&sz=128" alt="Shell Austria"
+               onerror="this.parentElement.innerHTML='<span>SA</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#20</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-20">📍 17.0 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Shell Austria</h2>
+        <a class="address" onclick="focusMarker('die', 20); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          REICHSSTRASSE 137, 6800 FELDKIRCH-LEVIS
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.159 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:75%; background:hsl(30,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-20"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.2468,9.60984&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-21" style="--brand:#009a44"
+             data-lat="47.2413165" data-lon="9.5914922" data-rank="21">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-bp" style="--brand:#009a44">
+          <img src="https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png" alt="BP"
+               onerror="this.parentElement.innerHTML='<span>BP</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#21</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-21">📍 17.5 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BP</h2>
+        <a class="address" onclick="focusMarker('die', 21); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Haemmerlestrasse 99 , 6805 Feldkirch-Gisingen
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.159 <small>€/L</small></span>
+            <span class="savings">− 0.030 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:75%; background:hsl(30,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-21"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.2413165,9.5914922&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-22" style="--brand:#009a44"
+             data-lat="47.41248" data-lon="9.7145355" data-rank="22">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-bp" style="--brand:#009a44">
+          <img src="https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png" alt="BP"
+               onerror="this.parentElement.innerHTML='<span>BP</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#22</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-22">📍 10.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BP</h2>
+        <a class="address" onclick="focusMarker('die', 22); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Lustenauerstrasse 92, 6850 Dornbirn
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.169 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:83%; background:hsl(20,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-22"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.41248,9.7145355&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-23" style="--brand:#c8a800"
+             data-lat="47.41172" data-lon="9.71573" data-rank="23">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#c8a800">
+          <img src="https://www.google.com/s2/favicons?domain=shell.at&sz=128" alt="Shell Austria"
+               onerror="this.parentElement.innerHTML='<span>SA</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#23</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-23">📍 10.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Shell Austria</h2>
+        <a class="address" onclick="focusMarker('die', 23); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          LUSTENAUERSTRASSE 86, 6850 DORNBIRN
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.169 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:83%; background:hsl(20,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-23"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.41172,9.71573&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-24" style="--brand:#4f46e5"
+             data-lat="47.5333189" data-lon="9.7393838" data-rank="24">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">SH</div>
+        <div class="card-meta">
+          <span class="rank-num">#24</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-24">📍 19.1 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Schindele, Hörbranz</h2>
+        <a class="address" onclick="focusMarker('die', 24); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Seestr. 14a, 6912 Hörbranz
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.169 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:83%; background:hsl(20,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-24"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.5333189,9.7393838&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-25" style="--brand:#4f46e5"
+             data-lat="47.534922" data-lon="9.7377447" data-rank="25">
+      <div class="card-header">
+        <div class="avatar" style="background:#4f46e5">DE</div>
+        <div class="card-meta">
+          <span class="rank-num">#25</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-25">📍 19.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Deuring</h2>
+        <a class="address" onclick="focusMarker('die', 25); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Seestrasse 10, 6912 Hörbranz
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.169 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:83%; background:hsl(20,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-25"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.534922,9.7377447&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-26" style="--brand:#012606"
+             data-lat="47.5347" data-lon="9.75204" data-rank="26">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#012606">
+          <img src="https://www.google.com/s2/favicons?domain=omv.at&sz=128" alt="OMV - Lochau Hofriedenstraße 17"
+               onerror="this.parentElement.innerHTML='<span>O-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#26</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-26">📍 19.8 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">OMV - Lochau Hofriedenstraße 17</h2>
+        <a class="address" onclick="focusMarker('die', 26); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Hofriedenstrasse 17, 6911 Lochau
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.169 <small>€/L</small></span>
+            <span class="savings">− 0.020 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:83%; background:hsl(20,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-26"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.5347,9.75204&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-27" style="--brand:#ccff00"
+             data-lat="47.49046" data-lon="9.70295" data-rank="27">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#ccff00">
+          <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Hard Hofsteigstraße 85"
+               onerror="this.parentElement.innerHTML='<span>A-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#27</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-27">📍 13.7 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">AVANTI - Hard Hofsteigstraße 85</h2>
+        <a class="address" onclick="focusMarker('die', 27); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Hofsteigstrasse 85, 6971 Hard
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.174 <small>€/L</small></span>
+            <span class="savings">− 0.015 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:87%; background:hsl(15,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-27"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.49046,9.70295&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-28" style="--brand:#e30613"
+             data-lat="47.47757" data-lon="9.679413" data-rank="28">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#28</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-28">📍 11.4 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('die', 28); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          RHEINSTRASSE 99, 6971 HARD
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.179 <small>€/L</small></span>
+            <span class="savings">− 0.010 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:91%; background:hsl(10,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-28"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.47757,9.679413&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-29" style="--brand:#005baa"
+             data-lat="47.4702303" data-lon="9.7287983" data-rank="29">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#005baa">
+          <img src="https://www.google.com/s2/favicons?domain=diskonttanken.at&sz=128" alt="Disk"
+               onerror="this.parentElement.innerHTML='<span>DI</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#29</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-29">📍 13.6 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Disk</h2>
+        <a class="address" onclick="focusMarker('die', 29); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bundesstraße 97, 6923 Lauterach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.179 <small>€/L</small></span>
+            <span class="savings">− 0.010 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:91%; background:hsl(10,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-29"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.4702303,9.7287983&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-30" style="--brand:#006db7"
+             data-lat="47.440047" data-lon="9.756718" data-rank="30">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-eni" style="--brand:#006db7">
+          <img src="https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png" alt="Gutmann ENI Tankstelle"
+               onerror="this.parentElement.innerHTML='<span>GE</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#30</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-30">📍 13.9 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">Gutmann ENI Tankstelle</h2>
+        <a class="address" onclick="focusMarker('die', 30); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Gutenbergstraße 6, 6858 Schwarzach
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.179 <small>€/L</small></span>
+            <span class="savings">− 0.010 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:91%; background:hsl(10,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-30"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.440047,9.756718&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-31" style="--brand:#ccff00"
+             data-lat="47.43888" data-lon="9.65664" data-rank="31">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#ccff00">
+          <img src="https://www.google.com/s2/favicons?domain=avanti.at&sz=128" alt="AVANTI - Lustenau Bahnhofstraße 8"
+               onerror="this.parentElement.innerHTML='<span>A-</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#31</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-31">📍 7.2 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">AVANTI - Lustenau Bahnhofstraße 8</h2>
+        <a class="address" onclick="focusMarker('die', 31); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bahnhofstrasse 8, 6890 Lustenau
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.183 <small>€/L</small></span>
+            <span class="savings">− 0.006 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:95%; background:hsl(6,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-31"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.43888,9.65664&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-32" style="--brand:#e30613"
+             data-lat="47.419549" data-lon="9.659337" data-rank="32">
+      <div class="card-header">
+        <div class="avatar avatar-logo " style="--brand:#e30613">
+          <img src="https://www.google.com/s2/favicons?domain=jet-tankstellen.at&sz=128" alt="JET TANKSTELLE"
+               onerror="this.parentElement.innerHTML='<span>JT</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#32</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-32">📍 6.3 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">JET TANKSTELLE</h2>
+        <a class="address" onclick="focusMarker('die', 32); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          GRINDELSTRASSE 16, 6890 LUSTENAU
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.188 <small>€/L</small></span>
+            <span class="savings">− 0.001 €</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:99%; background:hsl(1,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-32"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.419549,9.659337&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+
+    <article class="card " id="card-die-33" style="--brand:#009a44"
+             data-lat="47.5111513" data-lon="9.7530777" data-rank="33">
+      <div class="card-header">
+        <div class="avatar avatar-logo brand-bp" style="--brand:#009a44">
+          <img src="https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png" alt="BP"
+               onerror="this.parentElement.innerHTML='<span>BP</span>'">
+        </div>
+        <div class="card-meta">
+          <span class="rank-num">#33</span>
+          <span class="badge open">Offen</span>
+          <span class="dist home-dist" id="dist-die-33">📍 17.9 km</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">BP</h2>
+        <a class="address" onclick="focusMarker('die', 33); return false;" href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+               fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          Bregenzerstr. 63 , 6900 Bregenz/Lochau
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">2.189 <small>€/L</small></span>
+            <span class="savings maxprice">Höchstpreis</span>
+          </div>
+          <div class="price-bar-wrap"><div class="price-bar" style="width:100%; background:hsl(0,70%,45%)"></div></div>
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-die-33"
+             href="https://www.google.com/maps/dir/?api=1&destination=47.5111513,9.7530777&travelmode=driving"
+             target="_blank" rel="noopener">
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                 fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+            </svg>
+            Route
+          </a>
+        </div>
+      </div>
+    </article>
+</main>
+
+<footer class="pf">
+  Datenquelle: <a href="https://www.spritpreisrechner.at" target="_blank">E-Control Austria</a>
+  · Karte: <a href="https://leafletjs.com" target="_blank">Leaflet</a> / <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>
+  · Preise in €/Liter inkl. MwSt. · Alle Angaben ohne Gewähr
+</footer>
+
+<script>
+  // ── Leaflet Map ───────────────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: true }).setView([47.4069, 9.6969], 11);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+  }).addTo(map);
+
+  const allMarkers = { sup: {}, die: {} };
+  let currentFuel = localStorage.getItem('fuel') || 'sup';
+
+  function makeIcon(color, label) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        background:${color};
+        width:32px;height:32px;border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        border:2px solid rgba(255,255,255,.35);
+        box-shadow:0 3px 10px rgba(0,0,0,.5);
+        display:flex;align-items:center;justify-content:center;">
+        <span style="transform:rotate(45deg);color:#fff;font-weight:800;font-size:11px;">${label}</span>
+      </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -34],
+    });
+  }
+
+  function addMarker(fkey, lat, lon, popup, color, label, rank) {
+    const m = L.marker([lat, lon], { icon: makeIcon(color, label) })
+      .bindPopup(popup);
+    allMarkers[fkey][rank] = m;  // always store; initFuel() adds to map
+
+    m.on('click', () => {
+      const card = document.getElementById('card-' + fkey + '-' + rank);
+      if (card) {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
+        card.classList.add('highlighted');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  function focusMarker(fkey, rank) {
+    const m = allMarkers[fkey][rank];
+    if (!m) return;
+    map.setView(m.getLatLng(), 15, { animate: true });
+    m.openPopup();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
+    document.getElementById('card-' + fkey + '-' + rank)?.classList.add('highlighted');
+  }
+
+  function switchFuel(fuel) {
+    if (fuel === currentFuel) return;
+    const ids = ['grid', 'stats', 'fuel-sub', 'top4'];
+    ids.forEach(id => {
+      document.getElementById(id + '-' + currentFuel).style.display = 'none';
+      document.getElementById(id + '-' + fuel).style.display = '';
+    });
+    Object.values(allMarkers[currentFuel]).forEach(m => map.removeLayer(m));
+    Object.values(allMarkers[fuel]).forEach(m => m.addTo(map));
+    document.getElementById('btn-' + currentFuel).classList.remove('active');
+    document.getElementById('btn-' + fuel).classList.add('active');
+    currentFuel = fuel;
+    localStorage.setItem('fuel', fuel);
+  }
+
+
+  // ── Theme ────────────────────────────────────────────────────────────────
+  function setTheme(t) {
+    const root = document.documentElement;
+    if (t === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    document.querySelectorAll('.theme-toggle button').forEach((btn, i) => {
+      btn.classList.toggle('active', ['light','system','dark'][i] === t);
+    });
+  }
+  // Init from localStorage or system
+  (function() {
+    const saved = localStorage.getItem('theme') || 'system';
+    setTheme(saved);
+  })();
+
+  // ── Geolocation ──────────────────────────────────────────────────────────
+  const stationCoords = {
+    sup: {1: [47.22179, 9.67132], 2: [47.40698, 9.73476], 3: [47.39649, 9.731134], 4: [47.399883, 9.733621], 5: [47.426673, 9.741176], 6: [47.39618, 9.73126], 7: [47.3666, 9.67055], 8: [47.343134, 9.65439], 9: [47.32574, 9.62964], 10: [47.46296, 9.72747], 11: [47.323657, 9.6285154], 12: [47.42804, 9.73995], 13: [47.42974, 9.73995], 14: [47.247387, 9.610381], 15: [47.43888, 9.65664], 16: [47.419549, 9.659337], 17: [47.41248, 9.7145355], 18: [47.41172, 9.71573], 19: [47.4104, 9.72079], 20: [47.2468, 9.60984], 21: [47.2413165, 9.5914922], 22: [47.49046, 9.70295], 23: [47.45928, 9.64407], 24: [47.47757, 9.679413], 25: [47.4702303, 9.7287983], 26: [47.440047, 9.756718], 27: [47.5111513, 9.7530777], 28: [47.5333189, 9.7393838], 29: [47.534922, 9.7377447], 30: [47.5347, 9.75204]},
+    die: {1: [47.459666, 9.644945], 2: [47.363987, 9.680457], 3: [47.22179, 9.67132], 4: [47.40698, 9.73476], 5: [47.39649, 9.731134], 6: [47.399883, 9.733621], 7: [47.426673, 9.741176], 8: [47.39618, 9.73126], 9: [47.2724, 9.60797], 10: [47.46296, 9.72747], 11: [47.42804, 9.73995], 12: [47.42974, 9.73995], 13: [47.247387, 9.610381], 14: [47.3666, 9.67055], 15: [47.343134, 9.65439], 16: [47.32574, 9.62964], 17: [47.323657, 9.6285154], 18: [47.27182, 9.61785], 19: [47.26779, 9.61507], 20: [47.2468, 9.60984], 21: [47.2413165, 9.5914922], 22: [47.41248, 9.7145355], 23: [47.41172, 9.71573], 24: [47.5333189, 9.7393838], 25: [47.534922, 9.7377447], 26: [47.5347, 9.75204], 27: [47.49046, 9.70295], 28: [47.47757, 9.679413], 29: [47.4702303, 9.7287983], 30: [47.440047, 9.756718], 31: [47.43888, 9.65664], 32: [47.419549, 9.659337], 33: [47.5111513, 9.7530777]}
+  };
+
+  function haversineJS(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  let homeMarker = null;
+
+  function updateWithLocation(lat, lon, isLive) {
+    // Update distance badges and route links for both fuel sets
+    for (const fkey of ['sup', 'die']) {
+      for (const [rank, coords] of Object.entries(stationCoords[fkey])) {
+        const distEl = document.getElementById('dist-' + fkey + '-' + rank);
+        if (distEl) distEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
+        const routeEl = document.getElementById('route-' + fkey + '-' + rank);
+        if (routeEl) routeEl.href = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lon}&destination=${coords[0]},${coords[1]}&travelmode=driving`;
+        const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
+        if (mRouteEl) mRouteEl.href = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lon}&destination=${coords[0]},${coords[1]}&travelmode=driving`;
+        const mDistEl = document.getElementById('mdist-' + fkey + '-' + rank);
+        if (mDistEl) mDistEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
+      }
+    }
+    // Update home marker on map
+    if (homeMarker) map.removeLayer(homeMarker);
+    const label = isLive ? 'Ihr Standort (GPS)' : 'Rebstein CH (Fallback)';
+    homeMarker = L.marker([lat, lon], {
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="background:${isLive ? '#22c55e' : '#6366f1'};width:36px;height:36px;
+                           border-radius:50%;border:3px solid #fff;
+                           box-shadow:0 3px 10px rgba(0,0,0,.4);
+                           display:flex;align-items:center;justify-content:center;font-size:18px;">
+                 ${isLive ? '📱' : '🏠'}
+               </div>`,
+        iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -20],
+      })
+    }).addTo(map).bindPopup(`<b>${label}</b>`);
+
+    // Update pill
+    const pill = document.getElementById('geo-pill');
+    if (pill) {
+      pill.textContent = isLive ? '📱 GPS-Standort aktiv' : '🏠 Fallback: Rebstein CH';
+      pill.style.color = isLive ? '#22c55e' : '#a78bfa';
+    }
+  }
+
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => updateWithLocation(pos.coords.latitude, pos.coords.longitude, true),
+      ()  => updateWithLocation(47.3983, 9.5824, false),
+      { timeout: 8000 }
+    );
+  } else {
+    updateWithLocation(47.3983, 9.5824, false);
+  }
+
+  // ── Rebstein Fallback-Marker (wird bei GPS ersetzt) ───────────────────────
+  // (homeMarker wird durch updateWithLocation gesetzt)
+  updateWithLocation(47.3983, 9.5824, false); // initial render
+
+  // Register all markers (none added to map yet)
+  addMarker("sup", 47.22179, 9.67132, "<b>#1 DISK</b><br>Alte Schlinserstra\u00dfe 2, 6822 Satteins<br><span style='font-size:1.2em;font-weight:700'>1.806 \u20ac/L</span><br>\ud83d\udccd 20.7 km ab Rebstein CH", "hsl(120,80%,45%)", 1, 1);
+    addMarker("sup", 47.40698, 9.73476, "<b>#2 AVANTI - Dornbirn Lustenauer Stra\u00dfe 24</b><br>Lustenauer Strasse 24, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.810 \u20ac/L</span><br>\ud83d\udccd 11.5 km ab Rebstein CH", "hsl(115,80%,45%)", 2, 2);
+    addMarker("sup", 47.39649, 9.731134, "<b>#3 JET TANKSTELLE</b><br>WALLENMAHD 22, 6850 DORNBIRN<br><span style='font-size:1.2em;font-weight:700'>1.811 \u20ac/L</span><br>\ud83d\udccd 11.2 km ab Rebstein CH", "hsl(111,80%,45%)", 3, 3);
+    addMarker("sup", 47.399883, 9.733621, "<b>#4 DISK</b><br>Arlbergstra\u00dfe 6, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.812 \u20ac/L</span><br>\ud83d\udccd 11.4 km ab Rebstein CH", "hsl(107,80%,45%)", 4, 4);
+    addMarker("sup", 47.426673, 9.741176, "<b>#5 JET TANKSTELLE</b><br>SCHWEFEL 44 A, 6850 DORNBIRN<br><span style='font-size:1.2em;font-weight:700'>1.815 \u20ac/L</span><br>\ud83d\udccd 12.4 km ab Rebstein CH", "hsl(103,80%,45%)", 5, 5);
+    addMarker("sup", 47.39618, 9.73126, "<b>#6 OMV - Dornbirn Wallenmahd 1</b><br>Wallenmahd 1, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.819 \u20ac/L</span><br>\ud83d\udccd 11.2 km ab Rebstein CH", "hsl(99,80%,45%)", 6, 6);
+    addMarker("sup", 47.3666, 9.67055, "<b>#7 Diskont Tankstelle</b><br>Barnabas-Fink-Strasse 1 (am HOFER Parkplatz), 6845 Hohenems<br><span style='font-size:1.2em;font-weight:700'>1.824 \u20ac/L</span><br>\ud83d\udccd 7.5 km ab Rebstein CH", "hsl(95,80%,45%)", 7, 7);
+    addMarker("sup", 47.343134, 9.65439, "<b>#8 DISK</b><br>Im Buch 50, 6840 G\u00f6tzis<br><span style='font-size:1.2em;font-weight:700'>1.824 \u20ac/L</span><br>\ud83d\udccd 8.2 km ab Rebstein CH", "hsl(91,80%,45%)", 8, 8);
+    addMarker("sup", 47.32574, 9.62964, "<b>#9 Diskont Tankstelle</b><br>Bundesstrasse 6 (am HOFER Parkplatz), 6842 Koblach<br><span style='font-size:1.2em;font-weight:700'>1.824 \u20ac/L</span><br>\ud83d\udccd 8.8 km ab Rebstein CH", "hsl(86,80%,45%)", 9, 9);
+    addMarker("sup", 47.46296, 9.72747, "<b>#10 BayWa Tankstelle</b><br>Scheibenstra\u00dfe 2, 6923 Lauterach<br><span style='font-size:1.2em;font-weight:700'>1.828 \u20ac/L</span><br>\ud83d\udccd 13.1 km ab Rebstein CH", "hsl(82,80%,45%)", 10, 10);
+    addMarker("sup", 47.323657, 9.6285154, "<b>#11 Loacker Tours GmbH (Diesel + Super95)</b><br>Bundesstra\u00dfe 17, 6842 Koblach<br><span style='font-size:1.2em;font-weight:700'>1.829 \u20ac/L</span><br>\ud83d\udccd 9.0 km ab Rebstein CH", "hsl(78,80%,45%)", 11, 11);
+    addMarker("sup", 47.42804, 9.73995, "<b>#12 OMV - Dornbirn Schwefel 53</b><br>Schwefel 53, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.829 \u20ac/L</span><br>\ud83d\udccd 12.3 km ab Rebstein CH", "hsl(74,80%,45%)", 12, 12);
+    addMarker("sup", 47.42974, 9.73995, "<b>#13 eni</b><br>Schwefel 70a, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.829 \u20ac/L</span><br>\ud83d\udccd 12.4 km ab Rebstein CH", "hsl(70,80%,45%)", 13, 13);
+    addMarker("sup", 47.247387, 9.610381, "<b>#14 JET TANKSTELLE</b><br>REICHSSTRASSE 133 A, 6800 FELDKIRCH<br><span style='font-size:1.2em;font-weight:700'>1.839 \u20ac/L</span><br>\ud83d\udccd 16.9 km ab Rebstein CH", "hsl(66,80%,45%)", 14, 14);
+    addMarker("sup", 47.43888, 9.65664, "<b>#15 AVANTI - Lustenau Bahnhofstra\u00dfe 8</b><br>Bahnhofstrasse 8, 6890 Lustenau<br><span style='font-size:1.2em;font-weight:700'>1.844 \u20ac/L</span><br>\ud83d\udccd 7.2 km ab Rebstein CH", "hsl(62,80%,45%)", 15, 15);
+    addMarker("sup", 47.419549, 9.659337, "<b>#16 JET TANKSTELLE</b><br>GRINDELSTRASSE 16, 6890 LUSTENAU<br><span style='font-size:1.2em;font-weight:700'>1.849 \u20ac/L</span><br>\ud83d\udccd 6.3 km ab Rebstein CH", "hsl(57,80%,45%)", 16, 16);
+    addMarker("sup", 47.41248, 9.7145355, "<b>#17 BP</b><br>Lustenauerstrasse 92, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.849 \u20ac/L</span><br>\ud83d\udccd 10.1 km ab Rebstein CH", "hsl(53,80%,45%)", 17, 17);
+    addMarker("sup", 47.41172, 9.71573, "<b>#18 Shell Austria</b><br>LUSTENAUERSTRASSE 86, 6850 DORNBIRN<br><span style='font-size:1.2em;font-weight:700'>1.849 \u20ac/L</span><br>\ud83d\udccd 10.1 km ab Rebstein CH", "hsl(49,80%,45%)", 18, 18);
+    addMarker("sup", 47.4104, 9.72079, "<b>#19 eni</b><br>Lustenauerstrasse 52, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>1.849 \u20ac/L</span><br>\ud83d\udccd 10.5 km ab Rebstein CH", "hsl(45,80%,45%)", 19, 19);
+    addMarker("sup", 47.2468, 9.60984, "<b>#20 Shell Austria</b><br>REICHSSTRASSE 137, 6800 FELDKIRCH-LEVIS<br><span style='font-size:1.2em;font-weight:700'>1.849 \u20ac/L</span><br>\ud83d\udccd 17.0 km ab Rebstein CH", "hsl(41,80%,45%)", 20, 20);
+    addMarker("sup", 47.2413165, 9.5914922, "<b>#21 BP</b><br>Haemmerlestrasse 99 , 6805 Feldkirch-Gisingen<br><span style='font-size:1.2em;font-weight:700'>1.849 \u20ac/L</span><br>\ud83d\udccd 17.5 km ab Rebstein CH", "hsl(37,80%,45%)", 21, 21);
+    addMarker("sup", 47.49046, 9.70295, "<b>#22 AVANTI - Hard Hofsteigstra\u00dfe 85</b><br>Hofsteigstrasse 85, 6971 Hard<br><span style='font-size:1.2em;font-weight:700'>1.854 \u20ac/L</span><br>\ud83d\udccd 13.7 km ab Rebstein CH", "hsl(33,80%,45%)", 22, 22);
+    addMarker("sup", 47.45928, 9.64407, "<b>#23 Shell Austria</b><br>HAUPTSTR 32, 6973 HOECHST<br><span style='font-size:1.2em;font-weight:700'>1.859 \u20ac/L</span><br>\ud83d\udccd 8.2 km ab Rebstein CH", "hsl(28,80%,45%)", 23, 23);
+    addMarker("sup", 47.47757, 9.679413, "<b>#24 JET TANKSTELLE</b><br>RHEINSTRASSE 99, 6971 HARD<br><span style='font-size:1.2em;font-weight:700'>1.859 \u20ac/L</span><br>\ud83d\udccd 11.4 km ab Rebstein CH", "hsl(24,80%,45%)", 24, 24);
+    addMarker("sup", 47.4702303, 9.7287983, "<b>#25 Disk</b><br>Bundesstra\u00dfe 97, 6923 Lauterach<br><span style='font-size:1.2em;font-weight:700'>1.859 \u20ac/L</span><br>\ud83d\udccd 13.6 km ab Rebstein CH", "hsl(20,80%,45%)", 25, 25);
+    addMarker("sup", 47.440047, 9.756718, "<b>#26 Gutmann ENI Tankstelle</b><br>Gutenbergstra\u00dfe 6, 6858 Schwarzach<br><span style='font-size:1.2em;font-weight:700'>1.859 \u20ac/L</span><br>\ud83d\udccd 13.9 km ab Rebstein CH", "hsl(16,80%,45%)", 26, 26);
+    addMarker("sup", 47.5111513, 9.7530777, "<b>#27 BP</b><br>Bregenzerstr. 63 , 6900 Bregenz/Lochau<br><span style='font-size:1.2em;font-weight:700'>1.879 \u20ac/L</span><br>\ud83d\udccd 17.9 km ab Rebstein CH", "hsl(12,80%,45%)", 27, 27);
+    addMarker("sup", 47.5333189, 9.7393838, "<b>#28 Schindele, H\u00f6rbranz</b><br>Seestr. 14a, 6912 H\u00f6rbranz<br><span style='font-size:1.2em;font-weight:700'>1.879 \u20ac/L</span><br>\ud83d\udccd 19.1 km ab Rebstein CH", "hsl(8,80%,45%)", 28, 28);
+    addMarker("sup", 47.534922, 9.7377447, "<b>#29 Deuring</b><br>Seestrasse 10, 6912 H\u00f6rbranz<br><span style='font-size:1.2em;font-weight:700'>1.879 \u20ac/L</span><br>\ud83d\udccd 19.2 km ab Rebstein CH", "hsl(4,80%,45%)", 29, 29);
+    addMarker("sup", 47.5347, 9.75204, "<b>#30 OMV - Lochau Hofriedenstra\u00dfe 17</b><br>Hofriedenstrasse 17, 6911 Lochau<br><span style='font-size:1.2em;font-weight:700'>1.879 \u20ac/L</span><br>\ud83d\udccd 19.8 km ab Rebstein CH", "hsl(0,80%,45%)", 30, 30);
+  addMarker("die", 47.459666, 9.644945, "<b>#1 ESW Dieselkraftstoff</b><br>Hauptstra\u00dfe 38, 6973 H\u00f6chst<br><span style='font-size:1.2em;font-weight:700'>2.064 \u20ac/L</span><br>\ud83d\udccd 8.3 km ab Rebstein CH", "hsl(120,80%,45%)", 1, 1);
+    addMarker("die", 47.363987, 9.680457, "<b>#2 ESW Dieselkraftstoff</b><br>Kaulbachstra\u00dfe 6, 6845 Hohenems<br><span style='font-size:1.2em;font-weight:700'>2.064 \u20ac/L</span><br>\ud83d\udccd 8.3 km ab Rebstein CH", "hsl(116,80%,45%)", 2, 2);
+    addMarker("die", 47.22179, 9.67132, "<b>#3 DISK</b><br>Alte Schlinserstra\u00dfe 2, 6822 Satteins<br><span style='font-size:1.2em;font-weight:700'>2.126 \u20ac/L</span><br>\ud83d\udccd 20.7 km ab Rebstein CH", "hsl(112,80%,45%)", 3, 3);
+    addMarker("die", 47.40698, 9.73476, "<b>#4 AVANTI - Dornbirn Lustenauer Stra\u00dfe 24</b><br>Lustenauer Strasse 24, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>2.130 \u20ac/L</span><br>\ud83d\udccd 11.5 km ab Rebstein CH", "hsl(108,80%,45%)", 4, 4);
+    addMarker("die", 47.39649, 9.731134, "<b>#5 JET TANKSTELLE</b><br>WALLENMAHD 22, 6850 DORNBIRN<br><span style='font-size:1.2em;font-weight:700'>2.131 \u20ac/L</span><br>\ud83d\udccd 11.2 km ab Rebstein CH", "hsl(105,80%,45%)", 5, 5);
+    addMarker("die", 47.399883, 9.733621, "<b>#6 DISK</b><br>Arlbergstra\u00dfe 6, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>2.132 \u20ac/L</span><br>\ud83d\udccd 11.4 km ab Rebstein CH", "hsl(101,80%,45%)", 6, 6);
+    addMarker("die", 47.426673, 9.741176, "<b>#7 JET TANKSTELLE</b><br>SCHWEFEL 44 A, 6850 DORNBIRN<br><span style='font-size:1.2em;font-weight:700'>2.135 \u20ac/L</span><br>\ud83d\udccd 12.4 km ab Rebstein CH", "hsl(97,80%,45%)", 7, 7);
+    addMarker("die", 47.39618, 9.73126, "<b>#8 OMV - Dornbirn Wallenmahd 1</b><br>Wallenmahd 1, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>2.139 \u20ac/L</span><br>\ud83d\udccd 11.2 km ab Rebstein CH", "hsl(93,80%,45%)", 8, 8);
+    addMarker("die", 47.2724, 9.60797, "<b>#9 Diskont Tankstelle</b><br>St. Anna Weg 23 (am HOFER Parkplatz), 6830 Rankweil<br><span style='font-size:1.2em;font-weight:700'>2.147 \u20ac/L</span><br>\ud83d\udccd 14.1 km ab Rebstein CH", "hsl(90,80%,45%)", 9, 9);
+    addMarker("die", 47.46296, 9.72747, "<b>#10 BayWa Tankstelle</b><br>Scheibenstra\u00dfe 2, 6923 Lauterach<br><span style='font-size:1.2em;font-weight:700'>2.148 \u20ac/L</span><br>\ud83d\udccd 13.1 km ab Rebstein CH", "hsl(86,80%,45%)", 10, 10);
+    addMarker("die", 47.42804, 9.73995, "<b>#11 OMV - Dornbirn Schwefel 53</b><br>Schwefel 53, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>2.149 \u20ac/L</span><br>\ud83d\udccd 12.3 km ab Rebstein CH", "hsl(82,80%,45%)", 11, 11);
+    addMarker("die", 47.42974, 9.73995, "<b>#12 eni</b><br>Schwefel 70a, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>2.149 \u20ac/L</span><br>\ud83d\udccd 12.4 km ab Rebstein CH", "hsl(78,80%,45%)", 12, 12);
+    addMarker("die", 47.247387, 9.610381, "<b>#13 JET TANKSTELLE</b><br>REICHSSTRASSE 133 A, 6800 FELDKIRCH<br><span style='font-size:1.2em;font-weight:700'>2.149 \u20ac/L</span><br>\ud83d\udccd 16.9 km ab Rebstein CH", "hsl(75,80%,45%)", 13, 13);
+    addMarker("die", 47.3666, 9.67055, "<b>#14 Diskont Tankstelle</b><br>Barnabas-Fink-Strasse 1 (am HOFER Parkplatz), 6845 Hohenems<br><span style='font-size:1.2em;font-weight:700'>2.154 \u20ac/L</span><br>\ud83d\udccd 7.5 km ab Rebstein CH", "hsl(71,80%,45%)", 14, 14);
+    addMarker("die", 47.343134, 9.65439, "<b>#15 DISK</b><br>Im Buch 50, 6840 G\u00f6tzis<br><span style='font-size:1.2em;font-weight:700'>2.154 \u20ac/L</span><br>\ud83d\udccd 8.2 km ab Rebstein CH", "hsl(67,80%,45%)", 15, 15);
+    addMarker("die", 47.32574, 9.62964, "<b>#16 Diskont Tankstelle</b><br>Bundesstrasse 6 (am HOFER Parkplatz), 6842 Koblach<br><span style='font-size:1.2em;font-weight:700'>2.154 \u20ac/L</span><br>\ud83d\udccd 8.8 km ab Rebstein CH", "hsl(63,80%,45%)", 16, 16);
+    addMarker("die", 47.323657, 9.6285154, "<b>#17 Loacker Tours GmbH (Diesel + Super95)</b><br>Bundesstra\u00dfe 17, 6842 Koblach<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 9.0 km ab Rebstein CH", "hsl(60,80%,45%)", 17, 17);
+    addMarker("die", 47.27182, 9.61785, "<b>#18 eni</b><br>Langgasse 118a, 6830 Rankweil<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 14.3 km ab Rebstein CH", "hsl(56,80%,45%)", 18, 18);
+    addMarker("die", 47.26779, 9.61507, "<b>#19 OMV - Feldkirch K\u00f6nigshofstra\u00dfe 61</b><br>K\u00f6nigshofstrasse 61, 6804 Feldkirch<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 14.7 km ab Rebstein CH", "hsl(52,80%,45%)", 19, 19);
+    addMarker("die", 47.2468, 9.60984, "<b>#20 Shell Austria</b><br>REICHSSTRASSE 137, 6800 FELDKIRCH-LEVIS<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 17.0 km ab Rebstein CH", "hsl(48,80%,45%)", 20, 20);
+    addMarker("die", 47.2413165, 9.5914922, "<b>#21 BP</b><br>Haemmerlestrasse 99 , 6805 Feldkirch-Gisingen<br><span style='font-size:1.2em;font-weight:700'>2.159 \u20ac/L</span><br>\ud83d\udccd 17.5 km ab Rebstein CH", "hsl(45,80%,45%)", 21, 21);
+    addMarker("die", 47.41248, 9.7145355, "<b>#22 BP</b><br>Lustenauerstrasse 92, 6850 Dornbirn<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 10.1 km ab Rebstein CH", "hsl(41,80%,45%)", 22, 22);
+    addMarker("die", 47.41172, 9.71573, "<b>#23 Shell Austria</b><br>LUSTENAUERSTRASSE 86, 6850 DORNBIRN<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 10.1 km ab Rebstein CH", "hsl(37,80%,45%)", 23, 23);
+    addMarker("die", 47.5333189, 9.7393838, "<b>#24 Schindele, H\u00f6rbranz</b><br>Seestr. 14a, 6912 H\u00f6rbranz<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 19.1 km ab Rebstein CH", "hsl(33,80%,45%)", 24, 24);
+    addMarker("die", 47.534922, 9.7377447, "<b>#25 Deuring</b><br>Seestrasse 10, 6912 H\u00f6rbranz<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 19.2 km ab Rebstein CH", "hsl(30,80%,45%)", 25, 25);
+    addMarker("die", 47.5347, 9.75204, "<b>#26 OMV - Lochau Hofriedenstra\u00dfe 17</b><br>Hofriedenstrasse 17, 6911 Lochau<br><span style='font-size:1.2em;font-weight:700'>2.169 \u20ac/L</span><br>\ud83d\udccd 19.8 km ab Rebstein CH", "hsl(26,80%,45%)", 26, 26);
+    addMarker("die", 47.49046, 9.70295, "<b>#27 AVANTI - Hard Hofsteigstra\u00dfe 85</b><br>Hofsteigstrasse 85, 6971 Hard<br><span style='font-size:1.2em;font-weight:700'>2.174 \u20ac/L</span><br>\ud83d\udccd 13.7 km ab Rebstein CH", "hsl(22,80%,45%)", 27, 27);
+    addMarker("die", 47.47757, 9.679413, "<b>#28 JET TANKSTELLE</b><br>RHEINSTRASSE 99, 6971 HARD<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 11.4 km ab Rebstein CH", "hsl(18,80%,45%)", 28, 28);
+    addMarker("die", 47.4702303, 9.7287983, "<b>#29 Disk</b><br>Bundesstra\u00dfe 97, 6923 Lauterach<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 13.6 km ab Rebstein CH", "hsl(15,80%,45%)", 29, 29);
+    addMarker("die", 47.440047, 9.756718, "<b>#30 Gutmann ENI Tankstelle</b><br>Gutenbergstra\u00dfe 6, 6858 Schwarzach<br><span style='font-size:1.2em;font-weight:700'>2.179 \u20ac/L</span><br>\ud83d\udccd 13.9 km ab Rebstein CH", "hsl(11,80%,45%)", 30, 30);
+    addMarker("die", 47.43888, 9.65664, "<b>#31 AVANTI - Lustenau Bahnhofstra\u00dfe 8</b><br>Bahnhofstrasse 8, 6890 Lustenau<br><span style='font-size:1.2em;font-weight:700'>2.183 \u20ac/L</span><br>\ud83d\udccd 7.2 km ab Rebstein CH", "hsl(7,80%,45%)", 31, 31);
+    addMarker("die", 47.419549, 9.659337, "<b>#32 JET TANKSTELLE</b><br>GRINDELSTRASSE 16, 6890 LUSTENAU<br><span style='font-size:1.2em;font-weight:700'>2.188 \u20ac/L</span><br>\ud83d\udccd 6.3 km ab Rebstein CH", "hsl(3,80%,45%)", 32, 32);
+    addMarker("die", 47.5111513, 9.7530777, "<b>#33 BP</b><br>Bregenzerstr. 63 , 6900 Bregenz/Lochau<br><span style='font-size:1.2em;font-weight:700'>2.189 \u20ac/L</span><br>\ud83d\udccd 17.9 km ab Rebstein CH", "hsl(0,80%,45%)", 33, 33);
+
+  // Properly initialize fuel state from localStorage (handles all UI + markers)
+  (function initFuel() {
+    Object.values(allMarkers[currentFuel]).forEach(m => m.addTo(map));
+    if (currentFuel !== 'sup') {
+      ['grid', 'stats', 'fuel-sub', 'top4'].forEach(id => {
+        document.getElementById(id + '-sup').style.display = 'none';
+        document.getElementById(id + '-' + currentFuel).style.display = '';
+      });
+      document.getElementById('btn-sup').classList.remove('active');
+      document.getElementById('btn-' + currentFuel).classList.add('active');
+    }
+  })();
+</script>
+
+</body>
+</html>

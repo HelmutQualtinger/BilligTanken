@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-InnsbruckTanken – Günstigste Tankstellen rund um Innsbruck und das Inntal
+BilligTanken – Günstigste E5 Tankstellen in Vorarlberg zwischen Bregenz und Feldkirch
 Quelle: E-Control Austria API (spritpreisrechner.at)
 """
 
@@ -14,28 +14,37 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
-TOP_N      = 250
+TOP_N      = 80
 _web_root  = Path(os.environ.get("WEB_ROOT", "."))
-OUTPUT     = _web_root / "innsbruck-tanken.html"
-OUTPUT_NEW = _web_root / "innsbruck-tanken_new.html"
+OUTPUT     = _web_root / "index-vorarlberg.html"
+OUTPUT_NEW = _web_root / "index-vorarlberg_new.html"
 
-# Referenzpunkt Innsbruck Hauptbahnhof (47°15'36"N 11°24'01"E)
-HOME_LAT  = 47.2600
-HOME_LON  = 11.4005
-HOME_NAME = "Innsbruck Hbf"
+# Referenzpunkt Rebstein SG, Schweiz (47°23'53"N 9°34'56"E)
+HOME_LAT  = 47.3983
+HOME_LON  =  9.5824
+HOME_NAME = "Rebstein CH"
 
 API_BASE = "https://api.e-control.at/sprit/1.0/search/gas-stations/by-address"
 HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 
-# 0.12°×0.20°-Raster über Inntal-Korridor + Umland (Tirol, Vorarlberg Ost, Salzburg West)
-LAT_MIN, LAT_MAX = 46.90, 47.70
-LON_MIN, LON_MAX = 10.20, 13.00
-
 QUERY_POINTS = [
-    (round(lat, 3), round(lon, 3))
-    for lat in [46.90 + i * 0.12 for i in range(int((47.70 - 46.90) / 0.12) + 1)]
-    for lon in [10.20 + j * 0.20 for j in range(int((13.00 - 10.20) / 0.20) + 1)]
+    (47.505, 9.747),   # Bregenz
+    (47.474, 9.751),   # Wolfurt
+    (47.478, 9.664),   # Fußach
+    (47.460, 9.730),   # Lauterach / Hard
+    (47.427, 9.661),   # Lustenau
+    (47.413, 9.743),   # Dornbirn
+    (47.367, 9.697),   # Hohenems
+    (47.370, 9.680),   # Götzis
+    (47.311, 9.646),   # Klaus
+    (47.300, 9.610),   # Weiler
+    (47.274, 9.576),   # Meiningen
+    (47.271, 9.617),   # Rankweil
+    (47.238, 9.596),   # Feldkirch
 ]
+
+LAT_MIN, LAT_MAX = 47.20, 47.55
+LON_MIN, LON_MAX =  9.50,  9.80
 
 # ── Daten holen ───────────────────────────────────────────────────────────────
 def fetch_stations(fuel_type: str) -> list[dict]:
@@ -358,13 +367,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>InnsbruckTanken – Günstigste Tankstellen</title>
-
-  <meta name="description" content="Aktuelle Spritpreise rund um Innsbruck und das Inntal. Günstigste Tankstellen in Tirol im Preisvergleich." />
-  <meta name="keywords" content="Tanken, Benzinpreise, Innsbruck, Tirol, Inntal, E5, Super 95, Diesel, Hall, Wattens, Schwaz, billig tanken" />
-
-  <meta property="og:title" content="InnsbruckTanken – Günstigste Tankstellen" />
-  <meta property="og:description" content="Günstigste Tankstellen rund um Innsbruck. Echtzeit-Preise von E-Control." />
+  <title>BilligTanken Vorarlberg – E5 Super 95</title>
+  
+  <meta name="description" content="Aktuelle Benzinpreise (E5 Super 95) in Vorarlberg. Günstigste Tankstellen zwischen Bregenz und Feldkirch im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Vorarlberg, E5, Super 95, Bregenz, Dornbirn, Feldkirch, Lustenau, billig tanken" />
+  
+  <meta property="og:title" content="BilligTanken Vorarlberg – E5 Super 95" />
+  <meta property="og:description" content="Günstigste Tankstellen in Vorarlberg. Echtzeit-Preise von E-Control." />
   <meta property="og:image" content="screenshots/preview.png" />
   <meta property="og:type" content="website" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -740,13 +749,13 @@ def generate_html(stations_sup: list[dict], stations_die: list[dict], fetched_at
 <div class="overview">
   <div class="left-col">
     <header>
-      <h1>⛽ InnsbruckTanken</h1>
+      <h1>⛽ BilligTanken Vorarlberg</h1>
       <div class="fuel-toggle">
         <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
         <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
       </div>
-      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · Großraum Innsbruck / Inntal · Luftlinie ab {HOME_NAME}</p>
-      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · Großraum Innsbruck / Inntal · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · Korridor Bregenz – Feldkirch · Luftlinie ab {HOME_NAME}</p>
       <div class="pills">
         <span class="pill time">Aktualisiert: {fetched_at}</span>
         <span class="pill note">⚠ Tageshöchstpreis aktiv</span>

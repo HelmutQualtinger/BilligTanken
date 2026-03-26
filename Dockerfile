@@ -6,16 +6,26 @@ RUN apk add --no-cache \
       py3-requests \
       apache2 \
       dcron \
+      tzdata \
  && mkdir -p /var/www/localhost/htdocs /run/apache2 \
  && echo "ServerName localhost" >> /etc/apache2/httpd.conf
 
-COPY billigtanken.py /app/billigtanken.py
+COPY index.html                 /var/www/localhost/htdocs/index.html
+COPY billigtanken-alterlaa.py   /app/billigtanken-alterlaa.py
+COPY billigtanken-innsbruck.py  /app/billigtanken-innsbruck.py
+COPY billigtanken-vorarlberg.py /app/billigtanken-vorarlberg.py
+COPY billigtanken-schaerding.py /app/billigtanken-schaerding.py
 COPY entrypoint.sh   /entrypoint.sh
 
-# Cron: jede volle Stunde
-RUN printf '0 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken.py >> /var/log/billigtanken.log 2>&1\n' \
+# Cron: jede volle Stunde, je 20 Minuten versetzt
+RUN printf ' 0 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-alterlaa.py    >> /var/log/billigtanken.log 2>&1\n' \
+           '15 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-innsbruck.py   >> /var/log/billigtanken.log 2>&1\n' \
+           '30 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-vorarlberg.py  >> /var/log/billigtanken.log 2>&1\n' \
+           '45 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-schaerding.py  >> /var/log/billigtanken.log 2>&1\n' \
       > /etc/crontabs/root \
  && chmod +x /entrypoint.sh
+
+ENV TZ=Europe/Vienna
 
 EXPOSE 80
 
