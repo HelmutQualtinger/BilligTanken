@@ -14,7 +14,7 @@ from datetime import datetime
 from pathlib import Path
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
-TOP_N      = 50
+TOP_N      = 250
 _web_root  = Path(os.environ.get("WEB_ROOT", "."))
 OUTPUT     = _web_root / "alterlaa-tanken.html"
 OUTPUT_NEW = _web_root / "alterlaa-tanken_new.html"
@@ -27,23 +27,15 @@ HOME_NAME = "Alt-Erlaa Wien"
 API_BASE = "https://api.e-control.at/sprit/1.0/search/gas-stations/by-address"
 HEADERS  = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 
-QUERY_POINTS = [
-    (48.152, 16.312),   # Alt-Erlaa (Zentrum)
-    (48.132, 16.323),   # Liesing
-    (48.178, 16.325),   # Meidling / Schönbrunn
-    (48.162, 16.360),   # Favoriten
-    (48.138, 16.355),   # Inzersdorf
-    (48.116, 16.267),   # Perchtoldsdorf
-    (48.085, 16.284),   # Mödling
-    (48.110, 16.335),   # Vösendorf
-    (48.135, 16.485),   # Schwechat
-    (48.170, 16.410),   # Simmering
-    (48.060, 16.310),   # Wiener Neudorf
-    (48.090, 16.440),   # Himberg
-]
+# 0.05°-Raster über Großraum Wien + NÖ-Umgebung → ~300 Punkte → genug für 250 eindeutige Stationen
+LAT_MIN, LAT_MAX = 47.65, 48.50
+LON_MIN, LON_MAX = 15.70, 17.10
 
-LAT_MIN, LAT_MAX = 48.00, 48.28
-LON_MIN, LON_MAX = 16.15, 16.60
+QUERY_POINTS = [
+    (round(lat, 3), round(lon, 3))
+    for lat in [47.65 + i * 0.05 for i in range(int((48.50 - 47.65) / 0.05) + 1)]
+    for lon in [15.70 + j * 0.07 for j in range(int((17.10 - 15.70) / 0.07) + 1)]
+]
 
 # ── Daten holen ───────────────────────────────────────────────────────────────
 def fetch_stations(fuel_type: str) -> list[dict]:
