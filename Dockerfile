@@ -11,6 +11,7 @@ RUN apk add --no-cache \
  && echo "ServerName localhost" >> /etc/apache2/httpd.conf
 
 COPY index.html                 /var/www/localhost/htdocs/index.html
+COPY billigtanken_lib.py        /app/billigtanken_lib.py
 COPY billigtanken-alterlaa.py   /app/billigtanken-alterlaa.py
 COPY billigtanken-innsbruck.py  /app/billigtanken-innsbruck.py
 COPY billigtanken-vorarlberg.py /app/billigtanken-vorarlberg.py
