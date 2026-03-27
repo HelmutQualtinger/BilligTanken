@@ -908,6 +908,8 @@ def generate_html(
         if (mDistEl) mDistEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
       }}
     }}
+    // Center map on location
+    map.setView([lat, lon], map.getZoom(), {{ animate: true }});
     // Update home marker on map
     if (homeMarker) map.removeLayer(homeMarker);
     const label = isLive ? 'Ihr Standort (GPS)' : '{home_name} (Fallback)';
