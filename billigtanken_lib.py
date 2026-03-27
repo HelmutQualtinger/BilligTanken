@@ -152,7 +152,9 @@ def brand_initial(name: str) -> str:
     words = name.strip().split()
     if not words:
         return "?"
-    return (words[0][0] + (words[1][0] if len(words) > 1 else words[0][1])).upper()
+    first = words[0][0]
+    second = words[1][0] if len(words) > 1 else (words[0][1] if len(words[0]) > 1 else first)
+    return (first + second).upper()
 
 def open_badge(is_open) -> str:
     if is_open is True:
@@ -336,13 +338,20 @@ def generate_html(
     h1: str,
     sub_sup: str,
     sub_die: str,
+    base_url: str = "",
 ) -> str:
     st_sup = _stats(stations_sup)
     st_die = _stats(stations_die)
     cards_sup  = "\n".join(render_card(s, i+1, st_sup["min_p"], st_sup["max_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup))
     cards_die  = "\n".join(render_card(s, i+1, st_die["min_p"], st_die["max_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die))
-    top4_sup   = "\n".join(render_mini_card(s, i+1, st_sup["min_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup[:4]))
-    top4_die   = "\n".join(render_mini_card(s, i+1, st_die["min_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die[:4]))
+    def _top4_closest(stations):
+        """From the 20 closest stations (by home_dist), return the 6 cheapest with original rank."""
+        ranked = sorted(enumerate(stations, 1), key=lambda x: x[1]["home_dist"] or 999)[:20]
+        ranked.sort(key=lambda x: (x[1]["price"], x[1]["home_dist"] or 999))
+        return ranked[:6]
+
+    top4_sup   = "\n".join(render_mini_card(s, rank, st_sup["min_p"], st_sup["second_p"], "sup") for rank, s in _top4_closest(stations_sup))
+    top4_die   = "\n".join(render_mini_card(s, rank, st_die["min_p"], st_die["second_p"], "die") for rank, s in _top4_closest(stations_die))
     map_js_sup = build_map_js(stations_sup, "sup", home_name)
     map_js_die = build_map_js(stations_die, "die", home_name)
     all_stations = stations_sup  # for map center
@@ -352,22 +361,76 @@ def generate_html(
     stations = stations_sup
     min_p, max_p, avg, span = st_sup["min_p"], st_sup["max_p"], st_sup["avg"], st_sup["span"]
 
+    # Build absolute og:image URL
+    og_image_url = f"{base_url}/screenshots/preview.png" if base_url else "screenshots/preview.png"
+    page_url = base_url or ""
+
     return f"""<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f0f13" />
+  <meta name="color-scheme" content="dark light" />
   <title>{title}</title>
 
+  <!-- SEO & Meta Tags -->
   <meta name="description" content="{meta_description}" />
   <meta name="keywords" content="{meta_keywords}" />
+  <meta name="author" content="BilligTanken" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="language" content="de" />
+  <meta http-equiv="language" content="de-at" />
 
+  <!-- Open Graph (Facebook, LinkedIn, etc.) -->
+  <meta property="og:type" content="website" />
   <meta property="og:title" content="{og_title}" />
   <meta property="og:description" content="{og_description}" />
-  <meta property="og:image" content="screenshots/preview.png" />
-  <meta property="og:type" content="website" />
-  <meta name="twitter:card" content="summary_large_image" />
+  <meta property="og:image" content="{og_image_url}" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  {f'<meta property="og:url" content="{page_url}" />' if page_url else ""}
+  <meta property="og:locale" content="de_AT" />
+  <meta property="og:site_name" content="BilligTanken" />
 
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="{og_title}" />
+  <meta name="twitter:description" content="{og_description}" />
+  <meta name="twitter:image" content="{og_image_url}" />
+
+  <!-- Apple & Mobile -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BilligTanken" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {{
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "BilligTanken",
+    "description": "{meta_description}",
+    "url": "{page_url or 'https://billigtanken.at'}",
+    "image": "{og_image_url}",
+    "logo": "{base_url + '/logo.png' if base_url else '/logo.png'}",
+    "address": {{
+      "@type": "PostalAddress",
+      "addressCountry": "AT",
+      "addressRegion": "Vorarlberg"
+    }},
+    "sameAs": []
+  }}
+  </script>
+
+  <!-- Leaflet.js for map -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
@@ -506,7 +569,7 @@ def generate_html(
       display: flex; flex-direction: column; gap: .5rem; align-self: start;
     }}
     .top4-grid {{
-      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .5rem;
     }}
     .top4-label {{
       font-size: .72rem; font-weight: 700; color: var(--muted);
@@ -767,7 +830,7 @@ def generate_html(
   </div>
   <div id="map"></div>
   <div class="top4-panel">
-    <div class="top4-label">Top 4</div>
+    <div class="top4-label">Top 6</div>
     <div id="top4-sup" class="top4-grid">
 {top4_sup}
     </div>

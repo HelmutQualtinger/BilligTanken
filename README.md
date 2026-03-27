@@ -1,16 +1,28 @@
-# ⛽ BilligTanken Vorarlberg
+# ⛽ BilligTanken
 
-Echtzeit-Übersicht der günstigsten **E5 (Super 95)** Tankstellen im Korridor **Bregenz – Feldkirch**, mit interaktiver Karte, GPS-Standort und Luftlinien-Entfernung.
+Echtzeit-Übersicht der günstigsten **E5 (Super 95)** und **Diesel** Tankstellen in mehreren österreichischen Regionen, mit interaktiver Karte, GPS-Standort und Luftlinien-Entfernung.
 
 ![BilligTanken Screenshot](screenshots/preview.png)
 
+## Regionen
+
+| Region | Script | Referenzpunkt | Cron |
+|--------|--------|---------------|------|
+| Vorarlberg (Bregenz – Feldkirch) | `billigtanken-vorarlberg.py` | Rebstein CH | `:30` |
+| Wien – Alterlaa | `billigtanken-alterlaa.py` | Alterlaa | `:00` |
+| Innsbruck | `billigtanken-innsbruck.py` | Innsbruck | `:15` |
+| Schärding / OÖ | `billigtanken-schaerding.py` | Schärding | `:45` |
+
 ## Features
 
-- **Top 20 günstigste Stationen** – sortiert nach Preis, bei Gleichstand nach Luftlinie vom Standort
+- **Top N günstigste Stationen** – sortiert nach Preis, bei Gleichstand nach Luftlinie vom Standort
+- **Top 6 Schnellübersicht** – zeigt die 6 günstigsten unter den 20 nächstgelegenen Stationen
+- **Benzin / Diesel Umschalter** – beide Kraftstofftypen in einer Seite, letzter Stand wird gespeichert
 - **Interaktive Leaflet-Karte** – Marker farbcodiert von grün (günstig) → rot (teuer), klickbar
 - **GPS-Standort** – Browser-Geolocation aktualisiert Entfernungen und Route-Links live
 - **Route-Button** – öffnet Google Maps Directions direkt ab aktuellem Standort
-- **Automatische Aktualisierung** – Cron läuft jede volle Stunde, atomarer Datei-Swap (kein Flackern)
+- **Hell/Dunkel-Theme** – manuell umschaltbar, folgt System-Präferenz
+- **Automatische Aktualisierung** – Cron stündlich, atomarer Datei-Swap (kein Flackern)
 - Nur Stationen mit **gemeldeten Preisen** werden angezeigt
 
 ## Datenquelle
@@ -23,14 +35,16 @@ In Österreich gilt ein staatlicher **Tageshöchstpreis** (Erhöhungen nur Mo/Mi
 ## Quickstart
 
 ```bash
-# Lokal (erzeugt index.html im aktuellen Verzeichnis)
-pip install requests
-python3 billigtanken.py
-open index.html
-
 # Docker (empfohlen)
 docker compose up -d --build
 # → http://localhost:8080
+```
+
+```bash
+# Lokal (eine Region, erzeugt HTML im aktuellen Verzeichnis)
+pip install requests
+python3 billigtanken-vorarlberg.py
+open index-vorarlberg.html
 ```
 
 ## Docker
@@ -46,17 +60,28 @@ docker compose down            # stoppen
 | **Base Image** | `alpine:3.21` |
 | **Image-Größe** | ~88 MB |
 | **Web-Server** | Apache (httpd) |
-| **Aktualisierung** | Cron, jede volle Stunde |
+| **Aktualisierung** | Cron, jede Stunde (versetzt) |
 | **Port** | `8080` → Container `80` |
 
 ## Konfiguration
 
-Alle Einstellungen am Anfang von `billigtanken.py`:
+Alle Einstellungen am Anfang des jeweiligen Regionalskripts:
 
 | Variable | Bedeutung |
 |---|---|
-| `FUEL_TYPE` | `SUP` (Super 95) oder `DIE` (Diesel) |
 | `TOP_N` | Anzahl der angezeigten Kacheln |
 | `QUERY_POINTS` | Koordinatenpunkte für die API-Abfrage |
-| `HOME_LAT/LON` | Fallback-Referenzpunkt (Standard: Rebstein CH) |
+| `HOME_LAT/LON/NAME` | Referenzpunkt für Luftlinien-Berechnung |
+| `LAT/LON_MIN/MAX` | Bounding Box (filtert API-Ergebnisse) |
 | `WEB_ROOT` | Ausgabeverzeichnis (Env-Variable, Standard: `.`) |
+
+## Architektur
+
+```
+billigtanken_lib.py          ← gemeinsame Bibliothek (API, HTML-Generierung)
+billigtanken-vorarlberg.py   ← Regionalkonfiguration + main()
+billigtanken-alterlaa.py
+billigtanken-innsbruck.py
+billigtanken-schaerding.py
+entrypoint.sh                ← startet alle Skripte einmalig, dann cron + Apache
+```
