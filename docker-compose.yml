@@ -7,6 +7,13 @@ services:
     restart: unless-stopped
     volumes:
       - logs:/var/log
+    networks:
+      - default
+      - reverse-proxy
 
 volumes:
   logs:
+
+networks:
+  reverse-proxy:
+    external: true
