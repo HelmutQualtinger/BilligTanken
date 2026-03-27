@@ -53,12 +53,31 @@ QUERY_POINTS = [
     (47.095, 9.880),   # Schruns / Montafon
     # Bregenzerwald
     (47.450, 9.820),   # Bildstein / Langen
+    (47.440, 9.860),   # Kennelbach / Schwarzach
     (47.420, 9.870),   # Schwarzach / Wolfurt-Ost
+    (47.410, 9.890),   # Andelsbuch
+    (47.400, 9.910),   # Schwarzenberg
     (47.381, 9.903),   # Bezau
+    (47.355, 9.923),   # Egg
+    (47.460, 9.870),   # Hittisau-Richtung / Lingenau
+    (47.490, 9.780),   # Bregenz-Ost / Lochau
+    (47.510, 9.710),   # Bregenz-Nord / Lauterach-Nord
+    # Kleinwalsertal
+    (47.337, 10.181),  # Riezlern
+    (47.310, 10.200),  # Hirschegg
+    (47.285, 10.219),  # Mittelberg
+    # Großes Walsertal
+    (47.230, 9.800),   # Thüringerberg / Fontanella
+    (47.170, 9.860),   # Raggal / Sonntag
+    # Montafon tiefer
+    (47.070, 9.900),   # Vandans / Tschagguns
+    (47.040, 9.960),   # St. Gallenkirch
+    # Arlberg-Vorfeld
+    (47.130, 10.020),  # Klösterle / Langen am Arlberg
 ]
 
-LAT_MIN, LAT_MAX = 47.08, 47.55
-LON_MIN, LON_MAX =  9.50, 10.00
+LAT_MIN, LAT_MAX = 47.02, 47.55
+LON_MIN, LON_MAX =  9.50, 10.25
 
 # ── Region-spezifische HTML-Strings ───────────────────────────────────────────
 TITLE           = "BilligTanken Vorarlberg – E5 Super 95"
