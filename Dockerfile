@@ -11,6 +11,8 @@ RUN apk add --no-cache \
  && echo "ServerName localhost" >> /etc/apache2/httpd.conf
 
 COPY index.html                 /var/www/localhost/htdocs/index.html
+COPY webcam-vorarlberg.html     /var/www/localhost/htdocs/webcam-vorarlberg.html
+COPY webcam-tirol.html          /var/www/localhost/htdocs/webcam-tirol.html
 COPY billigtanken_lib.py        /app/billigtanken_lib.py
 COPY billigtanken-alterlaa.py   /app/billigtanken-alterlaa.py
 COPY billigtanken-innsbruck.py  /app/billigtanken-innsbruck.py

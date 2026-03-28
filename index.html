@@ -9,19 +9,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: system-ui, sans-serif; background: #f0f4f8; }
-  header {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    color: #fff; text-align: center; padding: 1.2rem 1rem;
-    font-size: 1.25rem; font-weight: 700; letter-spacing: .03em;
-    position: relative;
-  }
-  header img.pump {
-    position: absolute; left: .9rem; top: 50%; transform: translateY(-50%);
-    height: 150px; width: auto; border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.6);
-  }
   #map {
-    height: calc(100vh - 82px);
+    height: 100vh;
     background: #dde8f0;
   }
   .leaflet-control-zoom,
@@ -58,13 +47,11 @@
     display: inline-block;
   }
   .bl-label.fuel .fuel-btn:hover { background: #c52; }
+  .bl-label.fuel .webcam-btn { background: #0077cc; }
+  .bl-label.fuel .webcam-btn:hover { background: #005fa3; }
 </style>
 </head>
 <body>
-<header>
-  <img class="pump" src="https://commons.wikimedia.org/wiki/Special:FilePath/Petrol_pump.jpg?width=120" alt="Zapfsäule">
-  ⛽ BilligTanken Österreich
-</header>
 <div id="map"></div>
 <script>
 const map = L.map('map', {
@@ -80,7 +67,7 @@ const BL = {
   'Oberösterreich':   { color: '#f7f4b3', wappen: 'Oberoesterreich_Wappen.svg',       fuel: 'schaerding-tanken.html', lat: 48.100, lon: 14.000 },
   'Salzburg':         { color: '#b3e8b3', wappen: 'Salzburg_Wappen.svg',              lat: 47.520, lon: 13.200 },
   'Tirol':            { color: '#b3cff7', wappen: 'AUT_Tirol_COA.svg',                fuel: 'innsbruck-tanken.html', lat: 47.100, lon: 11.400 },
-  'Vorarlberg':       { color: '#d4b3f7', wappen: 'Vorarlberg_CoA.svg',               fuel: 'index-vorarlberg.html', lat: 47.300, lon: 9.920 },
+  'Vorarlberg':       { color: '#d4b3f7', wappen: 'Vorarlberg_CoA.svg',               fuel: 'index-vorarlberg.html', webcam: 'webcam-vorarlberg.html', lat: 47.300, lon: 9.920 },
   'Kärnten':          { color: '#b3f4e0', wappen: 'Kaernten_CoA.svg',                 lat: 46.780, lon: 14.200 },
   'Steiermark':       { color: '#d0f4b3', wappen: 'Wappen_Steiermark.svg',            lat: 47.200, lon: 15.300 },
   'Burgenland':       { color: '#f7dcb3', wappen: 'Burgenland_Wappen.svg',            lat: 47.500, lon: 16.530 },
@@ -113,7 +100,8 @@ fetch('https://cdn.jsdelivr.net/gh/ginseng666/GeoJSON-TopoJSON-Austria@master/20
           <a class="nozzle" href="${bl.fuel}">⛽</a>
           <img src="${wappenUrl}" alt="${name}" onerror="this.style.display='none'">
           <span>${name}</span>
-          <a class="fuel-btn" href="${bl.fuel}">Preise</a>`;
+          <a class="fuel-btn" href="${bl.fuel}">Preise</a>
+          ${bl.webcam ? `<a class="fuel-btn webcam-btn" href="${bl.webcam}">📷 Webcams</a>` : ''}`;
       } else {
         inner = `
           <img src="${wappenUrl}" alt="${name}" onerror="this.style.display='none'">
