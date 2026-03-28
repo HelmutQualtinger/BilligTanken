@@ -49,15 +49,34 @@
   .bl-label.fuel .fuel-btn:hover { background: #c52; }
   .bl-label.fuel .webcam-btn { background: #0077cc; }
   .bl-label.fuel .webcam-btn:hover { background: #005fa3; }
+
+  /* ── Mobile ──────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    .bl-label img { width: 36px; height: 36px; }
+    .bl-label span { font-size: .6rem; }
+    .bl-label.fuel .nozzle { font-size: 2.2rem; }
+    .bl-label.fuel .fuel-btn {
+      font-size: .72rem;
+      padding: 6px 10px;
+      min-height: 34px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .bl-label { gap: 2px; }
+  }
 </style>
 </head>
 <body>
 <div id="map"></div>
 <script>
+const isMobile = window.matchMedia('(max-width: 600px)').matches;
 const map = L.map('map', {
-  zoomControl: false, dragging: false,
-  scrollWheelZoom: false, doubleClickZoom: false,
-  boxZoom: false, keyboard: false, touchZoom: false
+  zoomControl: false,
+  dragging: isMobile,
+  scrollWheelZoom: false,
+  doubleClickZoom: false,
+  boxZoom: false,
+  keyboard: false,
+  touchZoom: isMobile
 });
 
 // Colors and data per Bundesland
