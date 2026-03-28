@@ -50,34 +50,71 @@
   .bl-label.fuel .webcam-btn { background: #0077cc; }
   .bl-label.fuel .webcam-btn:hover { background: #005fa3; }
 
-  /* ── Mobile ──────────────────────────────────────────── */
+  /* ── Mobile list ─────────────────────────────────────── */
+  #mobile-list {
+    display: none;
+  }
   @media (max-width: 600px) {
-    .bl-label img { width: 36px; height: 36px; }
-    .bl-label span { font-size: .6rem; }
-    .bl-label.fuel .nozzle { font-size: 2.2rem; }
-    .bl-label.fuel .fuel-btn {
-      font-size: .72rem;
-      padding: 6px 10px;
-      min-height: 34px;
-      display: flex; align-items: center; justify-content: center;
+    #map { display: none; }
+    #mobile-list {
+      display: block;
+      background: #1a1a2e;
+      min-height: 100vh;
+      padding: .5rem;
     }
-    .bl-label { gap: 2px; }
+    #mobile-list h1 {
+      text-align: center;
+      color: #e0e0e0;
+      font-size: 1.1rem;
+      padding: .8rem 0 .6rem;
+    }
+    .m-row {
+      display: flex;
+      align-items: center;
+      gap: .8rem;
+      background: #252540;
+      border-radius: 10px;
+      margin-bottom: .5rem;
+      padding: .6rem .8rem;
+    }
+    .m-wappen {
+      width: 48px; height: 48px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+    .m-name {
+      flex: 1;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #e0e0e0;
+    }
+    .m-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .m-btn {
+      display: flex; align-items: center; justify-content: center;
+      min-width: 90px;
+      padding: 7px 12px;
+      border-radius: 7px;
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+      color: #fff;
+      white-space: nowrap;
+    }
+    .m-btn.fuel  { background: #e63; }
+    .m-btn.webcam { background: #0077cc; }
   }
 </style>
 </head>
 <body>
 <div id="map"></div>
+<div id="mobile-list"></div>
 <script>
 const isMobile = window.matchMedia('(max-width: 600px)').matches;
-const map = L.map('map', {
-  zoomControl: false,
-  dragging: isMobile,
-  scrollWheelZoom: false,
-  doubleClickZoom: false,
-  boxZoom: false,
-  keyboard: false,
-  touchZoom: isMobile
-});
 
 // Colors and data per Bundesland
 const BL = {
@@ -94,6 +131,34 @@ const BL = {
 
 const BASE = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
 const WAPPEN_SZ = '?width=80';
+
+if (isMobile) {
+  const list = document.getElementById('mobile-list');
+  list.innerHTML = '<h1>⛽ BilligTanken Österreich</h1>';
+  Object.entries(BL).forEach(([name, bl]) => {
+    const wappenUrl = BASE + bl.wappen + WAPPEN_SZ;
+    const btns = [
+      bl.fuel   ? `<a class="m-btn fuel"   href="${bl.fuel}">⛽ Preise</a>`   : '',
+      bl.webcam ? `<a class="m-btn webcam" href="${bl.webcam}">📷 Webcams</a>` : '',
+    ].join('');
+    list.innerHTML += `
+      <div class="m-row" style="border-left:4px solid ${bl.color}">
+        <img class="m-wappen" src="${wappenUrl}" alt="${name}" onerror="this.style.display='none'">
+        <span class="m-name">${name}</span>
+        <div class="m-btns">${btns}</div>
+      </div>`;
+  });
+}
+
+const map = L.map('map', {
+  zoomControl: false,
+  dragging: false,
+  scrollWheelZoom: false,
+  doubleClickZoom: false,
+  boxZoom: false,
+  keyboard: false,
+  touchZoom: false
+});
 
 fetch('https://cdn.jsdelivr.net/gh/ginseng666/GeoJSON-TopoJSON-Austria@master/2021/simplified-99.9/laender_999_geo.json')
   .then(r => r.json())
