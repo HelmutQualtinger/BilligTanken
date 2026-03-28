@@ -14,6 +14,7 @@ COPY index.html                 /var/www/localhost/htdocs/index.html
 COPY webcam-vorarlberg.html     /var/www/localhost/htdocs/webcam-vorarlberg.html
 COPY webcam-tirol.html          /var/www/localhost/htdocs/webcam-tirol.html
 COPY webcam-wien.html           /var/www/localhost/htdocs/webcam-wien.html
+COPY webcam-schaerding.html     /var/www/localhost/htdocs/webcam-schaerding.html
 COPY billigtanken_lib.py        /app/billigtanken_lib.py
 COPY billigtanken-alterlaa.py   /app/billigtanken-alterlaa.py
 COPY billigtanken-innsbruck.py  /app/billigtanken-innsbruck.py

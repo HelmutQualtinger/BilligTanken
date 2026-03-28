@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Webcams Schärding &amp; Innviertel</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: system-ui, sans-serif;
+  background: #111;
+  color: #e0e0e0;
+  min-height: 100vh;
+}
+header {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #fff;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+header a.back {
+  color: #aac8f0;
+  text-decoration: none;
+  font-size: .9rem;
+  white-space: nowrap;
+}
+header a.back:hover { color: #fff; }
+header h1 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex: 1;
+}
+header .refresh-info {
+  font-size: .78rem;
+  color: #aaa;
+  white-space: nowrap;
+}
+.live-wrap {
+  max-width: 1400px;
+  margin: 1rem auto 0;
+  padding: 0 1rem;
+}
+.live-label {
+  font-size: .8rem;
+  font-weight: 700;
+  color: #ff5555;
+  margin-bottom: .4rem;
+  letter-spacing: .04em;
+}
+.live-wrap iframe {
+  width: 100%;
+  height: 56vw;
+  max-height: 720px;
+  border-radius: 10px;
+  display: block;
+}
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+@media (max-width: 700px) {
+  .grid { grid-template-columns: 1fr; }
+}
+.card {
+  background: #1e1e1e;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0,0,0,.5);
+}
+.card-header {
+  padding: .6rem .9rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+.card-title {
+  font-weight: 700;
+  font-size: .95rem;
+}
+.card-sub {
+  font-size: .75rem;
+  color: #888;
+}
+.card-img-wrap {
+  position: relative;
+  background: #0a0a0a;
+}
+.card-img-wrap a {
+  display: block;
+}
+.card-img-wrap img {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
+  aspect-ratio: 4/3;
+  transition: opacity .3s;
+}
+.card-img-wrap img.loading { opacity: .4; }
+.card-footer {
+  padding: .4rem .9rem;
+  font-size: .72rem;
+  color: #666;
+}
+.status-dot {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #4caf50;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.status-dot.err { background: #e53935; }
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="index.html">← Österreich</a>
+  <h1>📷 Webcams Schärding &amp; Innviertel</h1>
+  <span class="refresh-info">Aktualisierung alle 60s</span>
+</header>
+
+<div class="live-wrap">
+  <div class="live-label">🔴 Live – Passau / Veste Oberhaus (Inn &amp; Donau Confluence)</div>
+  <iframe src="https://webtv.feratel.com/webtv/?design=v5&cam=3365"
+          marginwidth="0" marginheight="0" scrolling="no"
+          allowfullscreen style="border:none;"></iframe>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<script>
+const CAMS = [
+  {
+    name: 'Schärding – Stadtplatz',
+    sub: 'Unterer Stadtplatz, 4780 Schärding',
+    img: 'https://www.kultur-schaerding.at/webcam/current.jpg',
+    link: 'https://www.schaerding.info/barockstadt-schaerding/service/-webcam.html'
+  },
+  {
+    name: 'Braunau am Inn',
+    sub: 'Stadtplatz Braunau',
+    img: 'https://webcam.glasfaserspeed.jetzt/stadtplatz_br.jpg',
+    link: 'https://www.braunau.at/Unsere_Stadt/Freizeit_Tourismus/Webcam'
+  },
+  {
+    name: 'Ried im Innkreis – Hauptplatz',
+    sub: 'Hauptplatz Ried',
+    img: 'https://www.riedweb.at/webcam/hauptp.jpg',
+    link: 'https://www.ried.com/ried/webcam/'
+  },
+  {
+    name: 'Ried im Innkreis – Stadtüberblick',
+    sub: 'Panorama Ried',
+    img: 'https://www.riedweb.at/webcam/ried.jpg',
+    link: 'https://www.ried.com/ried/webcam/'
+  },
+  {
+    name: 'WP Munderfing',
+    sub: 'Windpark Munderfing – Innviertel',
+    img: 'https://www.foto-webcam.eu/webcam/wp-munderfing/current/1200.jpg',
+    link: 'https://www.foto-webcam.eu/webcam/wp-munderfing/'
+  },
+  {
+    name: 'Passau – Veste Oberhaus',
+    sub: 'Zusammenfluss Inn, Donau &amp; Ilz',
+    img: 'https://wtvpict.feratel.com/picture/37/3365.jpeg',
+    link: 'https://www.passau.de/rathaus-buergerservice/buergerservice/webcam/'
+  },
+];
+
+const grid = document.getElementById('grid');
+const imgEls = [];
+const timeEls = [];
+
+CAMS.forEach((cam, i) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `
+    <div class="card-header">
+      <span class="card-title">${cam.name}</span>
+      <span class="card-sub">${cam.sub}</span>
+    </div>
+    <div class="card-img-wrap">
+      <a href="${cam.link}" target="_blank" rel="noopener">
+        <img id="img${i}" src="${cam.img}?t=${Date.now()}" alt="${cam.name}" loading="lazy">
+      </a>
+    </div>
+    <div class="card-footer">
+      <span class="status-dot" id="dot${i}"></span>
+      <span id="time${i}">Lädt…</span>
+    </div>
+  `;
+  grid.appendChild(card);
+  const imgEl = document.getElementById('img' + i);
+  imgEls.push(imgEl);
+  timeEls.push(document.getElementById('time' + i));
+
+  imgEl.addEventListener('load', () => {
+    document.getElementById('dot' + i).className = 'status-dot';
+    timeEls[i].textContent = 'Aktualisiert: ' + new Date().toLocaleTimeString('de-AT');
+    imgEl.classList.remove('loading');
+  });
+  imgEl.addEventListener('error', () => {
+    document.getElementById('dot' + i).className = 'status-dot err';
+    timeEls[i].textContent = 'Nicht verfügbar';
+  });
+});
+
+function refreshAll() {
+  const t = Date.now();
+  CAMS.forEach((cam, i) => {
+    imgEls[i].classList.add('loading');
+    imgEls[i].src = cam.img + '?t=' + t;
+  });
+}
+
+setInterval(refreshAll, 60000);
+</script>
+</body>
+</html>
