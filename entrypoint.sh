@@ -8,6 +8,7 @@ WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-alterlaa.py
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-innsbruck.py
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-vorarlberg.py
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-schaerding.py
+WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-ffb.py
 
 # Cron im Hintergrund
 crond

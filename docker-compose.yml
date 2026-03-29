@@ -5,6 +5,8 @@ services:
     restart: unless-stopped
     # ports:
     #   - "8080:80"
+    environment:
+      - TANKERKOENIG_API_KEY=${TANKERKOENIG_API_KEY}
     volumes:
       - logs:/var/log
     networks:
