@@ -891,7 +891,7 @@ def generate_html(
     subdomains: 'abcd', maxZoom: 19
   }}).addTo(map);
 
-  const allMarkers = {{ sup: {{}}, die: {{}} }};
+  const allMarkers = {{ sup: {{}}, e10: {{}}, die: {{}} }};
   let currentFuel = localStorage.getItem('fuel') || 'sup';
 
   function makeIcon(color, label) {{
