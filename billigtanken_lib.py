@@ -339,6 +339,8 @@ def generate_html(
     sub_sup: str,
     sub_die: str,
     base_url: str = "",
+    stations_e10: list[dict] | None = None,
+    sub_e10: str = "",
 ) -> str:
     st_sup = _stats(stations_sup)
     st_die = _stats(stations_die)
@@ -354,6 +356,28 @@ def generate_html(
     top4_die   = "\n".join(render_mini_card(s, rank, st_die["min_p"], st_die["second_p"], "die") for rank, s in _top4_closest(stations_die))
     map_js_sup = build_map_js(stations_sup, "sup", home_name)
     map_js_die = build_map_js(stations_die, "die", home_name)
+
+    # Optional E10 tab (German market only)
+    if stations_e10:
+        st_e10     = _stats(stations_e10)
+        cards_e10  = "\n".join(render_card(s, i+1, st_e10["min_p"], st_e10["max_p"], st_e10["second_p"], "e10") for i, s in enumerate(stations_e10))
+        top4_e10   = "\n".join(render_mini_card(s, rank, st_e10["min_p"], st_e10["second_p"], "e10") for rank, s in _top4_closest(stations_e10))
+        map_js_e10 = build_map_js(stations_e10, "e10", home_name)
+        _e10_btn   = f'<button id="btn-e10" class="fuel-btn" onclick="switchFuel(\'e10\')">🌿 Benzin E10</button>'
+        _e10_sub   = f'<p class="sub" id="fuel-sub-e10" style="display:none">Top {st_e10["count"]} gemeldete E10 · Super E10 · {sub_e10 or sub_sup} · Luftlinie ab {home_name}</p>'
+        _e10_stats = f"""<div class="stats" id="stats-e10" style="display:none">
+      <div class="stat"><div class="val">{st_e10["min_p"]:.3f} €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">{st_e10["avg"]:.3f} €</div><div class="lbl">Ø Top {st_e10["count"]}</div></div>
+      <div class="stat"><div class="val hi">{st_e10["max_p"]:.3f} €</div><div class="lbl">Tagesmax.</div></div>
+      <div class="stat"><div class="val">{st_e10["span"]:.3f} €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>"""
+        _e10_top4  = f'<div id="top4-e10" class="top4-grid" style="display:none">\n{top4_e10}\n    </div>'
+        _e10_grid  = f'<main class="grid" id="grid-e10" style="display:none">\n{cards_e10}\n</main>'
+        _e10_mapjs = map_js_e10
+        _fuel_keys = "['sup', 'e10', 'die']"
+    else:
+        _e10_btn = _e10_sub = _e10_stats = _e10_top4 = _e10_grid = _e10_mapjs = ""
+        _fuel_keys = "['sup', 'die']"
     all_stations = stations_sup  # for map center
     clat = sum(s["lat"] for s in all_stations) / len(all_stations)
     clon = sum(s["lon"] for s in all_stations) / len(all_stations)
@@ -805,9 +829,11 @@ def generate_html(
       <h1>{h1}</h1>
       <div class="fuel-toggle">
         <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
+        {_e10_btn}
         <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
       </div>
       <p class="sub" id="fuel-sub-sup">Top {st_sup["count"]} gemeldete E5 · Super 95 · {sub_sup} · Luftlinie ab {home_name}</p>
+      {_e10_sub}
       <p class="sub" id="fuel-sub-die" style="display:none">Top {st_die["count"]} gemeldete Diesel · {sub_die} · Luftlinie ab {home_name}</p>
       <div class="pills">
         <span class="pill time">Aktualisiert: {fetched_at}</span>
@@ -821,6 +847,7 @@ def generate_html(
       <div class="stat"><div class="val hi">{st_sup["max_p"]:.3f} €</div><div class="lbl">Tageshöchstpreis</div></div>
       <div class="stat"><div class="val">{st_sup["span"]:.3f} €</div><div class="lbl">Max. Ersparnis</div></div>
     </div>
+    {_e10_stats}
     <div class="stats" id="stats-die" style="display:none">
       <div class="stat"><div class="val">{st_die["min_p"]:.3f} €</div><div class="lbl">Günstigster Preis</div></div>
       <div class="stat"><div class="val neu">{st_die["avg"]:.3f} €</div><div class="lbl">Ø Top {st_die["count"]}</div></div>
@@ -834,6 +861,7 @@ def generate_html(
     <div id="top4-sup" class="top4-grid">
 {top4_sup}
     </div>
+    {_e10_top4}
     <div id="top4-die" class="top4-grid" style="display:none">
 {top4_die}
     </div>
@@ -843,6 +871,7 @@ def generate_html(
 <main class="grid" id="grid-sup">
 {cards_sup}
 </main>
+{_e10_grid}
 <main class="grid" id="grid-die" style="display:none">
 {cards_die}
 </main>
@@ -959,7 +988,7 @@ def generate_html(
 
   function updateWithLocation(lat, lon, isLive) {{
     // Update distance badges and route links for both fuel sets
-    for (const fkey of ['sup', 'die']) {{
+    for (const fkey of {_fuel_keys}) {{
       for (const [rank, coords] of Object.entries(stationCoords[fkey])) {{
         const distEl = document.getElementById('dist-' + fkey + '-' + rank);
         if (distEl) distEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
@@ -1015,6 +1044,7 @@ def generate_html(
   // Register all markers (none added to map yet)
   {map_js_sup}
   {map_js_die}
+  {_e10_mapjs}
 
   // Properly initialize fuel state from localStorage (handles all UI + markers)
   (function initFuel() {{

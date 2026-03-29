@@ -118,6 +118,7 @@ if __name__ == "__main__":
     fetched_at = datetime.now().strftime("%d.%m.%Y %H:%M Uhr")
 
     stations_e5  = process_de("E5")
+    stations_e10 = process_de("E10")
     stations_die = process_de("DIE")
 
     if not stations_e5 and not stations_die:
@@ -132,5 +133,7 @@ if __name__ == "__main__":
         TITLE, META_DESCRIPTION, META_KEYWORDS,
         OG_TITLE, OG_DESCRIPTION,
         H1, SUB_E5, SUB_DIE,
+        stations_e10=stations_e10,
+        sub_e10=SUB_E5,
     )
     write_html(html, OUTPUT, OUTPUT_NEW)
