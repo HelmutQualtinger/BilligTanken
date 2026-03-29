@@ -349,10 +349,10 @@ def generate_html(
     cards_sup  = "\n".join(render_card(s, i+1, st_sup["min_p"], st_sup["max_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup))
     cards_die  = "\n".join(render_card(s, i+1, st_die["min_p"], st_die["max_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die))
     def _top4_closest(stations):
-        """From the 20 closest stations (by home_dist), return the 6 cheapest with original rank."""
-        ranked = sorted(enumerate(stations, 1), key=lambda x: x[1]["home_dist"] or 999)[:20]
+        """From stations within 10 km, return the 4 cheapest with original rank."""
+        ranked = [(i+1, s) for i, s in enumerate(stations) if (s["home_dist"] or 999) <= 10]
         ranked.sort(key=lambda x: (x[1]["price"], x[1]["home_dist"] or 999))
-        return ranked[:6]
+        return ranked[:4]
 
     top4_sup   = "\n".join(render_mini_card(s, rank, st_sup["min_p"], st_sup["second_p"], "sup") for rank, s in _top4_closest(stations_sup))
     top4_die   = "\n".join(render_mini_card(s, rank, st_die["min_p"], st_die["second_p"], "die") for rank, s in _top4_closest(stations_die))
@@ -859,7 +859,7 @@ def generate_html(
   </div>
   <div id="map"></div>
   <div class="top4-panel">
-    <div class="top4-label">Top 6</div>
+    <div class="top4-label">Top 4 &lt;10 km</div>
     <div id="top4-sup" class="top4-grid">
 {top4_sup}
     </div>
