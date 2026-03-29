@@ -105,6 +105,8 @@ def process(data: list[dict], fuel_type: str,
     for s in data:
         if not in_corridor(s, lat_min, lat_max, lon_min, lon_max):
             continue
+        if s.get("open") is False:
+            continue
         price = extract_price(s, fuel_type)
         if price is None:
             continue
@@ -972,6 +974,7 @@ def generate_html(
   // ── Geolocation ──────────────────────────────────────────────────────────
   const stationCoords = {{
     sup: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_sup))}}},
+    e10: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_e10)) if stations_e10 else ""}}},
     die: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_die))}}}
   }};
 

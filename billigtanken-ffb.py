@@ -78,6 +78,8 @@ def process_de(fuel_type: str) -> list[dict]:
     stations = fetch_all_stations()
     result = []
     for s in stations:
+        if s.get("isOpen") is False:
+            continue
         price = s.get(tk_type)
         if not price or price <= 0:
             continue
