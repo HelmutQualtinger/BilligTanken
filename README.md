@@ -51,7 +51,7 @@ open index-vorarlberg.html
 
 ```bash
 docker compose up -d --build   # starten / neu bauen
-docker compose logs -f         # live logs
+docker compose logs -f         # live logs (cron runs & errors)
 docker compose down            # stoppen
 ```
 
@@ -60,8 +60,9 @@ docker compose down            # stoppen
 | **Base Image** | `alpine:3.21` |
 | **Image-Größe** | ~88 MB |
 | **Web-Server** | Apache (httpd) |
-| **Aktualisierung** | Cron, jede Stunde (versetzt) |
+| **Aktualisierung** | Cron, jede Stunde (stündlich um :00, :15, :30, :45 UTC) |
 | **Port** | `8080` → Container `80` |
+| **Log-Datei** | `/var/log/billigtanken.log` (gelöscht bei Neustart, ~200 Zeilen/Tag) |
 
 ## Konfiguration
 
@@ -85,3 +86,11 @@ billigtanken-innsbruck.py
 billigtanken-schaerding.py
 entrypoint.sh                ← startet alle Skripte einmalig, dann cron + Apache
 ```
+
+## Aktuelle Updates (2026-03-30)
+
+✅ **Cron Schedule Fix** – Printf-Bug behoben: alle 5 regionalen Scripts laufen jetzt auf Schedule (:00, :15, :30, :45, :48)
+
+✅ **Logfile Optimierung** – Startup-Ausgabe zu `/dev/null` umgeleitet, Logdatei bei Neustart gelöscht → keine Bloatware mehr
+
+✅ **Status Line** – Claude Code zeigt jetzt `hostname:dir | model | ctx%` (inspiriert von Debian PS1)

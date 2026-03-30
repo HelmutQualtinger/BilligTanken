@@ -44,7 +44,23 @@ Shared library (`billigtanken_lib.py`) + four regional scripts, each generating 
 
 **Output path** is controlled by `WEB_ROOT` environment variable. Atomic swap prevents serving a half-written file.
 
-**Docker setup:** Single Alpine container (~88 MB) with python3 + py3-requests + apache2 + dcron. Each script runs once at startup and then on its cron schedule. Apache serves static HTML on port 80. Logs at `/var/log/billigtanken.log`.
+**Docker setup:** Single Alpine container (~88 MB) with python3 + py3-requests + apache2 + dcron. Each script runs once at startup (output suppressed to prevent logfile bloat) and then on its cron schedule every hour. Apache serves static HTML on port 80. Logs at `/var/log/billigtanken.log` (cleared at startup, ~200 lines/day from cron runs).
+
+## Cron & Logging
+
+**Cron schedule (verified working after 2026-03-30 fixes):**
+- `:00` – alterlaa
+- `:15` – innsbruck
+- `:30` – vorarlberg
+- `:45` – schaerding
+- `:48` – ffb
+
+All runs append to `/var/log/billigtanken.log` (cron output only; startup output suppressed).
+
+**Important notes:**
+- Startup logs redirected to `/dev/null` to prevent logfile bloat (each run generates ~1,000 lines)
+- Logfile cleared at `entrypoint.sh` startup
+- Expected log size: ~200 lines/day (5 cron runs)
 
 ## Workflow
 
