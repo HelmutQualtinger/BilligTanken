@@ -20,15 +20,16 @@ docker compose down
 
 ## Architecture
 
-Shared library (`billigtanken_lib.py`) + four regional scripts, each generating its own HTML page.
+Shared library (`billigtanken_lib.py`) + five regional scripts, each generating its own HTML page.
 
 **Regional scripts:**
-| Script | Output file | Cron |
-|--------|-------------|------|
-| `billigtanken-alterlaa.py` | `alterlaa-tanken.html` | `:00` |
-| `billigtanken-innsbruck.py` | `innsbruck-tanken.html` | `:15` |
-| `billigtanken-vorarlberg.py` | `index-vorarlberg.html` | `:30` |
-| `billigtanken-schaerding.py` | `schaerding-tanken.html` | `:45` |
+| Script | Output file | Region | API | Cron |
+|--------|-------------|--------|-----|------|
+| `billigtanken-alterlaa.py` | `alterlaa-tanken.html` | Wien – Alterlaa | E-Control (AT) | `:00` |
+| `billigtanken-innsbruck.py` | `innsbruck-tanken.html` | Innsbruck | E-Control (AT) | `:15` |
+| `billigtanken-vorarlberg.py` | `index-vorarlberg.html` | Vorarlberg | E-Control (AT) | `:30` |
+| `billigtanken-schaerding.py` | `schaerding-tanken.html` | Schärding / OÖ | E-Control (AT) | `:45` |
+| `billigtanken-ffb.py` | `ffb-tanken.html` | Fürstenfeldbruck / Bayern | Tankerkönig (DE) | `:48` |
 
 **Data flow (per region):**
 1. Queries the Austrian E-Control API (`api.e-control.at/sprit/1.0/`) at multiple coordinate points (API returns max 10 stations per request)
@@ -76,10 +77,17 @@ After **every** code change:
 - **CSS theme variables**: Place default CSS variables (e.g. `--link-color`) inside `:root, [data-theme="dark"]` — never in a standalone `:root` block that appears after `[data-theme="light"]`, as equal specificity means last declaration wins and will override the light theme values
 - **brand_initial fallback**: Single-character station names duplicate the letter rather than crash
 
-**E-Control API notes:**
+**API notes:**
+
+**E-Control API (Austria - Alterlaa, Innsbruck, Vorarlberg, Schärding):**
 - Only `SUP` (Super 95) and `DIE` (Diesel) are valid fuel types – E10 is not sold in Austria
 - Austria has a regulated daily maximum price; most brand stations charge exactly this price, only Diskont/Disk/Avanti/JET/BayWa stations typically undercut it
 - ~30% of stations in the area don't report prices to the system (Shell, some ENI) and are excluded
+
+**Tankerkönig API (Germany - Fürstenfeldbruck):**
+- Official MTS-K data from German Bundesnetzagentur
+- Supports Super 95 (E5), E10, and Diesel
+- Provides real-time price data for German gas stations
 
 **Frontend (embedded in generated HTML):**
 - Leaflet.js + CARTO Voyager tiles for the map

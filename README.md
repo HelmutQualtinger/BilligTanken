@@ -6,12 +6,13 @@ Echtzeit-Übersicht der günstigsten **E5 (Super 95)** und **Diesel** Tankstelle
 
 ## Regionen
 
-| Region | Script | Referenzpunkt | Cron |
-|--------|--------|---------------|------|
-| Vorarlberg (Bregenz – Feldkirch) | `billigtanken-vorarlberg.py` | Rebstein CH | `:30` |
-| Wien – Alterlaa | `billigtanken-alterlaa.py` | Alterlaa | `:00` |
-| Innsbruck | `billigtanken-innsbruck.py` | Innsbruck | `:15` |
-| Schärding / OÖ | `billigtanken-schaerding.py` | Schärding | `:45` |
+| Region | Script | Referenzpunkt | API | Cron |
+|--------|--------|---------------|-----|------|
+| Wien – Alterlaa | `billigtanken-alterlaa.py` | Alterlaa | E-Control (AT) | `:00` |
+| Innsbruck | `billigtanken-innsbruck.py` | Innsbruck | E-Control (AT) | `:15` |
+| Vorarlberg (Bregenz – Feldkirch) | `billigtanken-vorarlberg.py` | Rebstein CH | E-Control (AT) | `:30` |
+| Schärding / OÖ | `billigtanken-schaerding.py` | Schärding | E-Control (AT) | `:45` |
+| Fürstenfeldbruck / Bayern 🇩🇪 | `billigtanken-ffb.py` | FFB Bahnhof | Tankerkönig (DE) | `:48` |
 
 ## Features
 
@@ -25,12 +26,14 @@ Echtzeit-Übersicht der günstigsten **E5 (Super 95)** und **Diesel** Tankstelle
 - **Automatische Aktualisierung** – Cron stündlich, atomarer Datei-Swap (kein Flackern)
 - Nur Stationen mit **gemeldeten Preisen** werden angezeigt
 
-## Datenquelle
+## Datenquellen
 
-[E-Control Austria](https://www.spritpreisrechner.at/) – gesetzlich verpflichtende Preistransparenzdatenbank.
+**Österreich** – [E-Control Austria](https://www.spritpreisrechner.at/) – gesetzlich verpflichtende Preistransparenzdatenbank.
 In Österreich gilt ein staatlicher **Tageshöchstpreis** (Erhöhungen nur Mo/Mi/Fr um 12 Uhr). Diskont-Ketten (Disk, Avanti, JET) unterbieten ihn regelmäßig.
 
-> **Hinweis:** E10 wird in Österreich nicht verkauft. Das österreichische Äquivalent ist Super 95 (E5).
+**Deutschland** – [Tankerkönig](https://creativecommons.tankerkoenig.de/) – MTS-K Daten der Bundesnetzagentur (E-Control Pendant).
+
+> **Hinweis:** E10 wird in Österreich nicht verkauft. Das österreichische Äquivalent ist Super 95 (E5). In Deutschland sind E5, E10 und Diesel verfügbar.
 
 ## Quickstart
 
@@ -92,5 +95,7 @@ entrypoint.sh                ← startet alle Skripte einmalig, dann cron + Apac
 ✅ **Cron Schedule Fix** – Printf-Bug behoben: alle 5 regionalen Scripts laufen jetzt auf Schedule (:00, :15, :30, :45, :48)
 
 ✅ **Logfile Optimierung** – Startup-Ausgabe zu `/dev/null` umgeleitet, Logdatei bei Neustart gelöscht → keine Bloatware mehr
+
+✅ **FFB Integration** – Neue Region: Fürstenfeldbruck mit deutscher Tankerkönig API (MTS-K Daten der Bundesnetzagentur)
 
 ✅ **Status Line** – Claude Code zeigt jetzt `hostname:dir | model | ctx%` (inspiriert von Debian PS1)
