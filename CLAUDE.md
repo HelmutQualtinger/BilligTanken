@@ -54,7 +54,7 @@ After **every** code change:
 
 ## Design Decisions
 
-- **Map tiles**: Use CARTO Positron tiles (high-contrast streets, clean light background)
+- **Map tiles**: Use CARTO Voyager (light/colorful) tiles — dark tiles were rejected by user
 - **Price ranking**: All stations tied at the same price get the same medal rank (all 🥇, all 🥈, etc.); distance from reference point is the tiebreaker within each price tier
 - **Top 6 panel**: Shows the 6 cheapest stations among the 20 closest (by home_dist). Ranks in the mini-cards match the main grid card IDs for correct scroll-to behavior.
 - **CSS theme variables**: Place default CSS variables (e.g. `--link-color`) inside `:root, [data-theme="dark"]` — never in a standalone `:root` block that appears after `[data-theme="light"]`, as equal specificity means last declaration wins and will override the light theme values
@@ -66,7 +66,7 @@ After **every** code change:
 - ~30% of stations in the area don't report prices to the system (Shell, some ENI) and are excluded
 
 **Frontend (embedded in generated HTML):**
-- Leaflet.js + CARTO Positron tiles for the map (high-contrast street rendering)
+- Leaflet.js + CARTO Voyager tiles for the map
 - Browser Geolocation API: if granted, recalculates all distances and route links from actual GPS position; falls back to `HOME_LAT/HOME_LON`
 - Route buttons open Google Maps Directions with origin set to user's location
 - Brand logos via `https://www.google.com/s2/favicons?domain={domain}&sz=128` with initials fallback on error
