@@ -400,6 +400,11 @@ def generate_html(
   <meta name="color-scheme" content="dark light" />
   <title>{title}</title>
 
+  <!-- Cache Control -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <!-- SEO & Meta Tags -->
   <meta name="description" content="{meta_description}" />
   <meta name="keywords" content="{meta_keywords}" />
