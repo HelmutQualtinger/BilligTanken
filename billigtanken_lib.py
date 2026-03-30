@@ -349,10 +349,10 @@ def generate_html(
     cards_sup  = "\n".join(render_card(s, i+1, st_sup["min_p"], st_sup["max_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup))
     cards_die  = "\n".join(render_card(s, i+1, st_die["min_p"], st_die["max_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die))
     def _top4_closest(stations):
-        """From stations within 10 km, return the 4 cheapest with original rank."""
+        """From stations within 10 km, return the 6 closest sorted by distance."""
         ranked = [(i+1, s) for i, s in enumerate(stations) if (s["home_dist"] or 999) <= 10]
-        ranked.sort(key=lambda x: (x[1]["price"], x[1]["home_dist"] or 999))
-        return ranked[:4]
+        ranked.sort(key=lambda x: (x[1]["home_dist"] or 999))
+        return ranked[:6]
 
     top4_sup   = "\n".join(render_mini_card(s, rank, st_sup["min_p"], st_sup["second_p"], "sup") for rank, s in _top4_closest(stations_sup))
     top4_die   = "\n".join(render_mini_card(s, rank, st_die["min_p"], st_die["second_p"], "die") for rank, s in _top4_closest(stations_die))
