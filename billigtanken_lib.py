@@ -893,7 +893,19 @@ def generate_html(
   // ── Leaflet Map ───────────────────────────────────────────────────────────
   const map = L.map('map', {{ zoomControl: true }}).setView([{clat:.4f}, {clon:.4f}], 11);
 
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+  // Detect theme and use appropriate tile layer
+  function getIsDarkMode() {{
+    return document.documentElement.getAttribute('data-theme') === 'dark' ||
+           (!document.documentElement.getAttribute('data-theme') && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  }}
+
+  function getTileUrl() {{
+    return getIsDarkMode()
+      ? 'https://{{s}}.basemaps.cartocdn.com/rastertiles/dark_all/{{z}}/{{x}}/{{y}}{{r}}.png'
+      : 'https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png';
+  }}
+
+  let tileLayer = L.tileLayer(getTileUrl(), {{
     attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19
   }}).addTo(map);
@@ -969,6 +981,14 @@ def generate_html(
     document.querySelectorAll('.theme-toggle button').forEach((btn, i) => {{
       btn.classList.toggle('active', ['light','system','dark'][i] === t);
     }});
+    // Update map tiles when theme changes
+    if (typeof tileLayer !== 'undefined' && map) {{
+      map.removeLayer(tileLayer);
+      tileLayer = L.tileLayer(getTileUrl(), {{
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>',
+        subdomains: 'abcd', maxZoom: 19
+      }}).addTo(map);
+    }}
   }}
   // Init from localStorage or system
   (function() {{
