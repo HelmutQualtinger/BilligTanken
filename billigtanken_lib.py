@@ -222,6 +222,20 @@ def generate_html(
     brand_colors_js = json.dumps(BRAND_COLORS, ensure_ascii=False)
     brand_domains_js = json.dumps(BRAND_DOMAINS, ensure_ascii=False)
 
+    # Inline Leaflet to avoid any CDN/proxy blocking (e.g. Brave Shields)
+    _leaflet_js_path  = Path("/var/www/localhost/htdocs/leaflet.js")
+    _leaflet_css_path = Path("/var/www/localhost/htdocs/leaflet.css")
+    if _leaflet_js_path.exists() and _leaflet_css_path.exists():
+        leaflet_head = (
+            f"<style>\n{_leaflet_css_path.read_text()}\n</style>\n"
+            f"<script>\n{_leaflet_js_path.read_text()}\n</script>"
+        )
+    else:
+        leaflet_head = (
+            '<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>\n'
+            '  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>'
+        )
+
     return f"""<!DOCTYPE html>
 <html lang="de">
 <head>
@@ -292,9 +306,8 @@ def generate_html(
   }}
   </script>
 
-  <!-- Leaflet.js for map (self-hosted to avoid CDN blocks in Brave/Firefox) -->
-  <link rel="stylesheet" href="/leaflet.css?v=1.9.4" />
-  <script src="/leaflet.js?v=1.9.4"></script>
+  <!-- Leaflet.js inlined to avoid any CDN or proxy blocking (Brave Shields, etc.) -->
+  {leaflet_head}
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
