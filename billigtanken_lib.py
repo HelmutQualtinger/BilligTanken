@@ -29,7 +29,7 @@ BRAND_COLORS = {
     "bp":      "#009a44",
     "esso":    "#003087",
     "avia":    "#e2001a",
-    "oil!":       "#00555",
+    "oil!":    "#005550",
     "baywa":   "#007db5",
     "loacker": "#6db33f",
     "gutmann": "#070605",
@@ -129,190 +129,26 @@ def process(data: list[dict], fuel_type: str,
     result.sort(key=lambda x: (x["price"], x["home_dist"] or 999))
     return result[:top_n]
 
-# ── HTML-Hilfsfunktionen ───────────────────────────────────────────────────────
-def brand_color(name: str) -> str:
-    n = name.lower()
-    for key, color in BRAND_COLORS.items():
-        if key in n:
-            return color
-    return "#4f46e5"
+# ── Daten aufbereiten ─────────────────────────────────────────────────────────
+def _top6_ranks(stations: list[dict]) -> list[int]:
+    """Ranks (1-based) der 6 nächstgelegenen Stationen innerhalb 10 km."""
+    ranked = [(i+1, s) for i, s in enumerate(stations) if (s["home_dist"] or 999) <= 10]
+    ranked.sort(key=lambda x: (x[1]["home_dist"] or 999))
+    return [rank for rank, _ in ranked[:6]]
 
-def brand_logo_url(name: str) -> str | None:
-    n = name.lower()
-    # Direct high-quality logos for iconic brands
-    if "eni" in n:
-        return "https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png"
-    if "bp" in n:
-        return "https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png"
-
-    for key, domain in BRAND_DOMAINS.items():
-        if key in n:
-            return f"https://www.google.com/s2/favicons?domain={domain}&sz=128"
-    return None
-
-def brand_initial(name: str) -> str:
-    words = name.strip().split()
-    if not words:
-        return "?"
-    first = words[0][0]
-    second = words[1][0] if len(words) > 1 else (words[0][1] if len(words[0]) > 1 else first)
-    return (first + second).upper()
-
-def open_badge(is_open) -> str:
-    if is_open is True:
-        return '<span class="badge open">Offen</span>'
-    if is_open is False:
-        return '<span class="badge closed">Geschlossen</span>'
-    return ""
-
-def savings_badge(price: float, max_price: float) -> str:
-    diff = max_price - price
-    if diff <= 0:
-        return '<span class="savings maxprice">Höchstpreis</span>'
-    return f'<span class="savings">− {diff:.3f} €</span>'
-
-def price_bar(price: float, min_price: float, max_price: float) -> str:
-    span = max_price - min_price
-    pct  = int(100 * (price - min_price) / span) if span else 0
-    hue  = int(120 * (1 - pct / 100))
-    return (
-        f'<div class="price-bar-wrap">'
-        f'<div class="price-bar" style="width:{max(4,pct)}%; background:hsl({hue},70%,45%)"></div>'
-        f'</div>'
-    )
-
-def rank_label(rank: int, price: float, min_price: float, second_price: float) -> tuple[str, str]:
-    if price == min_price:
-        return "rank-gold", '<span class="medal gold">🥇 Günstigste</span>'
-    if price == second_price:
-        return "rank-silver", '<span class="medal silver">🥈 2. Preis</span>'
-    return "", f'<span class="rank-num">#{rank}</span>'
-
-def marker_color(rank: int, total: int) -> str:
-    """Green → yellow → red gradient across ranks."""
-    hue = int(120 * (1 - (rank - 1) / max(total - 1, 1)))
-    return f"hsl({hue},80%,45%)"
-
-def render_mini_card(s: dict, rank: int, min_p: float, second_p: float, fkey: str) -> str:
-    color             = brand_color(s["name"])
-    logo_url          = brand_logo_url(s["name"])
-    is_eni            = "eni" in s["name"].lower()
-    is_bp             = "bp" in s["name"].lower()
-    rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
-    home_dist_str = f"{s['home_dist']} km" if s["home_dist"] else "–"
-    if logo_url:
-        extra_cls   = 'brand-eni' if is_eni else ('brand-bp' if is_bp else '')
-        avatar_html = (f'<div class="mini-avatar avatar-logo {extra_cls}" style="--brand:{color}">'
-                       f'<img src="{logo_url}" alt="{s["name"]}"'
-                       f' onerror="this.parentElement.innerHTML=\'<span>{brand_initial(s["name"])}</span>\'">'
-                       f'</div>')
-    else:
-        avatar_html = f'<div class="mini-avatar" style="background:{color}">{brand_initial(s["name"])}</div>'
-    return f"""<div class="mini-card {rclass}" onclick="document.getElementById('card-{fkey}-{rank}').scrollIntoView({{behavior:'smooth',block:'center'}})">
-  <div class="mini-top">{avatar_html}<span class="mini-rank">{rank_html}</span><span class="mini-badges">{open_badge(s['open'])}<span class="dist mini-dist" id="mdist-{fkey}-{rank}">📍 {home_dist_str}</span></span></div>
-  <div class="mini-name">{s['name']}</div>
-  <a class="mini-address address" onclick="focusMarker('{fkey}', {rank}); return false;" href="#">
-    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
-         fill="none" stroke="currentColor" stroke-width="2.2">
-      <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-      <circle cx="12" cy="10" r="3"/>
-    </svg>
-    {s['street']}, {s['zip']} {s['city']}
-  </a>
-  <div class="mini-footer">
-    <div class="mini-price">{s['price']:.3f} <small>€/L</small></div>
-    <a class="map-btn route-btn mini-route" id="mroute-{fkey}-{rank}"
-       href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}&travelmode=driving"
-       target="_blank" rel="noopener" onclick="event.stopPropagation()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24"
-           fill="none" stroke="currentColor" stroke-width="2">
-        <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-      </svg>
-      Route
-    </a>
-  </div>
-</div>"""
-
-def render_card(s: dict, rank: int, min_p: float, max_p: float, second_p: float, fkey: str) -> str:
-    color           = brand_color(s["name"])
-    logo_url        = brand_logo_url(s["name"])
-    is_eni          = "eni" in s["name"].lower()
-    is_bp           = "bp" in s["name"].lower()
-    rclass, rank_html = rank_label(rank, s["price"], min_p, second_p)
-    home = f'<span class="dist home-dist" id="dist-{fkey}-{rank}">📍 {s["home_dist"]} km</span>' if s["home_dist"] else f'<span class="dist home-dist" id="dist-{fkey}-{rank}">📍 –</span>'
-
-    if logo_url:
-        extra_cls = 'brand-eni' if is_eni else ('brand-bp' if is_bp else '')
-        avatar_html = f"""<div class="avatar avatar-logo {extra_cls}" style="--brand:{color}">
-          <img src="{logo_url}" alt="{s['name']}"
-               onerror="this.parentElement.innerHTML='<span>{brand_initial(s["name"])}</span>'">
-        </div>"""
-    else:
-        avatar_html = f'<div class="avatar" style="background:{color}">{brand_initial(s["name"])}</div>'
-
-    return f"""
-    <article class="card {rclass}" id="card-{fkey}-{rank}" style="--brand:{color}"
-             data-lat="{s['lat']}" data-lon="{s['lon']}" data-rank="{rank}">
-      <div class="card-header">
-        {avatar_html}
-        <div class="card-meta">
-          {rank_html}
-          {open_badge(s['open'])}
-          {home}
-        </div>
-      </div>
-      <div class="card-body">
-        <h2 class="station-name">{s['name']}</h2>
-        <a class="address" onclick="focusMarker('{fkey}', {rank}); return false;" href="#">
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-               fill="none" stroke="currentColor" stroke-width="2.2">
-            <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
-          </svg>
-          {s['street']}, {s['zip']} {s['city']}
-        </a>
-      </div>
-      <div class="card-footer">
-        <div class="price-block">
-          <div class="price-row">
-            <span class="price">{s['price']:.3f} <small>€/L</small></span>
-            {savings_badge(s['price'], max_p)}
-          </div>
-          {price_bar(s['price'], min_p, max_p)}
-        </div>
-        <div class="btn-group">
-          <a class="map-btn route-btn" id="route-{fkey}-{rank}"
-             href="https://www.google.com/maps/dir/?api=1&destination={s['lat']},{s['lon']}&travelmode=driving"
-             target="_blank" rel="noopener">
-            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
-                 fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="3 11 22 2 13 21 11 13 3 11"/>
-            </svg>
-            Route
-          </a>
-        </div>
-      </div>
-    </article>"""
-
-def build_map_js(stations: list[dict], fkey: str, home_name: str) -> str:
-    total = len(stations)
-    markers = []
-    for i, s in enumerate(stations):
-        rank  = i + 1
-        color = marker_color(rank, total)
-        label = rank
-        dist_str = f"<br>📍 {s['home_dist']} km ab {home_name}" if s.get("home_dist") else ""
-        popup = (
-            f"<b>#{rank} {s['name']}</b><br>"
-            f"{s['street']}, {s['zip']} {s['city']}<br>"
-            f"<span style='font-size:1.2em;font-weight:700'>{s['price']:.3f} €/L</span>"
-            f"{dist_str}"
-        )
-        markers.append(
-            f"addMarker({json.dumps(fkey)}, {s['lat']}, {s['lon']}, {json.dumps(popup)}, "
-            f"{json.dumps(color)}, {label}, {rank});"
-        )
-    return "\n    ".join(markers)
+def _fuel_json(stations: list[dict], stats: dict) -> dict:
+    return {
+        "stats": {
+            "min":    stats["min_p"],
+            "second": stats["second_p"],
+            "max":    stats["max_p"],
+        },
+        "top6": _top6_ranks(stations),
+        "data": [
+            {k: s[k] for k in ("name", "lat", "lon", "price", "street", "zip", "city", "open", "home_dist")}
+            for s in stations
+        ],
+    }
 
 def _stats(stations: list[dict]) -> dict:
     prices = sorted(set(s["price"] for s in stations))
@@ -346,26 +182,18 @@ def generate_html(
 ) -> str:
     st_sup = _stats(stations_sup)
     st_die = _stats(stations_die)
-    cards_sup  = "\n".join(render_card(s, i+1, st_sup["min_p"], st_sup["max_p"], st_sup["second_p"], "sup") for i, s in enumerate(stations_sup))
-    cards_die  = "\n".join(render_card(s, i+1, st_die["min_p"], st_die["max_p"], st_die["second_p"], "die") for i, s in enumerate(stations_die))
-    def _top4_closest(stations):
-        """From stations within 10 km, return the 6 closest sorted by distance."""
-        ranked = [(i+1, s) for i, s in enumerate(stations) if (s["home_dist"] or 999) <= 10]
-        ranked.sort(key=lambda x: (x[1]["home_dist"] or 999))
-        return ranked[:6]
 
-    top4_sup   = "\n".join(render_mini_card(s, rank, st_sup["min_p"], st_sup["second_p"], "sup") for rank, s in _top4_closest(stations_sup))
-    top4_die   = "\n".join(render_mini_card(s, rank, st_die["min_p"], st_die["second_p"], "die") for rank, s in _top4_closest(stations_die))
-    map_js_sup = build_map_js(stations_sup, "sup", home_name)
-    map_js_die = build_map_js(stations_die, "die", home_name)
+    # Build STATIONS JSON for JS rendering
+    stations_data: dict = {
+        "sup": _fuel_json(stations_sup, st_sup),
+        "die": _fuel_json(stations_die, st_die),
+    }
 
     # Optional E10 tab (German market only)
     if stations_e10:
         st_e10     = _stats(stations_e10)
-        cards_e10  = "\n".join(render_card(s, i+1, st_e10["min_p"], st_e10["max_p"], st_e10["second_p"], "e10") for i, s in enumerate(stations_e10))
-        top4_e10   = "\n".join(render_mini_card(s, rank, st_e10["min_p"], st_e10["second_p"], "e10") for rank, s in _top4_closest(stations_e10))
-        map_js_e10 = build_map_js(stations_e10, "e10", home_name)
-        _e10_btn   = f'<button id="btn-e10" class="fuel-btn" onclick="switchFuel(\'e10\')">🌿 Benzin E10</button>'
+        stations_data["e10"] = _fuel_json(stations_e10, st_e10)
+        _e10_btn   = '<button id="btn-e10" class="fuel-btn" onclick="switchFuel(\'e10\')">🌿 Benzin E10</button>'
         _e10_sub   = f'<p class="sub" id="fuel-sub-e10" style="display:none">Top {st_e10["count"]} gemeldete E10 · Super E10 · {sub_e10 or sub_sup} · Luftlinie ab {home_name}</p>'
         _e10_stats = f"""<div class="stats" id="stats-e10" style="display:none">
       <div class="stat"><div class="val">{st_e10["min_p"]:.3f} €</div><div class="lbl">Günstigster Preis</div></div>
@@ -373,23 +201,26 @@ def generate_html(
       <div class="stat"><div class="val hi">{st_e10["max_p"]:.3f} €</div><div class="lbl">Tagesmax.</div></div>
       <div class="stat"><div class="val">{st_e10["span"]:.3f} €</div><div class="lbl">Max. Ersparnis</div></div>
     </div>"""
-        _e10_top4  = f'<div id="top4-e10" class="top4-grid" style="display:none">\n{top4_e10}\n    </div>'
-        _e10_grid  = f'<main class="grid" id="grid-e10" style="display:none">\n{cards_e10}\n</main>'
-        _e10_mapjs = map_js_e10
+        _e10_top4  = '<div id="top4-e10" class="top4-grid" style="display:none"></div>'
+        _e10_grid  = '<main class="grid" id="grid-e10" style="display:none"></main>'
+        _e10_init  = "initStations('e10');"
         _fuel_keys = "['sup', 'e10', 'die']"
     else:
-        _e10_btn = _e10_sub = _e10_stats = _e10_top4 = _e10_grid = _e10_mapjs = ""
+        _e10_btn = _e10_sub = _e10_stats = _e10_top4 = _e10_grid = _e10_init = ""
         _fuel_keys = "['sup', 'die']"
-    all_stations = stations_sup  # for map center
+
+    all_stations = stations_sup
     clat = sum(s["lat"] for s in all_stations) / len(all_stations)
     clon = sum(s["lon"] for s in all_stations) / len(all_stations)
-    # backward-compat aliases used in the template below
-    stations = stations_sup
-    min_p, max_p, avg, span = st_sup["min_p"], st_sup["max_p"], st_sup["avg"], st_sup["span"]
 
     # Build absolute og:image URL
     og_image_url = f"{base_url}/screenshots/preview.png" if base_url else "screenshots/preview.png"
     page_url = base_url or ""
+
+    # Serialize STATIONS to JS — compact JSON, safe for embedding
+    stations_js = json.dumps(stations_data, ensure_ascii=False, separators=(",", ":"))
+    brand_colors_js = json.dumps(BRAND_COLORS, ensure_ascii=False)
+    brand_domains_js = json.dumps(BRAND_DOMAINS, ensure_ascii=False)
 
     return f"""<!DOCTYPE html>
 <html lang="de">
@@ -461,9 +292,9 @@ def generate_html(
   }}
   </script>
 
-  <!-- Leaflet.js for map -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Leaflet.js for map (self-hosted to avoid CDN blocks in Brave/Firefox) -->
+  <link rel="stylesheet" href="/leaflet.css" />
+  <script src="/leaflet.js"></script>
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
@@ -865,23 +696,15 @@ def generate_html(
   <div id="map"></div>
   <div class="top4-panel">
     <div class="top4-label">Top 4 &lt;10 km</div>
-    <div id="top4-sup" class="top4-grid">
-{top4_sup}
-    </div>
+    <div id="top4-sup" class="top4-grid"></div>
     {_e10_top4}
-    <div id="top4-die" class="top4-grid" style="display:none">
-{top4_die}
-    </div>
+    <div id="top4-die" class="top4-grid" style="display:none"></div>
   </div>
 </div>
 
-<main class="grid" id="grid-sup">
-{cards_sup}
-</main>
+<main class="grid" id="grid-sup"></main>
 {_e10_grid}
-<main class="grid" id="grid-die" style="display:none">
-{cards_die}
-</main>
+<main class="grid" id="grid-die" style="display:none"></main>
 
 <footer class="pf">
   Datenquelle: <a href="https://www.spritpreisrechner.at" target="_blank">E-Control Austria</a>
@@ -890,6 +713,171 @@ def generate_html(
 </footer>
 
 <script>
+  // ── Station data (server-rendered JSON) ──────────────────────────────────
+  const STATIONS = {stations_js};
+
+  // ── Brand helpers ─────────────────────────────────────────────────────────
+  const BRAND_COLORS  = {brand_colors_js};
+  const BRAND_DOMAINS = {brand_domains_js};
+
+  function brandColor(name) {{
+    const n = name.toLowerCase();
+    for (const [key, color] of Object.entries(BRAND_COLORS)) {{
+      if (n.includes(key)) return color;
+    }}
+    return "#4f46e5";
+  }}
+
+  function brandLogo(name) {{
+    const n = name.toLowerCase();
+    if (n.includes("eni")) return "https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png";
+    if (n.includes("bp"))  return "https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png";
+    for (const [key, domain] of Object.entries(BRAND_DOMAINS)) {{
+      if (n.includes(key)) return `https://www.google.com/s2/favicons?domain=${{domain}}&sz=128`;
+    }}
+    return null;
+  }}
+
+  function brandInitial(name) {{
+    const words = name.trim().split(/\s+/);
+    if (!words.length || !words[0]) return "?";
+    const first = words[0][0];
+    const second = words.length > 1 ? words[1][0] : (words[0].length > 1 ? words[0][1] : first);
+    return (first + second).toUpperCase();
+  }}
+
+  function markerColor(rank, total) {{
+    const hue = Math.round(120 * (1 - (rank - 1) / Math.max(total - 1, 1)));
+    return `hsl(${{hue}},80%,45%)`;
+  }}
+
+  function rankInfo(rank, price, minP, secondP) {{
+    const p = Math.round(price * 1000);
+    if (p === Math.round(minP * 1000))    return {{ cls: "rank-gold",   html: '<span class="medal gold">🥇 Günstigste</span>' }};
+    if (p === Math.round(secondP * 1000)) return {{ cls: "rank-silver", html: '<span class="medal silver">🥈 2. Preis</span>' }};
+    return {{ cls: "", html: `<span class="rank-num">#${{rank}}</span>` }};
+  }}
+
+  function openBadge(isOpen) {{
+    if (isOpen === true)  return '<span class="badge open">Offen</span>';
+    if (isOpen === false) return '<span class="badge closed">Geschlossen</span>';
+    return "";
+  }}
+
+  function savingsBadge(price, maxP) {{
+    const diff = maxP - price;
+    if (diff < 0.0005) return '<span class="savings maxprice">Höchstpreis</span>';
+    return `<span class="savings">− ${{diff.toFixed(3)}} €</span>`;
+  }}
+
+  function priceBar(price, minP, maxP) {{
+    const span = maxP - minP;
+    const pct = span ? Math.round(100 * (price - minP) / span) : 0;
+    const hue = Math.round(120 * (1 - pct / 100));
+    return `<div class="price-bar-wrap"><div class="price-bar" style="width:${{Math.max(4, pct)}}%;background:hsl(${{hue}},70%,45%)"></div></div>`;
+  }}
+
+  function makeAvatar(name, color, big) {{
+    const logo = brandLogo(name);
+    const n = name.toLowerCase();
+    const isEni = n.includes("eni"), isBp = n.includes("bp");
+    if (logo) {{
+      const ex = isEni ? "brand-eni" : (isBp ? "brand-bp" : "");
+      const cls = big ? `avatar avatar-logo ${{ex}}` : `mini-avatar avatar-logo ${{ex}}`;
+      return `<div class="${{cls}}" style="--brand:${{color}}"><img src="${{logo}}" alt="${{name}}" onerror="this.parentElement.innerHTML='<span>${{brandInitial(name)}}</span>'"></div>`;
+    }}
+    const cls = big ? "avatar" : "mini-avatar";
+    return `<div class="${{cls}}" style="background:${{color}}">${{brandInitial(name)}}</div>`;
+  }}
+
+  const SVG_PIN = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const SVG_PIN_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const SVG_ROUTE = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+  const SVG_ROUTE_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+
+  // ── Card renderers ────────────────────────────────────────────────────────
+  function renderCard(s, rank, fkey, stats) {{
+    const {{ min, second, max }} = stats;
+    const color = brandColor(s.name);
+    const {{ cls, html: rankHtml }} = rankInfo(rank, s.price, min, second);
+    const distStr = s.home_dist != null ? `📍 ${{s.home_dist.toFixed(1)}} km` : "📍 –";
+    const dest = `${{s.lat}},${{s.lon}}`;
+    const mapsHref = `https://www.google.com/maps/dir/?api=1&destination=${{dest}}&travelmode=driving`;
+
+    const art = document.createElement('article');
+    art.className = `card ${{cls}}`;
+    art.id = `card-${{fkey}}-${{rank}}`;
+    art.style.cssText = `--brand:${{color}}`;
+    art.innerHTML = `
+      <div class="card-header">
+        ${{makeAvatar(s.name, color, true)}}
+        <div class="card-meta">
+          ${{rankHtml}}
+          ${{openBadge(s.open)}}
+          <span class="dist home-dist" id="dist-${{fkey}}-${{rank}}">${{distStr}}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">${{s.name}}</h2>
+        <a class="address" onclick="focusMarker('${{fkey}}',${{rank}});return false;" href="#">
+          ${{SVG_PIN}} ${{s.street}}, ${{s.zip}} ${{s.city}}
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">${{s.price.toFixed(3)}} <small>€/L</small></span>
+            ${{savingsBadge(s.price, max)}}
+          </div>
+          ${{priceBar(s.price, min, max)}}
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-${{fkey}}-${{rank}}"
+             href="${{mapsHref}}" target="_blank" rel="noopener">
+            ${{SVG_ROUTE}} Route
+          </a>
+        </div>
+      </div>`;
+    return art;
+  }}
+
+  function renderMiniCard(s, rank, fkey, stats) {{
+    const {{ min, second }} = stats;
+    const color = brandColor(s.name);
+    const {{ cls, html: rankHtml }} = rankInfo(rank, s.price, min, second);
+    const distStr = s.home_dist != null ? `📍 ${{s.home_dist.toFixed(1)}} km` : "📍 –";
+    const dest = `${{s.lat}},${{s.lon}}`;
+    const mapsHref = `https://www.google.com/maps/dir/?api=1&destination=${{dest}}&travelmode=driving`;
+
+    const div = document.createElement('div');
+    div.className = `mini-card ${{cls}}`;
+    div.style.cssText = `--brand:${{color}}`;
+    div.setAttribute('onclick',
+      `document.getElementById('card-${{fkey}}-${{rank}}').scrollIntoView({{behavior:'smooth',block:'center'}})`);
+    div.innerHTML = `
+      <div class="mini-top">
+        ${{makeAvatar(s.name, color, false)}}
+        <span class="mini-rank">${{rankHtml}}</span>
+        <span class="mini-badges">
+          ${{openBadge(s.open)}}
+          <span class="dist mini-dist" id="mdist-${{fkey}}-${{rank}}">${{distStr}}</span>
+        </span>
+      </div>
+      <div class="mini-name">${{s.name}}</div>
+      <a class="mini-address address" onclick="focusMarker('${{fkey}}',${{rank}});return false;" href="#">
+        ${{SVG_PIN_SM}} ${{s.street}}, ${{s.zip}} ${{s.city}}
+      </a>
+      <div class="mini-footer">
+        <div class="mini-price">${{s.price.toFixed(3)}} <small>€/L</small></div>
+        <a class="map-btn route-btn mini-route" id="mroute-${{fkey}}-${{rank}}"
+           href="${{mapsHref}}" target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">
+          ${{SVG_ROUTE_SM}} Route
+        </a>
+      </div>`;
+    return div;
+  }}
+
   // ── Leaflet Map ───────────────────────────────────────────────────────────
   const map = L.map('map', {{ zoomControl: true }}).setView([{clat:.4f}, {clon:.4f}], 11);
 
@@ -922,7 +910,7 @@ def generate_html(
   function addMarker(fkey, lat, lon, popup, color, label, rank) {{
     const m = L.marker([lat, lon], {{ icon: makeIcon(color, label) }})
       .bindPopup(popup);
-    allMarkers[fkey][rank] = m;  // always store; initFuel() adds to map
+    allMarkers[fkey][rank] = m;
 
     m.on('click', () => {{
       const card = document.getElementById('card-' + fkey + '-' + rank);
@@ -959,6 +947,34 @@ def generate_html(
     localStorage.setItem('fuel', fuel);
   }}
 
+  // ── initStations: renders cards + mini-cards + registers markers ──────────
+  function initStations(fkey) {{
+    const fuel = STATIONS[fkey];
+    if (!fuel) return;
+    const {{ data, stats, top6 }} = fuel;
+    const total = data.length;
+
+    // Main grid cards
+    const grid = document.getElementById('grid-' + fkey);
+    const frag = document.createDocumentFragment();
+    data.forEach((s, i) => {{
+      const rank = i + 1;
+      frag.appendChild(renderCard(s, rank, fkey, stats));
+      const mColor = markerColor(rank, total);
+      const distPart = s.home_dist != null ? `<br>📍 ${{s.home_dist.toFixed(1)}} km ab {home_name}` : "";
+      const popup = `<b>#${{rank}} ${{s.name}}</b><br>${{s.street}}, ${{s.zip}} ${{s.city}}<br><span style='font-size:1.2em;font-weight:700'>${{s.price.toFixed(3)}} €/L</span>${{distPart}}`;
+      addMarker(fkey, s.lat, s.lon, popup, mColor, rank, rank);
+    }});
+    grid.appendChild(frag);
+
+    // Top-6 mini-cards
+    const top4div = document.getElementById('top4-' + fkey);
+    const mfrag = document.createDocumentFragment();
+    top6.forEach(rank => {{
+      mfrag.appendChild(renderMiniCard(data[rank - 1], rank, fkey, stats));
+    }});
+    top4div.appendChild(mfrag);
+  }}
 
   // ── Theme ────────────────────────────────────────────────────────────────
   function setTheme(t) {{
@@ -970,19 +986,12 @@ def generate_html(
       btn.classList.toggle('active', ['light','system','dark'][i] === t);
     }});
   }}
-  // Init from localStorage or system
   (function() {{
     const saved = localStorage.getItem('theme') || 'system';
     setTheme(saved);
   }})();
 
   // ── Geolocation ──────────────────────────────────────────────────────────
-  const stationCoords = {{
-    sup: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_sup))}}},
-    e10: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_e10)) if stations_e10 else ""}}},
-    die: {{{", ".join(f'{i+1}: [{s["lat"]}, {s["lon"]}]' for i, s in enumerate(stations_die))}}}
-  }};
-
   function haversineJS(lat1, lon1, lat2, lon2) {{
     const R = 6371;
     const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -995,22 +1004,24 @@ def generate_html(
   let homeMarker = null;
 
   function updateWithLocation(lat, lon, isLive) {{
-    // Update distance badges and route links for both fuel sets
     for (const fkey of {_fuel_keys}) {{
-      for (const [rank, coords] of Object.entries(stationCoords[fkey])) {{
+      STATIONS[fkey].data.forEach((s, i) => {{
+        const rank = i + 1;
+        const d = haversineJS(lat, lon, s.lat, s.lon).toFixed(1);
         const distEl = document.getElementById('dist-' + fkey + '-' + rank);
-        if (distEl) distEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
-        const routeEl = document.getElementById('route-' + fkey + '-' + rank);
-        if (routeEl) routeEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
-        const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
-        if (mRouteEl) mRouteEl.href = `https://www.google.com/maps/dir/?api=1&origin=${{lat}},${{lon}}&destination=${{coords[0]}},${{coords[1]}}&travelmode=driving`;
+        if (distEl) distEl.textContent = '📍 ' + d + ' km';
         const mDistEl = document.getElementById('mdist-' + fkey + '-' + rank);
-        if (mDistEl) mDistEl.textContent = '📍 ' + haversineJS(lat, lon, coords[0], coords[1]).toFixed(1) + ' km';
-      }}
+        if (mDistEl) mDistEl.textContent = '📍 ' + d + ' km';
+        const origin = `${{lat}},${{lon}}`;
+        const dest   = `${{s.lat}},${{s.lon}}`;
+        const href   = `https://www.google.com/maps/dir/?api=1&origin=${{origin}}&destination=${{dest}}&travelmode=driving`;
+        const routeEl = document.getElementById('route-' + fkey + '-' + rank);
+        if (routeEl) routeEl.href = href;
+        const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
+        if (mRouteEl) mRouteEl.href = href;
+      }});
     }}
-    // Center map on location
     map.setView([lat, lon], map.getZoom(), {{ animate: true }});
-    // Update home marker on map
     if (homeMarker) map.removeLayer(homeMarker);
     const label = isLive ? 'Ihr Standort (GPS)' : '{home_name} (Fallback)';
     homeMarker = L.marker([lat, lon], {{
@@ -1027,7 +1038,6 @@ def generate_html(
       }})
     }}).addTo(map).bindPopup(`<b>${{label}}</b>`);
 
-    // Update pill
     const pill = document.getElementById('geo-pill');
     if (pill) {{
       pill.textContent = isLive ? '📱 GPS-Standort aktiv' : '🏠 Fallback: {home_name}';
@@ -1035,26 +1045,16 @@ def generate_html(
     }}
   }}
 
-  if (navigator.geolocation) {{
-    navigator.geolocation.getCurrentPosition(
-      pos => updateWithLocation(pos.coords.latitude, pos.coords.longitude, true),
-      ()  => updateWithLocation({home_lat}, {home_lon}, false),
-      {{ timeout: 8000 }}
-    );
-  }} else {{
-    updateWithLocation({home_lat}, {home_lon}, false);
-  }}
+  // ── Startup sequence ──────────────────────────────────────────────────────
+  // 1. Render all stations (creates DOM elements + registers map markers)
+  initStations('sup');
+  initStations('die');
+  {_e10_init}
 
-  // ── Rebstein Fallback-Marker (wird bei GPS ersetzt) ───────────────────────
-  // (homeMarker wird durch updateWithLocation gesetzt)
-  updateWithLocation({home_lat}, {home_lon}, false); // initial render
+  // 2. Initial location render (DOM elements now exist)
+  updateWithLocation({home_lat}, {home_lon}, false);
 
-  // Register all markers (none added to map yet)
-  {map_js_sup}
-  {map_js_die}
-  {_e10_mapjs}
-
-  // Properly initialize fuel state from localStorage (handles all UI + markers)
+  // 3. Apply saved fuel preference (adds markers to map, shows correct grid)
   (function initFuel() {{
     Object.values(allMarkers[currentFuel]).forEach(m => m.addTo(map));
     if (currentFuel !== 'sup') {{
@@ -1066,6 +1066,15 @@ def generate_html(
       document.getElementById('btn-' + currentFuel).classList.add('active');
     }}
   }})();
+
+  // 4. Try GPS (updates distances + route links if granted)
+  if (navigator.geolocation) {{
+    navigator.geolocation.getCurrentPosition(
+      pos => updateWithLocation(pos.coords.latitude, pos.coords.longitude, true),
+      ()  => updateWithLocation({home_lat}, {home_lon}, false),
+      {{ timeout: 8000 }}
+    );
+  }}
 </script>
 
 </body>

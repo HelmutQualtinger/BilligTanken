@@ -7,8 +7,11 @@ RUN apk add --no-cache \
       apache2 \
       dcron \
       tzdata \
+      wget \
  && mkdir -p /var/www/localhost/htdocs /run/apache2 \
- && echo "ServerName localhost" >> /etc/apache2/httpd.conf
+ && echo "ServerName localhost" >> /etc/apache2/httpd.conf \
+ && wget -q -O /var/www/localhost/htdocs/leaflet.js  https://unpkg.com/leaflet@1.9.4/dist/leaflet.js \
+ && wget -q -O /var/www/localhost/htdocs/leaflet.css https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
 
 COPY index.html                 /var/www/localhost/htdocs/index.html
 COPY webcam-vorarlberg.html     /var/www/localhost/htdocs/webcam-vorarlberg.html
