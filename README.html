@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>README</title>
+  <style>
+    html {
+      line-height: 1.5;
+      font-family: Georgia, serif;
+      font-size: 20px;
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, 'Lucida Console', Consolas, monospace;
+      font-size: 85%;
+      margin: 0;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      background-color: #1a1a1a;
+      border: none;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    span.underline{text-decoration: underline;}
+    div.column{display: inline-block; vertical-align: top; width: 50%;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+</head>
+<body>
+<h1 id="billigtanken">⛽ BilligTanken</h1>
+<p><strong>Live-Übersicht: <a
+href="https://tanken.bekerh.ddns.net">tanken.bekerh.ddns.net</a></strong></p>
+<p>Echtzeit-Übersicht der günstigsten <strong>E5 (Super 95)</strong> und
+<strong>Diesel</strong> Tankstellen in mehreren österreichischen
+Regionen, mit interaktiver Karte, GPS-Standort und
+Luftlinien-Entfernung.</p>
+<figure>
+<img src="screenshots/preview.png" alt="BilligTanken Screenshot" />
+<figcaption aria-hidden="true">BilligTanken Screenshot</figcaption>
+</figure>
+<h2 id="regionen">Regionen</h2>
+<table>
+<colgroup>
+<col style="width: 19%" />
+<col style="width: 19%" />
+<col style="width: 35%" />
+<col style="width: 11%" />
+<col style="width: 14%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Region</th>
+<th>Script</th>
+<th>Referenzpunkt</th>
+<th>API</th>
+<th>Cron</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Wien – Alterlaa</td>
+<td><code>billigtanken-alterlaa.py</code></td>
+<td>Alterlaa</td>
+<td>E-Control (AT)</td>
+<td><code>:00</code></td>
+</tr>
+<tr class="even">
+<td>Innsbruck</td>
+<td><code>billigtanken-innsbruck.py</code></td>
+<td>Innsbruck</td>
+<td>E-Control (AT)</td>
+<td><code>:15</code></td>
+</tr>
+<tr class="odd">
+<td>Vorarlberg (Bregenz – Feldkirch)</td>
+<td><code>billigtanken-vorarlberg.py</code></td>
+<td>Rebstein CH</td>
+<td>E-Control (AT)</td>
+<td><code>:30</code></td>
+</tr>
+<tr class="even">
+<td>Schärding / OÖ</td>
+<td><code>billigtanken-schaerding.py</code></td>
+<td>Schärding</td>
+<td>E-Control (AT)</td>
+<td><code>:45</code></td>
+</tr>
+<tr class="odd">
+<td>Fürstenfeldbruck / Bayern 🇩🇪</td>
+<td><code>billigtanken-ffb.py</code></td>
+<td>FFB Bahnhof</td>
+<td>Tankerkönig (DE)</td>
+<td><code>:48</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="features">Features</h2>
+<ul>
+<li><strong>Top N günstigste Stationen</strong> – sortiert nach Preis,
+bei Gleichstand nach Luftlinie vom Standort</li>
+<li><strong>Top 6 Schnellübersicht</strong> – zeigt die 6 günstigsten
+unter den 20 nächstgelegenen Stationen</li>
+<li><strong>Benzin / Diesel Umschalter</strong> – beide Kraftstofftypen
+in einer Seite, letzter Stand wird gespeichert</li>
+<li><strong>Interaktive Leaflet-Karte</strong> – Marker farbcodiert von
+grün (günstig) → rot (teuer), klickbar</li>
+<li><strong>GPS-Standort</strong> – Browser-Geolocation aktualisiert
+Entfernungen und Route-Links live</li>
+<li><strong>Route-Button</strong> – öffnet Google Maps Directions direkt
+ab aktuellem Standort</li>
+<li><strong>Hell/Dunkel-Theme</strong> – manuell umschaltbar, folgt
+System-Präferenz</li>
+<li><strong>Automatische Aktualisierung</strong> – Cron stündlich,
+atomarer Datei-Swap (kein Flackern)</li>
+<li>Nur Stationen mit <strong>gemeldeten Preisen</strong> werden
+angezeigt</li>
+</ul>
+<h2 id="datenquellen">Datenquellen</h2>
+<p><strong>Österreich</strong> – <a
+href="https://www.spritpreisrechner.at/">E-Control Austria</a> –
+gesetzlich verpflichtende Preistransparenzdatenbank. In Österreich gilt
+ein staatlicher <strong>Tageshöchstpreis</strong> (Erhöhungen nur
+Mo/Mi/Fr um 12 Uhr). Diskont-Ketten (Disk, Avanti, JET) unterbieten ihn
+regelmäßig.</p>
+<p><strong>Deutschland</strong> – <a
+href="https://creativecommons.tankerkoenig.de/">Tankerkönig</a> – MTS-K
+Daten der Bundesnetzagentur (E-Control Pendant).</p>
+<blockquote>
+<p><strong>Hinweis:</strong> E10 wird in Österreich nicht verkauft. Das
+österreichische Äquivalent ist Super 95 (E5). In Deutschland sind E5,
+E10 und Diesel verfügbar.</p>
+</blockquote>
+<h2 id="quickstart">Quickstart</h2>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Docker (empfohlen)</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose up <span class="at">-d</span> <span class="at">--build</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="co"># → http://localhost:8080</span></span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Lokal (eine Region, erzeugt HTML im aktuellen Verzeichnis)</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install requests</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="ex">python3</span> billigtanken-vorarlberg.py</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="ex">open</span> index-vorarlberg.html</span></code></pre></div>
+<h2 id="docker">Docker</h2>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose up <span class="at">-d</span> <span class="at">--build</span>   <span class="co"># starten / neu bauen</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose logs <span class="at">-f</span>         <span class="co"># live logs (cron runs &amp; errors)</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="ex">docker</span> compose down            <span class="co"># stoppen</span></span></code></pre></div>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<tbody>
+<tr class="odd">
+<td><strong>Base Image</strong></td>
+<td><code>alpine:3.21</code></td>
+</tr>
+<tr class="even">
+<td><strong>Image-Größe</strong></td>
+<td>~88 MB</td>
+</tr>
+<tr class="odd">
+<td><strong>Web-Server</strong></td>
+<td>Apache (httpd)</td>
+</tr>
+<tr class="even">
+<td><strong>Aktualisierung</strong></td>
+<td>Cron, jede Stunde (stündlich um :00, :15, :30, :45 UTC)</td>
+</tr>
+<tr class="odd">
+<td><strong>Port</strong></td>
+<td><code>8080</code> → Container <code>80</code></td>
+</tr>
+<tr class="even">
+<td><strong>Log-Datei</strong></td>
+<td><code>/var/log/billigtanken.log</code> (gelöscht bei Neustart, ~200
+Zeilen/Tag)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="konfiguration">Konfiguration</h2>
+<p>Alle Einstellungen am Anfang des jeweiligen Regionalskripts:</p>
+<table>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Bedeutung</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>TOP_N</code></td>
+<td>Anzahl der angezeigten Kacheln</td>
+</tr>
+<tr class="even">
+<td><code>QUERY_POINTS</code></td>
+<td>Koordinatenpunkte für die API-Abfrage</td>
+</tr>
+<tr class="odd">
+<td><code>HOME_LAT/LON/NAME</code></td>
+<td>Referenzpunkt für Luftlinien-Berechnung</td>
+</tr>
+<tr class="even">
+<td><code>LAT/LON_MIN/MAX</code></td>
+<td>Bounding Box (filtert API-Ergebnisse)</td>
+</tr>
+<tr class="odd">
+<td><code>WEB_ROOT</code></td>
+<td>Ausgabeverzeichnis (Env-Variable, Standard: <code>.</code>)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="architektur">Architektur</h2>
+<pre><code>billigtanken_lib.py          ← gemeinsame Bibliothek (API, HTML-Generierung)
+billigtanken-vorarlberg.py   ← Regionalkonfiguration + main()
+billigtanken-alterlaa.py
+billigtanken-innsbruck.py
+billigtanken-schaerding.py
+entrypoint.sh                ← startet alle Skripte einmalig, dann cron + Apache</code></pre>
+<h2 id="aktuelle-updates-2026-03-30">Aktuelle Updates (2026-03-30)</h2>
+<p>✅ <strong>Cron Schedule Fix</strong> – Printf-Bug behoben: alle 5
+regionalen Scripts laufen jetzt auf Schedule (:00, :15, :30, :45,
+:48)</p>
+<p>✅ <strong>Logfile Optimierung</strong> – Startup-Ausgabe zu
+<code>/dev/null</code> umgeleitet, Logdatei bei Neustart gelöscht →
+keine Bloatware mehr</p>
+<p>✅ <strong>FFB Integration</strong> – Neue Region: Fürstenfeldbruck
+mit deutscher Tankerkönig API (MTS-K Daten der Bundesnetzagentur)</p>
+<p>✅ <strong>Status Line</strong> – Claude Code zeigt jetzt
+<code>hostname:dir | model | ctx%</code> (inspiriert von Debian PS1)</p>
+</body>
+</html>
