@@ -10,6 +10,7 @@ RUN apk add --no-cache \
       wget \
  && mkdir -p /var/www/localhost/htdocs /run/apache2 \
  && echo "ServerName localhost" >> /etc/apache2/httpd.conf \
+ && printf '<IfModule mod_headers.c>\n  <FilesMatch "\\.html$">\n    Header set Cache-Control "no-store, no-cache, must-revalidate"\n    Header set Pragma "no-cache"\n  </FilesMatch>\n</IfModule>\n' > /etc/apache2/conf.d/no-cache.conf \
  && wget -q -O /var/www/localhost/htdocs/leaflet.js  https://unpkg.com/leaflet@1.9.4/dist/leaflet.js \
  && wget -q -O /var/www/localhost/htdocs/leaflet.css https://unpkg.com/leaflet@1.9.4/dist/leaflet.css
 

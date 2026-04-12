@@ -293,8 +293,8 @@ def generate_html(
   </script>
 
   <!-- Leaflet.js for map (self-hosted to avoid CDN blocks in Brave/Firefox) -->
-  <link rel="stylesheet" href="/leaflet.css" />
-  <script src="/leaflet.js"></script>
+  <link rel="stylesheet" href="/leaflet.css?v=1.9.4" />
+  <script src="/leaflet.js?v=1.9.4"></script>
   <style>
     *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
 
