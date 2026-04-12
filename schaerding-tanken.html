@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f0f13" />
+  <meta name="color-scheme" content="dark light" />
+  <title>SchärdingTanken – Günstigste Tankstellen</title>
+
+  <!-- Cache Control -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- SEO & Meta Tags -->
+  <meta name="description" content="Aktuelle Spritpreise rund um Schärding und das Innviertel. Günstigste Tankstellen in Oberösterreich im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Schärding, Innviertel, Oberösterreich, E5, Super 95, Diesel, Ried, Braunau, billig tanken" />
+  <meta name="author" content="BilligTanken" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="language" content="de" />
+  <meta http-equiv="language" content="de-at" />
+
+  <!-- Open Graph (Facebook, LinkedIn, etc.) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="SchärdingTanken – Günstigste Tankstellen" />
+  <meta property="og:description" content="Günstigste Tankstellen rund um Schärding. Echtzeit-Preise von E-Control." />
+  <meta property="og:image" content="screenshots/preview.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  
+  <meta property="og:locale" content="de_AT" />
+  <meta property="og:site_name" content="BilligTanken" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="SchärdingTanken – Günstigste Tankstellen" />
+  <meta name="twitter:description" content="Günstigste Tankstellen rund um Schärding. Echtzeit-Preise von E-Control." />
+  <meta name="twitter:image" content="screenshots/preview.png" />
+
+  <!-- Apple & Mobile -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BilligTanken" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "BilligTanken",
+    "description": "Aktuelle Spritpreise rund um Schärding und das Innviertel. Günstigste Tankstellen in Oberösterreich im Preisvergleich.",
+    "url": "https://billigtanken.at",
+    "image": "screenshots/preview.png",
+    "logo": "/logo.png",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "AT",
+      "addressRegion": "Vorarlberg"
+    },
+    "sameAs": []
+  }
+  </script>
+
+  <!-- Leaflet.js inlined to avoid any CDN or proxy blocking (Brave Shields, etc.) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Dark theme (default) ── */
+    :root, [data-theme="dark"] {
+      --bg:      #0f0f13;
+      --surface: #1a1a24;
+      --surf2:   #22222f;
+      --border:  #2e2e40;
+      --text:    #e8e8f0;
+      --muted:   #8888aa;
+      --popup-bg:#1a1a24;
+      --popup-border:#2e2e40;
+      --popup-text:#e8e8f0;
+      --map-filter: none;
+      --link-color: #60a5fa;
+      --link-weight: 400;
+    }
+
+    /* ── Light theme ── */
+    [data-theme="light"] {
+      --bg:      #f4f4f8;
+      --surface: #ffffff;
+      --surf2:   #eeeef4;
+      --border:  #d0d0e0;
+      --text:    #1a1a2e;
+      --muted:   #666688;
+      --popup-bg:#ffffff;
+      --popup-border:#d0d0e0;
+      --popup-text:#1a1a2e;
+      --map-filter: none;
+      --link-color: #1a4fa8;
+      --link-weight: 700;
+    }
+
+    /* ── System preference ── */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]):not([data-theme="light"]) {
+        --bg:      #f4f4f8;
+        --surface: #ffffff;
+        --surf2:   #eeeef4;
+        --border:  #d0d0e0;
+        --text:    #1a1a2e;
+        --muted:   #666688;
+        --popup-bg:#ffffff;
+        --popup-border:#d0d0e0;
+        --popup-text:#1a1a2e;
+        --link-color: #1a4fa8;
+        --link-weight: 700;
+        --map-filter: none;
+      }
+    }
+
+    :root {
+      --green:  #22c55e;
+      --gold:   #fbbf24;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+      --r:      16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 2rem 1rem 4rem;
+      transition: background .25s, color .25s;
+    }
+
+    /* ── Theme toggle button ── */
+    .theme-toggle {
+      position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+      display: flex; align-items: center; gap: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: .25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .theme-toggle button {
+      background: none; border: none; cursor: pointer;
+      padding: .3rem .55rem; border-radius: 999px;
+      font-size: .8rem; color: var(--muted);
+      transition: background .15s, color .15s;
+      line-height: 1;
+    }
+    .theme-toggle button.active {
+      background: var(--surf2); color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .theme-toggle button:hover:not(.active) { color: var(--text); }
+
+    /* ── Fuel toggle ── */
+    .fuel-toggle {
+      display: inline-flex; gap: 0; margin-bottom: .6rem;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 999px; padding: .2rem;
+    }
+    .fuel-btn {
+      background: none; border: none; cursor: pointer;
+      padding: .35rem .9rem; border-radius: 999px;
+      font-size: .82rem; font-weight: 600; color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+    .fuel-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .fuel-btn:hover:not(.active) { color: var(--text); }
+
+    .pill {
+      display: inline-block;
+      font-size: .72rem; padding: .28rem .75rem; border-radius: 999px;
+    }
+    .pill.time { color: var(--muted); background: var(--surf2); border: 1px solid var(--border); }
+    .pill.note { color: #f59e0b; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); }
+
+    /* Overview row: left col + map + top-4 */
+    .overview {
+      display: grid;
+      grid-template-columns: 260px 1fr 430px;
+      gap: 1rem;
+      max-width: 1500px;
+      margin: 0 auto 2rem;
+      align-items: stretch;
+    }
+    @media (max-width: 1100px) {
+      .overview { grid-template-columns: 260px 1fr; }
+      .top4-panel { display: none; }
+    }
+    @media (max-width: 800px) {
+      .overview { grid-template-columns: 1fr; }
+    }
+
+    /* Top-4 mini-card panel */
+    .top4-panel {
+      display: flex; flex-direction: column; gap: .5rem; align-self: start;
+    }
+    .top4-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+    }
+    .top4-label {
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: .1rem;
+    }
+    .mini-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .6rem .7rem;
+      display: flex; flex-direction: column; gap: .25rem;
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+      position: relative; overflow: hidden;
+    }
+    .mini-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }
+    .mini-card.rank-gold::before  { background: var(--gold); }
+    .mini-card.rank-silver::before { background: var(--silver); }
+    .mini-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+    .mini-top {
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .mini-avatar {
+      width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .6rem; color: #fff;
+    }
+    .mini-avatar.avatar-logo { background: #fff; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .mini-avatar.avatar-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 4px; }
+    .mini-avatar.brand-eni img, .mini-avatar.brand-bp img { transform: scale(1.3); }
+    .mini-rank .medal { font-size: .6rem; padding: .1rem .35rem; }
+    .mini-rank .rank-num { font-size: .65rem; }
+    .mini-name { font-size: .72rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .mini-badges {
+      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; margin-left: auto;
+    }
+    .mini-dist { font-size: .62rem; }
+    .mini-address {
+      font-size: .65rem; line-height: 1.3; display: flex; align-items: flex-start; gap: .25rem;
+    }
+    .mini-address svg { flex-shrink: 0; margin-top: .1rem; }
+    .mini-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: .4rem; margin-top: .1rem;
+    }
+    .mini-price {
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em;
+      line-height: 1; white-space: nowrap;
+    }
+    .mini-price small { font-size: .6rem; font-weight: 500; color: var(--muted); }
+    .mini-route { font-size: .65rem; padding: .2rem .45rem; }
+
+    /* Left column: header + stats */
+    .left-col {
+      display: flex; flex-direction: column; gap: .9rem;
+    }
+
+    /* Header (now inside left col) */
+    header { text-align: left; }
+    header h1 {
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      font-weight: 800; letter-spacing: -.03em;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    header p.sub { color: var(--muted); margin-top: .3rem; font-size: .8rem; line-height: 1.4; }
+    .pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+
+    /* Stats */
+    .stats { display: flex; flex-direction: column; gap: .6rem; flex: 1; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .7rem 1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    }
+    .stat .val { font-size: 1.2rem; font-weight: 700; color: var(--green); }
+    .stat .val.hi { color: #f87171; }
+    .stat .val.neu { color: var(--text); }
+    .stat .lbl { font-size: .73rem; color: var(--muted); }
+
+    /* MAP */
+    #map {
+      height: 100%; min-height: 340px; border-radius: var(--r);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 250px));
+      gap: 1.1rem; max-width: 1400px; margin: 0 auto;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .85rem;
+      display: flex; flex-direction: column; gap: .55rem;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+      cursor: default;
+    }
+    .card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+    .card.highlighted { box-shadow: 0 0 0 2px #60a5fa, 0 12px 32px rgba(0,0,0,.5); }
+
+    .rank-gold   { border-color: var(--gold);   }
+    .rank-silver { border-color: var(--silver); }
+    .rank-bronze { border-color: var(--bronze); }
+    .rank-gold::before   { background: var(--gold); height: 4px; }
+    .rank-silver::before { background: var(--silver); }
+    .rank-bronze::before { background: var(--bronze); }
+
+    .card-header { display: flex; align-items: center; justify-content: space-between; }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .83rem; color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+    .avatar-logo {
+      background: #fff;
+      padding: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    }
+    /* ── Logo Sizing ── */
+    .avatar-logo img {
+      width: 100%; height: 100%;
+      object-fit: contain; border-radius: 6px;
+    }
+    /* Specific fix for Eni logo (often appears small) */
+    .brand-eni img {
+      transform: scale(1.4);
+    }
+    /* BP logo needs scaling up */
+    .brand-bp img {
+      transform: scale(1.5);
+    }
+    .card-meta { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }
+    .medal {
+      font-size: .72rem; font-weight: 700; padding: .22rem .55rem; border-radius: 999px;
+    }
+    .medal.gold   { background: rgba(251,191,36,.15); color: var(--gold);   border: 1px solid rgba(251,191,36,.3); }
+    .medal.silver { background: rgba(148,163,184,.12); color: var(--silver); border: 1px solid rgba(148,163,184,.25); }
+    .medal.bronze { background: rgba(205,127,50,.12);  color: var(--bronze); border: 1px solid rgba(205,127,50,.25); }
+    .rank-num { font-size: .78rem; color: var(--muted); font-weight: 600; }
+    .badge {
+      font-size: .67rem; font-weight: 600; padding: .2rem .5rem; border-radius: 999px;
+    }
+    .badge.open   { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+    .badge.closed { background: rgba(239,68,68,.15);  color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+    .dist {
+      font-size: .7rem; color: var(--muted); background: var(--surf2);
+      padding: .18rem .48rem; border-radius: 999px; border: 1px solid var(--border);
+    }
+    .home-dist {
+      color: #a78bfa; background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.25);
+    }
+
+    .card-body { flex: 1; }
+    .station-name { font-size: .93rem; font-weight: 700; line-height: 1.3; margin-bottom: .2rem; }
+    .address {
+      font-size: .78rem; color: var(--link-color); font-weight: var(--link-weight);
+      display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
+      text-decoration: underline; cursor: pointer;
+    }
+    .address:hover { opacity: .75; }
+    .address svg { flex-shrink: 0; margin-top: .15rem; stroke: #ef4444; }
+
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: .5rem; border-top: 1px solid var(--border); gap: .5rem;
+    }
+    .price-block { display: flex; flex-direction: column; gap: .22rem; min-width: 0; }
+    .price-row { display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; }
+    .price { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+    .price small { font-size: .82rem; font-weight: 500; color: var(--muted); }
+    .savings {
+      font-size: .72rem; font-weight: 700; padding: .14rem .48rem;
+      border-radius: 999px; align-self: flex-start;
+      background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.22);
+    }
+    .savings.maxprice {
+      background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.2);
+    }
+    .price-bar-wrap {
+      height: 4px; background: var(--border); border-radius: 999px;
+      width: 110px; overflow: hidden;
+    }
+    .price-bar { height: 100%; border-radius: 999px; }
+
+    .btn-group { display: flex; gap: .4rem; flex-shrink: 0; }
+    .map-btn {
+      display: inline-flex; align-items: center; gap: .32rem;
+      font-size: .78rem; font-weight: 600; color: var(--text);
+      background: var(--surf2); border: 1px solid var(--border);
+      padding: .42rem .85rem; border-radius: 8px;
+      cursor: pointer; flex-shrink: 0; text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+    .map-btn:hover { background: var(--border); border-color: var(--muted); }
+    .route-btn { border-color: rgba(96,165,250,.3); color: #60a5fa; }
+    .route-btn:hover { background: rgba(96,165,250,.1); border-color: #60a5fa; color: #60a5fa; }
+
+    /* Leaflet popup themed */
+    .leaflet-popup-content-wrapper {
+      background: var(--popup-bg) !important; color: var(--popup-text) !important;
+      border: 1px solid var(--popup-border) !important; border-radius: 10px !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+    }
+    .leaflet-popup-tip { background: var(--popup-bg) !important; }
+    .leaflet-popup-content { font-size: .85rem; line-height: 1.5; }
+
+    footer.pf {
+      text-align: center; margin-top: 3rem; font-size: .76rem; color: var(--muted);
+    }
+    footer.pf a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="theme-toggle" id="theme-toggle">
+  <button onclick="setTheme('light')" title="Hell">☀️</button>
+  <button onclick="setTheme('system')" title="System">💻</button>
+  <button onclick="setTheme('dark')" title="Dunkel">🌙</button>
+</div>
+
+<div class="overview">
+  <div class="left-col">
+    <header>
+      <h1>⛽ SchärdingTanken</h1>
+      <div class="fuel-toggle">
+        <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
+        
+        <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
+      </div>
+      <p class="sub" id="fuel-sub-sup">Top 93 gemeldete E5 · Super 95 · Großraum Schärding / Innviertel · Luftlinie ab Schärding</p>
+      
+      <p class="sub" id="fuel-sub-die" style="display:none">Top 99 gemeldete Diesel · Großraum Schärding / Innviertel · Luftlinie ab Schärding</p>
+      <div class="pills">
+        <span class="pill time">Aktualisiert: 12.04.2026 13:29 Uhr</span>
+        <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
+        <span class="pill time" id="geo-pill" style="color:#a78bfa">🏠 Standort wird ermittelt …</span>
+      </div>
+    </header>
+    <div class="stats" id="stats-sup">
+      <div class="stat"><div class="val">1.664 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">1.708 €</div><div class="lbl">Ø Top 93</div></div>
+      <div class="stat"><div class="val hi">1.799 €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">0.135 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+    
+    <div class="stats" id="stats-die" style="display:none">
+      <div class="stat"><div class="val">1.997 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">2.068 €</div><div class="lbl">Ø Top 99</div></div>
+      <div class="stat"><div class="val hi">2.199 €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">0.202 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+  </div>
+  <div id="map"></div>
+  <div class="top4-panel">
+    <div class="top4-label">Top 4 &lt;10 km</div>
+    <div id="top4-sup" class="top4-grid"></div>
+    
+    <div id="top4-die" class="top4-grid" style="display:none"></div>
+  </div>
+</div>
+
+<main class="grid" id="grid-sup"></main>
+
+<main class="grid" id="grid-die" style="display:none"></main>
+
+<footer class="pf">
+  Datenquelle: <a href="https://www.spritpreisrechner.at" target="_blank">E-Control Austria</a>
+  · Karte: <a href="https://leafletjs.com" target="_blank">Leaflet</a> / <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>
+  · Preise in €/Liter inkl. MwSt. · Alle Angaben ohne Gewähr
+</footer>
+
+<script>
+  // ── Station data (server-rendered JSON) ──────────────────────────────────
+  const STATIONS = {"sup":{"stats":{"min":1.664,"second":1.667,"max":1.799},"top6":[52,27,29,53,17,90],"data":[{"name":"AVANTI - Alkoven Strass 16","lat":48.28792,"lon":14.07613,"price":1.664,"street":"Strass 16","zip":"4072","city":"Alkoven","open":true,"home_dist":50.7},{"name":"Turmöl Quick","lat":48.1378,"lon":13.9568,"price":1.664,"street":"Welser Straße 70","zip":"4623","city":"Gunskirchen","open":true,"home_dist":52.1},{"name":"Diskont Tankstelle","lat":48.1437,"lon":13.9715,"price":1.664,"street":"Malvenstrasse 3 (am HOFER Parkplatz)","zip":"4600","city":"Wels","open":true,"home_dist":52.5},{"name":"Turmöl Quick","lat":48.1807644,"lon":14.0187608,"price":1.664,"street":"Grieskirchnerstraße 118","zip":"4600","city":"Wels","open":true,"home_dist":52.7},{"name":"Diskont Tankstelle","lat":48.183554,"lon":14.025008,"price":1.664,"street":"Dalistrasse 2 (am HOFER Parkplatz)","zip":"4600","city":"Wels","open":true,"home_dist":52.9},{"name":"SB-Tankstelle Zauner","lat":48.37648,"lon":13.63102,"price":1.667,"street":"Jagern 18","zip":"4761","city":"Enzenkirchen","open":true,"home_dist":16.7},{"name":"Turmöl Quick","lat":48.57763,"lon":13.99039,"price":1.669,"street":"Bahnhofstraße 26","zip":"4150","city":"Rohrbach","open":true,"home_dist":43.0},{"name":"PINK - so pink, so clever","lat":48.3001235,"lon":14.015287,"price":1.669,"street":"Karl-Schachinger-Straße 17","zip":"4070","city":"Eferding","open":true,"home_dist":46.0},{"name":"PINK - so pink, so clever","lat":48.3081944,"lon":14.0209109,"price":1.669,"street":"Schmiedstraße 29","zip":"4070","city":"Eferding","open":true,"home_dist":46.1},{"name":"Turmöl","lat":48.181068,"lon":14.02697,"price":1.669,"street":"Eferdingerstraße 81","zip":"4600","city":"Wels","open":true,"home_dist":53.1},{"name":"ECODROM - 24h Tanken & CAR WASH CLUB","lat":48.1821416,"lon":14.0157362,"price":1.67,"street":"Oberfeldstraße 95","zip":"4600","city":"Wels","open":true,"home_dist":52.4},{"name":"AVIA","lat":48.1056064,"lon":13.623153,"price":1.679,"street":"Landstraße 2","zip":"4901","city":"Bruckmühl","open":true,"home_dist":41.2},{"name":"eni Tankstelle Eferding","lat":48.30191847478238,"lon":14.02992820360073,"price":1.679,"street":"Linzer Straße 24","zip":"4070","city":"Eferding","open":true,"home_dist":46.9},{"name":"Turmöl Quick","lat":48.2392811,"lon":13.3481402,"price":1.68,"street":"Rieder Straße 8","zip":"4942","city":"Gurten","open":true,"home_dist":24.8},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.172218,"lon":13.347336,"price":1.68,"street":"Rieder Straße 17","zip":"4931","city":"Mettmach","open":true,"home_dist":32.1},{"name":"Turmöl Quick","lat":48.1568483,"lon":13.5618253,"price":1.68,"street":"Eberschwang 98","zip":"4906","city":"Eberschwang","open":true,"home_dist":34.4},{"name":"AVANTI - Sankt Florian/Inn Bundesstraße 129","lat":48.43865,"lon":13.44392,"price":1.684,"street":"Bundesstrasse 129","zip":"4780","city":"Sankt Florian/Inn","open":true,"home_dist":1.8},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.4105618,"lon":13.5398537,"price":1.684,"street":"Eferdinger Straße 24","zip":"4775","city":"Taufkirchen an der Pram","open":true,"home_dist":9.0},{"name":"JET TANKSTELLE","lat":48.199009,"lon":13.47368,"price":1.684,"street":"FISCHERSTRASSE 15","zip":"4910","city":"RIED IM INNKREIS","open":true,"home_dist":28.5},{"name":"AVANTI - Hartkirchen Schaunbergstraße 20","lat":48.35956,"lon":13.99537,"price":1.684,"street":"Schaunbergstrasse 20","zip":"4081","city":"Hartkirchen","open":true,"home_dist":42.5},{"name":"PINK - so pink, so clever","lat":48.363754,"lon":14.010318,"price":1.684,"street":"Bahnhofstrasse 26","zip":"4082","city":"Aschach an der Donau","open":true,"home_dist":43.5},{"name":"Turmöl","lat":48.20592720321371,"lon":13.48057637590599,"price":1.685,"street":"Braunauerstraße 10","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.8},{"name":"Diskont Tankstelle","lat":48.217,"lon":13.4957,"price":1.687,"street":"Hannesgrub Nord 1 (am HOFER Parkplatz)","zip":"4910","city":"Tumeltsham","open":true,"home_dist":26.8},{"name":"AVANTI - Ried im Innkreis Schärdinger Straße 16","lat":48.21309,"lon":13.48535,"price":1.687,"street":"Schärdinger Strasse 16","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.1},{"name":"Diskont Tankstelle","lat":48.2072,"lon":13.4651,"price":1.687,"street":"Aubachweg 2 (am HOFER Parkplatz)","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.6},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.205796,"lon":13.482978,"price":1.687,"street":"Braunauer Straße 3a","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.9},{"name":"JET TANKSTELLE","lat":48.450421,"lon":13.436477,"price":1.689,"street":"LINZERSTRASSE 58","zip":"4780","city":"SCHÄRDING","open":true,"home_dist":0.5},{"name":"Bauchinger - Diskonttankstelle","lat":48.2004742,"lon":13.4818461,"price":1.689,"street":"Magerlstraße 1","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":28.4},{"name":"SB-Tankstelle Zauner","lat":48.447209,"lon":13.439305,"price":1.69,"street":"Ludwig-Paglstr. 1","zip":"4780","city":"Schärding","open":true,"home_dist":0.8},{"name":"Turmöl Quick","lat":48.542477,"lon":13.5834969,"price":1.692,"street":"Hauptstraße 86","zip":"4092","city":"Esternberg","open":true,"home_dist":14.5},{"name":"Turmöl Quick","lat":48.33844,"lon":13.77165,"price":1.692,"street":"Bahnhofstraße 27","zip":"4722","city":"Peuerbach","open":true,"home_dist":27.8},{"name":"PINK - so pink, so clever","lat":48.23407,"lon":13.771828,"price":1.692,"street":"Industriepark Stritzing 18","zip":"4710","city":"Grieskirchen","open":true,"home_dist":34.8},{"name":"AVANTI - Grieskirchen Wengerstraße 16","lat":48.2327,"lon":13.82238,"price":1.692,"street":"Wengerstrasse 16","zip":"4710","city":"Grieskirchen","open":true,"home_dist":37.6},{"name":"Turmöl Quick","lat":48.183217,"lon":13.1314513,"price":1.692,"street":"Unterbrunning 7","zip":"5270","city":"Mauerkirchen","open":true,"home_dist":37.7},{"name":"Turmöl Quick","lat":48.226524,"lon":13.846774,"price":1.692,"street":"Industriegelände 5","zip":"4710","city":"Grieskirchen","open":true,"home_dist":39.5},{"name":"Turmöl Quick","lat":48.1787503,"lon":13.0508818,"price":1.692,"street":"Salzburgerstraße 14","zip":"5145","city":"Neukirchen/Enknach","open":true,"home_dist":41.9},{"name":"Diskont Tankstelle","lat":48.1141,"lon":13.1514,"price":1.692,"street":"Braunauer Strasse 27 (am HOFER Parkplatz)","zip":"5230","city":"Mattighofen","open":true,"home_dist":43.4},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.349753,"lon":13.402063,"price":1.693,"street":"Rieder Straße 4","zip":"4980","city":"Antiesenhofen","open":true,"home_dist":11.9},{"name":"AVANTI - Ort im Innkreis Kammer 19","lat":48.31724,"lon":13.42524,"price":1.693,"street":"Kammer 19","zip":"4974","city":"Ort im Innkreis","open":true,"home_dist":15.3},{"name":"AVANTI - Braunau Laabstraße","lat":48.26028,"lon":13.05145,"price":1.694,"street":"Laabstrasse ","zip":"5280","city":"Braunau","open":true,"home_dist":35.8},{"name":"Diskont Tankstelle","lat":48.2447,"lon":13.0487,"price":1.694,"street":"Hofer Strasse 1 (am HOFER Parkplatz)","zip":"5280","city":"Braunau","open":true,"home_dist":37.0},{"name":"Turmöl","lat":48.5810432,"lon":13.503549,"price":1.697,"street":"Hinding 23a","zip":"4785","city":"Achleiten","open":true,"home_dist":14.9},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.266416,"lon":13.565932,"price":1.697,"street":"Lindet 2","zip":"4753","city":"Taiskirchen im Innkreis","open":true,"home_dist":23.0},{"name":"Turmöl","lat":48.28544,"lon":13.74498,"price":1.697,"street":"Haslau 10","zip":"4715","city":"Taufkirchen an der Trattnach","open":true,"home_dist":29.5},{"name":"Turmöl","lat":48.22723,"lon":13.8435,"price":1.697,"street":"Industriestraße 29 ","zip":"4710","city":"Grieskirchen","open":true,"home_dist":39.2},{"name":"JET TANKSTELLE","lat":48.108581,"lon":13.150259,"price":1.697,"street":"BAHNHOFSTRASSE 1 A","zip":"5230","city":"MATTIGHOFEN","open":true,"home_dist":43.9},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.2328076,"lon":13.944986,"price":1.697,"street":"Eferdinger Str. 10","zip":"4702","city":"Wallern an der Trattnach","open":true,"home_dist":44.9},{"name":"Diskont Tankstelle","lat":48.23833,"lon":13.95712,"price":1.697,"street":"Eferdinger Strasse 79 (am HOFER Parkplatz)","zip":"4702","city":"Wallern","open":true,"home_dist":45.3},{"name":"PINK - so pink, so clever","lat":48.25478,"lon":13.97167,"price":1.697,"street":"Breitenaich 100","zip":"4612","city":"Breitenaich","open":true,"home_dist":45.3},{"name":"PINK - so pink, so clever","lat":48.2067254,"lon":13.9783181,"price":1.697,"street":"Ziegeleistraße 42","zip":"4631","city":"Krenglbach","open":true,"home_dist":48.6},{"name":"PINK - so pink, so clever","lat":48.22651,"lon":14.02806,"price":1.697,"street":"Siggstraße 2","zip":"4611","city":"Buchkirchen","open":true,"home_dist":50.5},{"name":"OMV","lat":48.4511218,"lon":13.4358673,"price":1.699,"street":"Linzerstraße 52","zip":"4780","city":"Schärding","open":true,"home_dist":0.4},{"name":"DISKONT","lat":48.446277,"lon":13.439573,"price":1.699,"street":"Othmar-Spanlang-Straße 1","zip":"4780","city":"Brunnwies","open":true,"home_dist":0.9},{"name":"easy ÖL","lat":48.543264,"lon":13.65487,"price":1.699,"street":"Kasten an der Donau 15","zip":"4091","city":"Vichtenstein","open":true,"home_dist":18.8},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.31086,"lon":13.62981,"price":1.699,"street":"Stöckl-Allee 15","zip":"4755","city":"Zell an der Pram","open":true,"home_dist":21.4},{"name":"Shell Tankstelle Litzlbauer","lat":48.394535,"lon":13.749519,"price":1.699,"street":"Hauserstraße 10","zip":"4723","city":"Natternbach","open":true,"home_dist":24.0},{"name":"ECODROM - 24h Tanken & CAR WASH CLUB","lat":48.2504417,"lon":13.0476875,"price":1.699,"street":"Auf der Haiden 2","zip":"5280","city":"Braunau am Inn","open":true,"home_dist":36.7},{"name":"M3 Braunau","lat":48.2546850983996,"lon":13.036477300015548,"price":1.699,"street":"Salzburger Str. 11","zip":"5280","city":"Braunau am Inn","open":true,"home_dist":37.0},{"name":"JET TANKSTELLE","lat":48.243053,"lon":13.045175,"price":1.699,"street":"BRAUNAUERSTRASSE 1","zip":"5280","city":"BRAUNAU","open":true,"home_dist":37.3},{"name":"OMV Fast Lane - Haslach an der Mühl Sternwaldstraße 45","lat":48.57546,"lon":14.05164,"price":1.699,"street":"Sternwaldstrasse 45","zip":"4170","city":"Haslach an der Muehl","open":true,"home_dist":47.2},{"name":"PINK - so pink, so clever","lat":48.32004,"lon":13.9187,"price":1.707,"street":"Weidenholz 6","zip":"4730","city":"Waizenkirchen","open":true,"home_dist":38.6},{"name":"BP Ried-Tumeltsham","lat":48.21739999,"lon":13.49461995,"price":1.708,"street":"Hannesgrub Süd 3","zip":"4911","city":"Tumeltsham","open":true,"home_dist":26.7},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.261989,"lon":13.241999,"price":1.714,"street":"Bahnhofstraße 69","zip":"4950","city":"Altheim","open":true,"home_dist":25.8},{"name":"Land lebt auf","lat":48.2099926,"lon":13.3502305,"price":1.719,"street":"Alleenweg 2","zip":"4932","city":"Kirchheim","open":true,"home_dist":27.9},{"name":"PINK - so pink, so clever","lat":48.2479956,"lon":13.1899036,"price":1.719,"street":"Harterding 20","zip":"4952","city":"Weng","open":true,"home_dist":29.4},{"name":"BP","lat":48.19876935917574,"lon":13.60487102471469,"price":1.719,"street":"Pramerdorf 13","zip":"4922","city":"Geiersberg","open":true,"home_dist":31.0},{"name":"Freie Tankstelle","lat":48.1926383,"lon":13.2767613,"price":1.719,"street":"Fraham 13","zip":"5273","city":"Rossbach","open":true,"home_dist":31.4},{"name":"OMV - Braunau Salzburger Straße 99","lat":48.24673,"lon":13.0403,"price":1.719,"street":"Salzburger Strasse 99","zip":"5280","city":"Braunau","open":true,"home_dist":37.4},{"name":"Diskont Tankstelle","lat":48.4971,"lon":13.96922,"price":1.719,"street":"Haselbach 30 (am HOFER Parkplatz)","zip":"4121","city":"Altenfelden i. Mkr.","open":true,"home_dist":39.5},{"name":"Lagerhaus Genol","lat":48.3664201,"lon":13.5658676,"price":1.728,"street":"Hauptstrasse 75","zip":"4770","city":"Andorf","open":true,"home_dist":13.6},{"name":"Lagerhaus Genol","lat":48.4431738,"lon":13.659578,"price":1.728,"street":"Sportplatzstrasse 121","zip":"4794","city":"Kopfing","open":true,"home_dist":16.4},{"name":"Lagerhaus Genol","lat":48.4781749,"lon":13.7377153,"price":1.728,"street":"St. Aegidi 29","zip":"4725","city":"St. Aegidi","open":true,"home_dist":22.3},{"name":"eni","lat":48.115024,"lon":13.152329,"price":1.728,"street":"Landstrasse 37","zip":"5230","city":"Mattighofen","open":true,"home_dist":43.2},{"name":"BP","lat":48.2480541,"lon":13.0157924,"price":1.739,"street":"Neue Innbrückenstraße 2","zip":"5280","city":"Braunau","open":true,"home_dist":38.7},{"name":"Sprit Diskont Thomas Weißenböck-Straßl","lat":48.5017813,"lon":13.735886,"price":1.748,"street":"Nibelungenstrasse 20","zip":"4090","city":"Engelhartszell","open":true,"home_dist":22.6},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.1824222,"lon":13.2944021,"price":1.749,"street":"Höhnharter Straße 47","zip":"5252","city":"Aspach","open":true,"home_dist":32.1},{"name":"Easy Tank","lat":48.222328,"lon":13.732715,"price":1.749,"street":"Strötting 1","zip":"4716","city":"Hofkirchen/Tr.","open":true,"home_dist":33.8},{"name":"AVIA","lat":48.1508193,"lon":13.1999703,"price":1.749,"street":"Haslau 29","zip":"5241","city":"Maria Schmolln","open":true,"home_dist":38.1},{"name":"BP Rohrbach","lat":48.565037,"lon":13.985382,"price":1.749,"street":"Umfahrung-Süd 1","zip":"4150","city":"Rohrbach","open":true,"home_dist":42.2},{"name":"BP Tankstelle","lat":48.438205,"lon":14.03703,"price":1.749,"street":"Windorf 10","zip":"4113","city":"St. Martin im Mühlkreis","open":true,"home_dist":44.3},{"name":"BP","lat":48.4338571,"lon":14.0432299,"price":1.749,"street":"Adsdorf 13 ","zip":"4113","city":"St. Martin Im Muehlkreis","open":true,"home_dist":44.7},{"name":"PINK - so pink, so clever","lat":48.5506544,"lon":13.7729547,"price":1.759,"street":"Falkensteinerstraße 3","zip":"4144","city":"Oberkappel","open":true,"home_dist":26.9},{"name":"BP","lat":48.6023475,"lon":13.838931,"price":1.759,"street":"Falkensteinstraße 16","zip":"4154","city":"Kollerschlag","open":true,"home_dist":33.8},{"name":"BP","lat":48.6206163,"lon":13.8854566,"price":1.759,"street":"Hanriederstraße 43","zip":"4153","city":"Peilstein","open":true,"home_dist":37.8},{"name":"BP - Lagerhaus","lat":48.7363704,"lon":13.8195141,"price":1.759,"street":"Schwarzenberg 168","zip":"4164","city":"Schwarzenberg","open":true,"home_dist":42.1},{"name":"BP - Lagerhaus","lat":48.5621814,"lon":13.9935071,"price":1.759,"street":"Scheiblberg 44","zip":"4150","city":"Rohrbach","open":true,"home_dist":42.7},{"name":"BP - Lagerhaus","lat":48.6792247,"lon":13.9081676,"price":1.759,"street":"Dreisesselbergstrasse 18","zip":"4161","city":"Ulrichsberg","open":true,"home_dist":42.7},{"name":"BP Tankstelle Aigen-Schlägl","lat":48.63583,"lon":13.96424,"price":1.759,"street":"Schlägler Hauptstraße","zip":"4160","city":"Aigen-Schlägl","open":true,"home_dist":43.7},{"name":"Turmöl","lat":48.1022595,"lon":12.9685609,"price":1.779,"street":"Goldbrunn 7","zip":"5132","city":"Geretsberg","open":true,"home_dist":52.3},{"name":"eni","lat":48.394378,"lon":13.427743,"price":1.789,"street":"Andiesen 15","zip":"4774","city":"St. Marienkirchen / Schärding","open":true,"home_dist":6.7},{"name":"Shell Austria","lat":48.39134,"lon":13.42525,"price":1.789,"street":"ANDIESEN 8","zip":"4774","city":"ST. MARIENKIRCHEN","open":true,"home_dist":7.1},{"name":"LP","lat":48.1305292,"lon":12.8768827,"price":1.799,"street":"Hochburg 27","zip":"5122","city":"Ach","open":true,"home_dist":54.9},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.146017,"lon":12.8379112,"price":1.799,"street":"Heinz Lannerstraße 1","zip":"5122","city":"Hochburg","open":true,"home_dist":56.1}]},"die":{"stats":{"min":1.997,"second":2.009,"max":2.199},"top6":[7,6,11,40,2,3],"data":[{"name":"SB-Tankstelle Zauner","lat":48.37648,"lon":13.63102,"price":1.997,"street":"Jagern 18","zip":"4761","city":"Enzenkirchen","open":true,"home_dist":16.7},{"name":"AVANTI - Sankt Florian/Inn Bundesstraße 129","lat":48.43865,"lon":13.44392,"price":2.009,"street":"Bundesstrasse 129","zip":"4780","city":"Sankt Florian/Inn","open":true,"home_dist":1.8},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.4105618,"lon":13.5398537,"price":2.009,"street":"Eferdinger Straße 24","zip":"4775","city":"Taufkirchen an der Pram","open":true,"home_dist":9.0},{"name":"PINK - so pink, so clever","lat":48.3001235,"lon":14.015287,"price":2.011,"street":"Karl-Schachinger-Straße 17","zip":"4070","city":"Eferding","open":true,"home_dist":46.0},{"name":"PINK - so pink, so clever","lat":48.3081944,"lon":14.0209109,"price":2.011,"street":"Schmiedstraße 29","zip":"4070","city":"Eferding","open":true,"home_dist":46.1},{"name":"JET TANKSTELLE","lat":48.450421,"lon":13.436477,"price":2.013,"street":"LINZERSTRASSE 58","zip":"4780","city":"SCHÄRDING","open":true,"home_dist":0.5},{"name":"OMV","lat":48.4511218,"lon":13.4358673,"price":2.014,"street":"Linzerstraße 52","zip":"4780","city":"Schärding","open":true,"home_dist":0.4},{"name":"Turmöl Quick","lat":48.57763,"lon":13.99039,"price":2.015,"street":"Bahnhofstraße 26","zip":"4150","city":"Rohrbach","open":true,"home_dist":43.0},{"name":"Turmöl Quick","lat":48.1378,"lon":13.9568,"price":2.019,"street":"Welser Straße 70","zip":"4623","city":"Gunskirchen","open":true,"home_dist":52.1},{"name":"Turmöl Quick","lat":48.1807644,"lon":14.0187608,"price":2.019,"street":"Grieskirchnerstraße 118","zip":"4600","city":"Wels","open":true,"home_dist":52.7},{"name":"SB-Tankstelle Zauner","lat":48.447209,"lon":13.439305,"price":2.02,"street":"Ludwig-Paglstr. 1","zip":"4780","city":"Schärding","open":true,"home_dist":0.8},{"name":"eni Tankstelle Eferding","lat":48.30191847478238,"lon":14.02992820360073,"price":2.021,"street":"Linzer Straße 24","zip":"4070","city":"Eferding","open":true,"home_dist":46.9},{"name":"PINK - so pink, so clever","lat":48.1039304,"lon":14.0397516,"price":2.023,"street":"Reitingerstrasse 1","zip":"4641","city":"Steinhaus","open":true,"home_dist":59.2},{"name":"Turmöl","lat":48.181068,"lon":14.02697,"price":2.024,"street":"Eferdingerstraße 81","zip":"4600","city":"Wels","open":true,"home_dist":53.1},{"name":"ECODROM - 24h Tanken & CAR WASH CLUB","lat":48.1821416,"lon":14.0157362,"price":2.027,"street":"Oberfeldstraße 95","zip":"4600","city":"Wels","open":true,"home_dist":52.4},{"name":"AVIA","lat":48.1056064,"lon":13.623153,"price":2.029,"street":"Landstraße 2","zip":"4901","city":"Bruckmühl","open":true,"home_dist":41.2},{"name":"AVANTI - Hartkirchen Schaunbergstraße 20","lat":48.35956,"lon":13.99537,"price":2.029,"street":"Schaunbergstrasse 20","zip":"4081","city":"Hartkirchen","open":true,"home_dist":42.5},{"name":"PINK - so pink, so clever","lat":48.363754,"lon":14.010318,"price":2.029,"street":"Bahnhofstrasse 26","zip":"4082","city":"Aschach an der Donau","open":true,"home_dist":43.5},{"name":"Diskont Tankstelle","lat":48.183554,"lon":14.025008,"price":2.029,"street":"Dalistrasse 2 (am HOFER Parkplatz)","zip":"4600","city":"Wels","open":true,"home_dist":52.9},{"name":"Turmöl Quick","lat":48.2392811,"lon":13.3481402,"price":2.034,"street":"Rieder Straße 8","zip":"4942","city":"Gurten","open":true,"home_dist":24.8},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.172218,"lon":13.347336,"price":2.034,"street":"Rieder Straße 17","zip":"4931","city":"Mettmach","open":true,"home_dist":32.1},{"name":"Turmöl Quick","lat":48.1568483,"lon":13.5618253,"price":2.034,"street":"Eberschwang 98","zip":"4906","city":"Eberschwang","open":true,"home_dist":34.4},{"name":"Turmöl Quick","lat":48.183217,"lon":13.1314513,"price":2.034,"street":"Unterbrunning 7","zip":"5270","city":"Mauerkirchen","open":true,"home_dist":37.7},{"name":"Turmöl Quick","lat":48.1787503,"lon":13.0508818,"price":2.034,"street":"Salzburgerstraße 14","zip":"5145","city":"Neukirchen/Enknach","open":true,"home_dist":41.9},{"name":"Diskont Tankstelle","lat":48.1141,"lon":13.1514,"price":2.034,"street":"Braunauer Strasse 27 (am HOFER Parkplatz)","zip":"5230","city":"Mattighofen","open":true,"home_dist":43.4},{"name":"JET TANKSTELLE","lat":48.199009,"lon":13.47368,"price":2.036,"street":"FISCHERSTRASSE 15","zip":"4910","city":"RIED IM INNKREIS","open":true,"home_dist":28.5},{"name":"Diskont Tankstelle","lat":48.217,"lon":13.4957,"price":2.037,"street":"Hannesgrub Nord 1 (am HOFER Parkplatz)","zip":"4910","city":"Tumeltsham","open":true,"home_dist":26.8},{"name":"AVANTI - Ried im Innkreis Schärdinger Straße 16","lat":48.21309,"lon":13.48535,"price":2.037,"street":"Schärdinger Strasse 16","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.1},{"name":"Diskont Tankstelle","lat":48.2072,"lon":13.4651,"price":2.037,"street":"Aubachweg 2 (am HOFER Parkplatz)","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.6},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.205796,"lon":13.482978,"price":2.037,"street":"Braunauer Straße 3a","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":27.9},{"name":"Bauchinger - Diskonttankstelle","lat":48.2004742,"lon":13.4818461,"price":2.037,"street":"Magerlstraße 1","zip":"4910","city":"Ried im Innkreis","open":true,"home_dist":28.4},{"name":"Turmöl Quick","lat":48.542477,"lon":13.5834969,"price":2.038,"street":"Hauptstraße 86","zip":"4092","city":"Esternberg","open":true,"home_dist":14.5},{"name":"Turmöl Quick","lat":48.33844,"lon":13.77165,"price":2.038,"street":"Bahnhofstraße 27","zip":"4722","city":"Peuerbach","open":true,"home_dist":27.8},{"name":"PINK - so pink, so clever","lat":48.23407,"lon":13.771828,"price":2.038,"street":"Industriepark Stritzing 18","zip":"4710","city":"Grieskirchen","open":true,"home_dist":34.8},{"name":"AVANTI - Grieskirchen Wengerstraße 16","lat":48.2327,"lon":13.82238,"price":2.038,"street":"Wengerstrasse 16","zip":"4710","city":"Grieskirchen","open":true,"home_dist":37.6},{"name":"PINK - so pink, so clever","lat":48.32004,"lon":13.9187,"price":2.038,"street":"Weidenholz 6","zip":"4730","city":"Waizenkirchen","open":true,"home_dist":38.6},{"name":"Turmöl Quick","lat":48.226524,"lon":13.846774,"price":2.038,"street":"Industriegelände 5","zip":"4710","city":"Grieskirchen","open":true,"home_dist":39.5},{"name":"easy ÖL","lat":48.543264,"lon":13.65487,"price":2.039,"street":"Kasten an der Donau 15","zip":"4091","city":"Vichtenstein","open":true,"home_dist":18.8},{"name":"JET TANKSTELLE","lat":48.108581,"lon":13.150259,"price":2.039,"street":"BAHNHOFSTRASSE 1 A","zip":"5230","city":"MATTIGHOFEN","open":true,"home_dist":43.9},{"name":"DISKONT","lat":48.446277,"lon":13.439573,"price":2.04,"street":"Othmar-Spanlang-Straße 1","zip":"4780","city":"Brunnwies","open":true,"home_dist":0.9},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.349753,"lon":13.402063,"price":2.043,"street":"Rieder Straße 4","zip":"4980","city":"Antiesenhofen","open":true,"home_dist":11.9},{"name":"AVANTI - Ort im Innkreis Kammer 19","lat":48.31724,"lon":13.42524,"price":2.043,"street":"Kammer 19","zip":"4974","city":"Ort im Innkreis","open":true,"home_dist":15.3},{"name":"Turmöl","lat":48.28544,"lon":13.74498,"price":2.043,"street":"Haslau 10","zip":"4715","city":"Taufkirchen an der Trattnach","open":true,"home_dist":29.5},{"name":"Turmöl","lat":48.22723,"lon":13.8435,"price":2.043,"street":"Industriestraße 29 ","zip":"4710","city":"Grieskirchen","open":true,"home_dist":39.2},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.2328076,"lon":13.944986,"price":2.044,"street":"Eferdinger Str. 10","zip":"4702","city":"Wallern an der Trattnach","open":true,"home_dist":44.9},{"name":"Diskont Tankstelle","lat":48.23833,"lon":13.95712,"price":2.044,"street":"Eferdinger Strasse 79 (am HOFER Parkplatz)","zip":"4702","city":"Wallern","open":true,"home_dist":45.3},{"name":"PINK - so pink, so clever","lat":48.25478,"lon":13.97167,"price":2.044,"street":"Breitenaich 100","zip":"4612","city":"Breitenaich","open":true,"home_dist":45.3},{"name":"PINK - so pink, so clever","lat":48.2067254,"lon":13.9783181,"price":2.044,"street":"Ziegeleistraße 42","zip":"4631","city":"Krenglbach","open":true,"home_dist":48.6},{"name":"PINK - so pink, so clever","lat":48.22651,"lon":14.02806,"price":2.044,"street":"Siggstraße 2","zip":"4611","city":"Buchkirchen","open":true,"home_dist":50.5},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.266416,"lon":13.565932,"price":2.047,"street":"Lindet 2","zip":"4753","city":"Taiskirchen im Innkreis","open":true,"home_dist":23.0},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.31086,"lon":13.62981,"price":2.059,"street":"Stöckl-Allee 15","zip":"4755","city":"Zell an der Pram","open":true,"home_dist":21.4},{"name":"OMV Fast Lane - Haslach an der Mühl Sternwaldstraße 45","lat":48.57546,"lon":14.05164,"price":2.059,"street":"Sternwaldstrasse 45","zip":"4170","city":"Haslach an der Muehl","open":true,"home_dist":47.2},{"name":"Wölfl","lat":48.308489,"lon":13.425225,"price":2.063,"street":"Kammer 38 - Gewerbegebiet","zip":"4974","city":"Reichersberg","open":true,"home_dist":16.3},{"name":"Wölfl","lat":48.255305,"lon":13.077085,"price":2.063,"street":"Gewerbestraße 10","zip":"4963","city":"St. Peter am Hart","open":true,"home_dist":34.6},{"name":"AVANTI - Braunau Laabstraße","lat":48.26028,"lon":13.05145,"price":2.064,"street":"Laabstrasse ","zip":"5280","city":"Braunau","open":true,"home_dist":35.8},{"name":"Diskont Tankstelle","lat":48.2447,"lon":13.0487,"price":2.064,"street":"Hofer Strasse 1 (am HOFER Parkplatz)","zip":"5280","city":"Braunau","open":true,"home_dist":37.0},{"name":"BP","lat":48.19876935917574,"lon":13.60487102471469,"price":2.069,"street":"Pramerdorf 13","zip":"4922","city":"Geiersberg","open":true,"home_dist":31.0},{"name":"ECODROM - 24h Tanken & CAR WASH CLUB","lat":48.2504417,"lon":13.0476875,"price":2.069,"street":"Auf der Haiden 2","zip":"5280","city":"Braunau am Inn","open":true,"home_dist":36.7},{"name":"M3 Braunau","lat":48.2546850983996,"lon":13.036477300015548,"price":2.069,"street":"Salzburger Str. 11","zip":"5280","city":"Braunau am Inn","open":true,"home_dist":37.0},{"name":"JET TANKSTELLE","lat":48.243053,"lon":13.045175,"price":2.069,"street":"BRAUNAUERSTRASSE 1","zip":"5280","city":"BRAUNAU","open":true,"home_dist":37.3},{"name":"Shell Tankstelle Litzlbauer","lat":48.394535,"lon":13.749519,"price":2.079,"street":"Hauserstraße 10","zip":"4723","city":"Natternbach","open":true,"home_dist":24.0},{"name":"BP","lat":48.195925,"lon":13.105236,"price":2.079,"street":"Au 2","zip":"5274","city":"Burgkirchen","open":true,"home_dist":37.8},{"name":"AVIA Xpress (Automaten-Tankstelle)","lat":48.261989,"lon":13.241999,"price":2.094,"street":"Bahnhofstraße 69","zip":"4950","city":"Altheim","open":true,"home_dist":25.8},{"name":"Daxl (Freie Tankstelle)","lat":48.176389,"lon":13.85891,"price":2.097,"street":"Innbachtalstrasse 60","zip":"4633","city":"Kematen am Innbach /an der A8","open":true,"home_dist":43.9},{"name":"Lagerhaus Genol","lat":48.3664201,"lon":13.5658676,"price":2.098,"street":"Hauptstrasse 75","zip":"4770","city":"Andorf","open":true,"home_dist":13.6},{"name":"Lagerhaus Genol","lat":48.4431738,"lon":13.659578,"price":2.098,"street":"Sportplatzstrasse 121","zip":"4794","city":"Kopfing","open":true,"home_dist":16.4},{"name":"Lagerhaus Genol","lat":48.4781749,"lon":13.7377153,"price":2.098,"street":"St. Aegidi 29","zip":"4725","city":"St. Aegidi","open":true,"home_dist":22.3},{"name":"Lagerhaus Genol","lat":48.4063695,"lon":13.7808293,"price":2.098,"street":"Hasledt 38","zip":"4724","city":"Neukirchen/Walde","open":true,"home_dist":25.9},{"name":"GENOL-LH EFERDING-OÖ. MITTE eGen","lat":48.23172,"lon":13.61824,"price":2.098,"street":"STEINBRUCK 16","zip":"4742","city":"PRAM","open":true,"home_dist":28.1},{"name":"GENOL-LH EFERDING-OÖ. MITTE eGen","lat":48.2727841,"lon":13.7392114,"price":2.098,"street":"KIMPLINGERSTRASSE 9","zip":"4720","city":"NEUMARKT","open":true,"home_dist":30.1},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.2910626,"lon":13.4412191,"price":2.099,"street":"Diesseits 189","zip":"4973","city":"St.Martin","open":true,"home_dist":18.2},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr eGen","lat":48.2697773,"lon":13.2628,"price":2.099,"street":"Moosham 35","zip":"4943","city":"Geinberg","open":true,"home_dist":24.3},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.2707097,"lon":13.1710372,"price":2.099,"street":"Gewerbestr. 1","zip":"4962","city":"Mining","open":true,"home_dist":28.4},{"name":"PINK - so pink, so clever","lat":48.2479956,"lon":13.1899036,"price":2.099,"street":"Harterding 20","zip":"4952","city":"Weng","open":true,"home_dist":29.4},{"name":"Freie Tankstelle","lat":48.1926383,"lon":13.2767613,"price":2.099,"street":"Fraham 13","zip":"5273","city":"Rossbach","open":true,"home_dist":31.4},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.1824222,"lon":13.2944021,"price":2.099,"street":"Höhnharter Straße 47","zip":"5252","city":"Aspach","open":true,"home_dist":32.1},{"name":"GENOL-LH EFERDING-OÖ. MITTE eGen","lat":48.416328,"lon":13.916588,"price":2.099,"street":"BERGERSTRASSE 1","zip":"4083","city":"HAIBACH OB DER DONAU","open":true,"home_dist":35.6},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.1971181,"lon":13.1286289,"price":2.099,"street":"Bahnhofstraße 32","zip":"5270","city":"Mauerkirchen","open":true,"home_dist":36.6},{"name":"OMV - Braunau Salzburger Straße 99","lat":48.24673,"lon":13.0403,"price":2.099,"street":"Salzburger Strasse 99","zip":"5280","city":"Braunau","open":true,"home_dist":37.4},{"name":"Diskont Tankstelle","lat":48.4971,"lon":13.96922,"price":2.099,"street":"Haselbach 30 (am HOFER Parkplatz)","zip":"4121","city":"Altenfelden i. Mkr.","open":true,"home_dist":39.5},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.1059377,"lon":13.1525169,"price":2.099,"street":"Harlochnerstraße 1","zip":"5230","city":"Mattighofen","open":true,"home_dist":44.1},{"name":"BP Rohrbach","lat":48.565037,"lon":13.985382,"price":2.109,"street":"Umfahrung-Süd 1","zip":"4150","city":"Rohrbach","open":true,"home_dist":42.2},{"name":"BP Tankstelle","lat":48.438205,"lon":14.03703,"price":2.109,"street":"Windorf 10","zip":"4113","city":"St. Martin im Mühlkreis","open":true,"home_dist":44.3},{"name":"BP","lat":48.4338571,"lon":14.0432299,"price":2.109,"street":"Adsdorf 13 ","zip":"4113","city":"St. Martin Im Muehlkreis","open":true,"home_dist":44.7},{"name":"Sprit Diskont Thomas Weißenböck-Straßl","lat":48.5017813,"lon":13.735886,"price":2.118,"street":"Nibelungenstrasse 20","zip":"4090","city":"Engelhartszell","open":true,"home_dist":22.6},{"name":"OMV Fast Lane - Neustift im Mühlkreis Passauer Straße 23","lat":48.52955,"lon":13.74859,"price":2.129,"street":"Passauer Strasse 23","zip":"4143","city":"Neustift im Muehlkreis","open":true,"home_dist":24.4},{"name":"AVIA Xpress","lat":48.52476,"lon":13.75722,"price":2.129,"street":"Rannariedler Straße 10","zip":"4143","city":"Neustift i. M.","open":true,"home_dist":24.8},{"name":"AVIA Xpress","lat":48.48421,"lon":13.80487,"price":2.129,"street":"Falkensteinstraße 3","zip":"4142","city":"Hofkirchen im Mühlkreis","open":true,"home_dist":27.3},{"name":"AVIA Xpress","lat":48.5139,"lon":13.87304,"price":2.129,"street":"Hanriederstraße 9","zip":"4134","city":"Putzleinsdorf","open":true,"home_dist":32.8},{"name":"Genol - Lagerhaus","lat":48.502476968764455,"lon":13.88292064531762,"price":2.129,"street":"Glotzing 20","zip":"4134","city":"Putzleinsdorf","open":true,"home_dist":33.3},{"name":"LKW - Tankstelle","lat":48.7363868,"lon":13.8195391,"price":2.129,"street":"Schwarzenberg 168","zip":"4164","city":"Schwarzenberg","open":true,"home_dist":42.1},{"name":"LKW - Genol Lagerhaus","lat":48.6786932,"lon":13.907774,"price":2.129,"street":"Dreisesselbergstrasse 19","zip":"4161","city":"Ulrichsberg","open":true,"home_dist":42.6},{"name":"Genol - Lagerhaus","lat":48.5621814,"lon":13.9935071,"price":2.129,"street":"Scheiblberg 44","zip":"4150","city":"Rohrbach","open":true,"home_dist":42.7},{"name":"Genol - Lagerhaus","lat":48.5733215,"lon":14.0553602,"price":2.129,"street":"Sternwaldstrasse 56","zip":"4170","city":"Haslach","open":true,"home_dist":47.4},{"name":"BP","lat":48.2480541,"lon":13.0157924,"price":2.139,"street":"Neue Innbrückenstraße 2","zip":"5280","city":"Braunau","open":true,"home_dist":38.7},{"name":"Turmöl","lat":48.1022595,"lon":12.9685609,"price":2.149,"street":"Goldbrunn 7","zip":"5132","city":"Geretsberg","open":true,"home_dist":52.3},{"name":"Hauthaler","lat":48.3479775,"lon":13.4753257,"price":2.189,"street":"Edenaichet Nr. 32","zip":"4773","city":"Eggerding","open":true,"home_dist":12.2},{"name":"LP","lat":48.1305292,"lon":12.8768827,"price":2.199,"street":"Hochburg 27","zip":"5122","city":"Ach","open":true,"home_dist":54.9},{"name":"Genol Lagerhaus Innviertel-Traunviertel-Urfahr","lat":48.146017,"lon":12.8379112,"price":2.199,"street":"Heinz Lannerstraße 1","zip":"5122","city":"Hochburg","open":true,"home_dist":56.1}]}};
+
+  // ── Brand helpers ─────────────────────────────────────────────────────────
+  const BRAND_COLORS  = {"jet": "#e30613", "avanti": "#ccff00", "disk": "#005baa", "diskont": "#005baa", "eni": "#006db7", "omv": "#012606", "shell": "#c8a800", "bp": "#009a44", "esso": "#003087", "avia": "#e2001a", "oil!": "#005550", "baywa": "#007db5", "loacker": "#6db33f", "gutmann": "#070605"};
+  const BRAND_DOMAINS = {"jet": "jet-tankstellen.at", "avanti": "avanti.at", "disk": "diskonttanken.at", "diskont": "diskonttanken.at", "eni": "eni.at", "omv": "omv.at", "shell": "shell.at", "bp": "bp.com", "esso": "esso.de", "avia": "avia.at", "oil!": "oil-energy.at", "baywa": "baywa.de", "loacker": "loacker-recycling.com", "gutmann": "gutmann.at"};
+
+  function brandColor(name) {
+    const n = name.toLowerCase();
+    for (const [key, color] of Object.entries(BRAND_COLORS)) {
+      if (n.includes(key)) return color;
+    }
+    return "#4f46e5";
+  }
+
+  function brandLogo(name) {
+    const n = name.toLowerCase();
+    if (n.includes("eni")) return "https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png";
+    if (n.includes("bp"))  return "https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png";
+    for (const [key, domain] of Object.entries(BRAND_DOMAINS)) {
+      if (n.includes(key)) return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    }
+    return null;
+  }
+
+  function brandInitial(name) {
+    const words = name.trim().split(/\s+/);
+    if (!words.length || !words[0]) return "?";
+    const first = words[0][0];
+    const second = words.length > 1 ? words[1][0] : (words[0].length > 1 ? words[0][1] : first);
+    return (first + second).toUpperCase();
+  }
+
+  function markerColor(rank, total) {
+    const hue = Math.round(120 * (1 - (rank - 1) / Math.max(total - 1, 1)));
+    return `hsl(${hue},80%,45%)`;
+  }
+
+  function rankInfo(rank, price, minP, secondP) {
+    const p = Math.round(price * 1000);
+    if (p === Math.round(minP * 1000))    return { cls: "rank-gold",   html: '<span class="medal gold">🥇 Günstigste</span>' };
+    if (p === Math.round(secondP * 1000)) return { cls: "rank-silver", html: '<span class="medal silver">🥈 2. Preis</span>' };
+    return { cls: "", html: `<span class="rank-num">#${rank}</span>` };
+  }
+
+  function openBadge(isOpen) {
+    if (isOpen === true)  return '<span class="badge open">Offen</span>';
+    if (isOpen === false) return '<span class="badge closed">Geschlossen</span>';
+    return "";
+  }
+
+  function savingsBadge(price, maxP) {
+    const diff = maxP - price;
+    if (diff < 0.0005) return '<span class="savings maxprice">Höchstpreis</span>';
+    return `<span class="savings">− ${diff.toFixed(3)} €</span>`;
+  }
+
+  function priceBar(price, minP, maxP) {
+    const span = maxP - minP;
+    const pct = span ? Math.round(100 * (price - minP) / span) : 0;
+    const hue = Math.round(120 * (1 - pct / 100));
+    return `<div class="price-bar-wrap"><div class="price-bar" style="width:${Math.max(4, pct)}%;background:hsl(${hue},70%,45%)"></div></div>`;
+  }
+
+  function makeAvatar(name, color, big) {
+    const logo = brandLogo(name);
+    const n = name.toLowerCase();
+    const isEni = n.includes("eni"), isBp = n.includes("bp");
+    if (logo) {
+      const ex = isEni ? "brand-eni" : (isBp ? "brand-bp" : "");
+      const cls = big ? `avatar avatar-logo ${ex}` : `mini-avatar avatar-logo ${ex}`;
+      return `<div class="${cls}" style="--brand:${color}"><img src="${logo}" alt="${name}" onerror="this.parentElement.innerHTML='<span>${brandInitial(name)}</span>'"></div>`;
+    }
+    const cls = big ? "avatar" : "mini-avatar";
+    return `<div class="${cls}" style="background:${color}">${brandInitial(name)}</div>`;
+  }
+
+  const SVG_PIN = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const SVG_PIN_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const SVG_ROUTE = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+  const SVG_ROUTE_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+
+  // ── Card renderers ────────────────────────────────────────────────────────
+  function renderCard(s, rank, fkey, stats) {
+    const { min, second, max } = stats;
+    const color = brandColor(s.name);
+    const { cls, html: rankHtml } = rankInfo(rank, s.price, min, second);
+    const distStr = s.home_dist != null ? `📍 ${s.home_dist.toFixed(1)} km` : "📍 –";
+    const dest = `${s.lat},${s.lon}`;
+    const mapsHref = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+
+    const art = document.createElement('article');
+    art.className = `card ${cls}`;
+    art.id = `card-${fkey}-${rank}`;
+    art.style.cssText = `--brand:${color}`;
+    art.innerHTML = `
+      <div class="card-header">
+        ${makeAvatar(s.name, color, true)}
+        <div class="card-meta">
+          ${rankHtml}
+          ${openBadge(s.open)}
+          <span class="dist home-dist" id="dist-${fkey}-${rank}">${distStr}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">${s.name}</h2>
+        <a class="address" onclick="focusMarker('${fkey}',${rank});return false;" href="#">
+          ${SVG_PIN} ${s.street}, ${s.zip} ${s.city}
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">${s.price.toFixed(3)} <small>€/L</small></span>
+            ${savingsBadge(s.price, max)}
+          </div>
+          ${priceBar(s.price, min, max)}
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-${fkey}-${rank}"
+             href="${mapsHref}" target="_blank" rel="noopener">
+            ${SVG_ROUTE} Route
+          </a>
+        </div>
+      </div>`;
+    return art;
+  }
+
+  function renderMiniCard(s, rank, fkey, stats) {
+    const { min, second } = stats;
+    const color = brandColor(s.name);
+    const { cls, html: rankHtml } = rankInfo(rank, s.price, min, second);
+    const distStr = s.home_dist != null ? `📍 ${s.home_dist.toFixed(1)} km` : "📍 –";
+    const dest = `${s.lat},${s.lon}`;
+    const mapsHref = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+
+    const div = document.createElement('div');
+    div.className = `mini-card ${cls}`;
+    div.style.cssText = `--brand:${color}`;
+    div.setAttribute('onclick',
+      `document.getElementById('card-${fkey}-${rank}').scrollIntoView({behavior:'smooth',block:'center'})`);
+    div.innerHTML = `
+      <div class="mini-top">
+        ${makeAvatar(s.name, color, false)}
+        <span class="mini-rank">${rankHtml}</span>
+        <span class="mini-badges">
+          ${openBadge(s.open)}
+          <span class="dist mini-dist" id="mdist-${fkey}-${rank}">${distStr}</span>
+        </span>
+      </div>
+      <div class="mini-name">${s.name}</div>
+      <a class="mini-address address" onclick="focusMarker('${fkey}',${rank});return false;" href="#">
+        ${SVG_PIN_SM} ${s.street}, ${s.zip} ${s.city}
+      </a>
+      <div class="mini-footer">
+        <div class="mini-price">${s.price.toFixed(3)} <small>€/L</small></div>
+        <a class="map-btn route-btn mini-route" id="mroute-${fkey}-${rank}"
+           href="${mapsHref}" target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">
+          ${SVG_ROUTE_SM} Route
+        </a>
+      </div>`;
+    return div;
+  }
+
+  // ── Leaflet Map ───────────────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: true }).setView([48.3136, 13.5988], 11);
+
+  // Tile layer with automatic fallback: CARTO Voyager → OSM (if blocked by Brave Shields)
+  const osmAttrib = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  const osmLayer  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: osmAttrib, subdomains: 'abc', maxZoom: 19
+  });
+  let cartoFails = 0, usingOsm = false;
+  const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: osmAttrib + ' © <a href="https://carto.com">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+  });
+  cartoLayer.on('tileerror', () => {
+    if (usingOsm) return;
+    cartoFails++;
+    if (cartoFails >= 2) {
+      usingOsm = true;
+      map.removeLayer(cartoLayer);
+      osmLayer.addTo(map);
+    }
+  });
+  cartoLayer.addTo(map);
+
+  const allMarkers = { sup: {}, e10: {}, die: {} };
+  let currentFuel = localStorage.getItem('fuel') || 'sup';
+
+  function makeIcon(color, label) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        background:${color};
+        width:32px;height:32px;border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        border:2px solid rgba(255,255,255,.35);
+        box-shadow:0 3px 10px rgba(0,0,0,.5);
+        display:flex;align-items:center;justify-content:center;">
+        <span style="transform:rotate(45deg);color:#fff;font-weight:800;font-size:11px;">${label}</span>
+      </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -34],
+    });
+  }
+
+  function addMarker(fkey, lat, lon, popup, color, label, rank) {
+    const m = L.marker([lat, lon], { icon: makeIcon(color, label) })
+      .bindPopup(popup);
+    allMarkers[fkey][rank] = m;
+
+    m.on('click', () => {
+      const card = document.getElementById('card-' + fkey + '-' + rank);
+      if (card) {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
+        card.classList.add('highlighted');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  function focusMarker(fkey, rank) {
+    const m = allMarkers[fkey][rank];
+    if (!m) return;
+    map.setView(m.getLatLng(), 15, { animate: true });
+    m.openPopup();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
+    document.getElementById('card-' + fkey + '-' + rank)?.classList.add('highlighted');
+  }
+
+  function switchFuel(fuel) {
+    if (fuel === currentFuel) return;
+    const ids = ['grid', 'stats', 'fuel-sub', 'top4'];
+    ids.forEach(id => {
+      document.getElementById(id + '-' + currentFuel).style.display = 'none';
+      document.getElementById(id + '-' + fuel).style.display = '';
+    });
+    Object.values(allMarkers[currentFuel]).forEach(m => map.removeLayer(m));
+    Object.values(allMarkers[fuel]).forEach(m => m.addTo(map));
+    document.getElementById('btn-' + currentFuel).classList.remove('active');
+    document.getElementById('btn-' + fuel).classList.add('active');
+    currentFuel = fuel;
+    localStorage.setItem('fuel', fuel);
+  }
+
+  // ── initStations: renders cards + mini-cards + registers markers ──────────
+  function initStations(fkey) {
+    const fuel = STATIONS[fkey];
+    if (!fuel) return;
+    const { data, stats, top6 } = fuel;
+    const total = data.length;
+
+    // Main grid cards
+    const grid = document.getElementById('grid-' + fkey);
+    const frag = document.createDocumentFragment();
+    data.forEach((s, i) => {
+      const rank = i + 1;
+      frag.appendChild(renderCard(s, rank, fkey, stats));
+      const mColor = markerColor(rank, total);
+      const distPart = s.home_dist != null ? `<br>📍 ${s.home_dist.toFixed(1)} km ab Schärding` : "";
+      const popup = `<b>#${rank} ${s.name}</b><br>${s.street}, ${s.zip} ${s.city}<br><span style='font-size:1.2em;font-weight:700'>${s.price.toFixed(3)} €/L</span>${distPart}`;
+      addMarker(fkey, s.lat, s.lon, popup, mColor, rank, rank);
+    });
+    grid.appendChild(frag);
+
+    // Top-6 mini-cards
+    const top4div = document.getElementById('top4-' + fkey);
+    const mfrag = document.createDocumentFragment();
+    top6.forEach(rank => {
+      mfrag.appendChild(renderMiniCard(data[rank - 1], rank, fkey, stats));
+    });
+    top4div.appendChild(mfrag);
+  }
+
+  // ── Theme ────────────────────────────────────────────────────────────────
+  function setTheme(t) {
+    const root = document.documentElement;
+    if (t === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    document.querySelectorAll('.theme-toggle button').forEach((btn, i) => {
+      btn.classList.toggle('active', ['light','system','dark'][i] === t);
+    });
+  }
+  (function() {
+    const saved = localStorage.getItem('theme') || 'system';
+    setTheme(saved);
+  })();
+
+  // ── Geolocation ──────────────────────────────────────────────────────────
+  function haversineJS(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  let homeMarker = null;
+
+  function updateWithLocation(lat, lon, isLive) {
+    for (const fkey of ['sup', 'die']) {
+      STATIONS[fkey].data.forEach((s, i) => {
+        const rank = i + 1;
+        const d = haversineJS(lat, lon, s.lat, s.lon).toFixed(1);
+        const distEl = document.getElementById('dist-' + fkey + '-' + rank);
+        if (distEl) distEl.textContent = '📍 ' + d + ' km';
+        const mDistEl = document.getElementById('mdist-' + fkey + '-' + rank);
+        if (mDistEl) mDistEl.textContent = '📍 ' + d + ' km';
+        const origin = `${lat},${lon}`;
+        const dest   = `${s.lat},${s.lon}`;
+        const href   = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=driving`;
+        const routeEl = document.getElementById('route-' + fkey + '-' + rank);
+        if (routeEl) routeEl.href = href;
+        const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
+        if (mRouteEl) mRouteEl.href = href;
+      });
+    }
+    map.setView([lat, lon], map.getZoom(), { animate: true });
+    if (homeMarker) map.removeLayer(homeMarker);
+    const label = isLive ? 'Ihr Standort (GPS)' : 'Schärding (Fallback)';
+    homeMarker = L.marker([lat, lon], {
+      zIndexOffset: 1000,
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="background:${isLive ? '#22c55e' : '#6366f1'};width:36px;height:36px;
+                           border-radius:50%;border:3px solid #fff;
+                           box-shadow:0 3px 10px rgba(0,0,0,.4);
+                           display:flex;align-items:center;justify-content:center;font-size:18px;">
+                 ${isLive ? '📱' : '🏠'}
+               </div>`,
+        iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -20],
+      })
+    }).addTo(map).bindPopup(`<b>${label}</b>`);
+
+    const pill = document.getElementById('geo-pill');
+    if (pill) {
+      pill.textContent = isLive ? '📱 GPS-Standort aktiv' : '🏠 Fallback: Schärding';
+      pill.style.color = isLive ? '#22c55e' : '#a78bfa';
+    }
+  }
+
+  // ── Startup sequence ──────────────────────────────────────────────────────
+  // 1. Render all stations (creates DOM elements + registers map markers)
+  initStations('sup');
+  initStations('die');
+  
+
+  // 2. Initial location render (DOM elements now exist)
+  updateWithLocation(48.4545, 13.4375, false);
+
+  // 3. Apply saved fuel preference (adds markers to map, shows correct grid)
+  (function initFuel() {
+    Object.values(allMarkers[currentFuel]).forEach(m => m.addTo(map));
+    if (currentFuel !== 'sup') {
+      ['grid', 'stats', 'fuel-sub', 'top4'].forEach(id => {
+        document.getElementById(id + '-sup').style.display = 'none';
+        document.getElementById(id + '-' + currentFuel).style.display = '';
+      });
+      document.getElementById('btn-sup').classList.remove('active');
+      document.getElementById('btn-' + currentFuel).classList.add('active');
+    }
+  })();
+
+  // 4. Try GPS (updates distances + route links if granted)
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => updateWithLocation(pos.coords.latitude, pos.coords.longitude, true),
+      ()  => updateWithLocation(48.4545, 13.4375, false),
+      { timeout: 8000 }
+    );
+  }
+</script>
+
+</body>
+</html>

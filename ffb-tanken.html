@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0f0f13" />
+  <meta name="color-scheme" content="dark light" />
+  <title>FFB-Tanken – Günstigste Tankstellen</title>
+
+  <!-- Cache Control -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <!-- SEO & Meta Tags -->
+  <meta name="description" content="Aktuelle Spritpreise rund um Fürstenfeldbruck. Günstigste Tankstellen im Landkreis FFB und Münchner Westen im Preisvergleich." />
+  <meta name="keywords" content="Tanken, Benzinpreise, Fürstenfeldbruck, FFB, München, Bayern, Super 95, E5, Diesel, billig tanken, günstig tanken" />
+  <meta name="author" content="BilligTanken" />
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+  <meta name="language" content="de" />
+  <meta http-equiv="language" content="de-at" />
+
+  <!-- Open Graph (Facebook, LinkedIn, etc.) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="FFB-Tanken – Günstigste Tankstellen" />
+  <meta property="og:description" content="Günstigste Tankstellen rund um Fürstenfeldbruck. Echtzeit-Preise von Tankerkönig." />
+  <meta property="og:image" content="screenshots/preview.png" />
+  <meta property="og:image:type" content="image/png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  
+  <meta property="og:locale" content="de_AT" />
+  <meta property="og:site_name" content="BilligTanken" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="FFB-Tanken – Günstigste Tankstellen" />
+  <meta name="twitter:description" content="Günstigste Tankstellen rund um Fürstenfeldbruck. Echtzeit-Preise von Tankerkönig." />
+  <meta name="twitter:image" content="screenshots/preview.png" />
+
+  <!-- Apple & Mobile -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BilligTanken" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+  <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+  <link rel="manifest" href="/site.webmanifest" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "BilligTanken",
+    "description": "Aktuelle Spritpreise rund um Fürstenfeldbruck. Günstigste Tankstellen im Landkreis FFB und Münchner Westen im Preisvergleich.",
+    "url": "https://billigtanken.at",
+    "image": "screenshots/preview.png",
+    "logo": "/logo.png",
+    "address": {
+      "@type": "PostalAddress",
+      "addressCountry": "AT",
+      "addressRegion": "Vorarlberg"
+    },
+    "sameAs": []
+  }
+  </script>
+
+  <!-- Leaflet.js inlined to avoid any CDN or proxy blocking (Brave Shields, etc.) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ── Dark theme (default) ── */
+    :root, [data-theme="dark"] {
+      --bg:      #0f0f13;
+      --surface: #1a1a24;
+      --surf2:   #22222f;
+      --border:  #2e2e40;
+      --text:    #e8e8f0;
+      --muted:   #8888aa;
+      --popup-bg:#1a1a24;
+      --popup-border:#2e2e40;
+      --popup-text:#e8e8f0;
+      --map-filter: none;
+      --link-color: #60a5fa;
+      --link-weight: 400;
+    }
+
+    /* ── Light theme ── */
+    [data-theme="light"] {
+      --bg:      #f4f4f8;
+      --surface: #ffffff;
+      --surf2:   #eeeef4;
+      --border:  #d0d0e0;
+      --text:    #1a1a2e;
+      --muted:   #666688;
+      --popup-bg:#ffffff;
+      --popup-border:#d0d0e0;
+      --popup-text:#1a1a2e;
+      --map-filter: none;
+      --link-color: #1a4fa8;
+      --link-weight: 700;
+    }
+
+    /* ── System preference ── */
+    @media (prefers-color-scheme: light) {
+      :root:not([data-theme="dark"]):not([data-theme="light"]) {
+        --bg:      #f4f4f8;
+        --surface: #ffffff;
+        --surf2:   #eeeef4;
+        --border:  #d0d0e0;
+        --text:    #1a1a2e;
+        --muted:   #666688;
+        --popup-bg:#ffffff;
+        --popup-border:#d0d0e0;
+        --popup-text:#1a1a2e;
+        --link-color: #1a4fa8;
+        --link-weight: 700;
+        --map-filter: none;
+      }
+    }
+
+    :root {
+      --green:  #22c55e;
+      --gold:   #fbbf24;
+      --silver: #94a3b8;
+      --bronze: #cd7f32;
+      --r:      16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100vh; padding: 2rem 1rem 4rem;
+      transition: background .25s, color .25s;
+    }
+
+    /* ── Theme toggle button ── */
+    .theme-toggle {
+      position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+      display: flex; align-items: center; gap: 0;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; padding: .25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    }
+    .theme-toggle button {
+      background: none; border: none; cursor: pointer;
+      padding: .3rem .55rem; border-radius: 999px;
+      font-size: .8rem; color: var(--muted);
+      transition: background .15s, color .15s;
+      line-height: 1;
+    }
+    .theme-toggle button.active {
+      background: var(--surf2); color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+    }
+    .theme-toggle button:hover:not(.active) { color: var(--text); }
+
+    /* ── Fuel toggle ── */
+    .fuel-toggle {
+      display: inline-flex; gap: 0; margin-bottom: .6rem;
+      background: var(--surf2); border: 1px solid var(--border);
+      border-radius: 999px; padding: .2rem;
+    }
+    .fuel-btn {
+      background: none; border: none; cursor: pointer;
+      padding: .35rem .9rem; border-radius: 999px;
+      font-size: .82rem; font-weight: 600; color: var(--muted);
+      transition: background .15s, color .15s;
+    }
+    .fuel-btn.active {
+      background: var(--surface); color: var(--text);
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+    }
+    .fuel-btn:hover:not(.active) { color: var(--text); }
+
+    .pill {
+      display: inline-block;
+      font-size: .72rem; padding: .28rem .75rem; border-radius: 999px;
+    }
+    .pill.time { color: var(--muted); background: var(--surf2); border: 1px solid var(--border); }
+    .pill.note { color: #f59e0b; background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.25); }
+
+    /* Overview row: left col + map + top-4 */
+    .overview {
+      display: grid;
+      grid-template-columns: 260px 1fr 430px;
+      gap: 1rem;
+      max-width: 1500px;
+      margin: 0 auto 2rem;
+      align-items: stretch;
+    }
+    @media (max-width: 1100px) {
+      .overview { grid-template-columns: 260px 1fr; }
+      .top4-panel { display: none; }
+    }
+    @media (max-width: 800px) {
+      .overview { grid-template-columns: 1fr; }
+    }
+
+    /* Top-4 mini-card panel */
+    .top4-panel {
+      display: flex; flex-direction: column; gap: .5rem; align-self: start;
+    }
+    .top4-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: .5rem;
+    }
+    .top4-label {
+      font-size: .72rem; font-weight: 700; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .05em; margin-bottom: .1rem;
+    }
+    .mini-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .6rem .7rem;
+      display: flex; flex-direction: column; gap: .25rem;
+      cursor: pointer; transition: transform .15s, box-shadow .15s;
+      position: relative; overflow: hidden;
+    }
+    .mini-card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }
+    .mini-card.rank-gold::before  { background: var(--gold); }
+    .mini-card.rank-silver::before { background: var(--silver); }
+    .mini-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,.35); }
+    .mini-top {
+      display: flex; align-items: center; gap: .4rem;
+    }
+    .mini-avatar {
+      width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .6rem; color: #fff;
+    }
+    .mini-avatar.avatar-logo { background: #fff; padding: 2px; box-shadow: 0 1px 3px rgba(0,0,0,.25); }
+    .mini-avatar.avatar-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 4px; }
+    .mini-avatar.brand-eni img, .mini-avatar.brand-bp img { transform: scale(1.3); }
+    .mini-rank .medal { font-size: .6rem; padding: .1rem .35rem; }
+    .mini-rank .rank-num { font-size: .65rem; }
+    .mini-name { font-size: .72rem; font-weight: 600; line-height: 1.3; color: var(--text); }
+    .mini-badges {
+      display: flex; align-items: center; gap: .3rem; flex-wrap: wrap; margin-left: auto;
+    }
+    .mini-dist { font-size: .62rem; }
+    .mini-address {
+      font-size: .65rem; line-height: 1.3; display: flex; align-items: flex-start; gap: .25rem;
+    }
+    .mini-address svg { flex-shrink: 0; margin-top: .1rem; }
+    .mini-footer {
+      display: flex; align-items: center; justify-content: space-between; gap: .4rem; margin-top: .1rem;
+    }
+    .mini-price {
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -.02em;
+      line-height: 1; white-space: nowrap;
+    }
+    .mini-price small { font-size: .6rem; font-weight: 500; color: var(--muted); }
+    .mini-route { font-size: .65rem; padding: .2rem .45rem; }
+
+    /* Left column: header + stats */
+    .left-col {
+      display: flex; flex-direction: column; gap: .9rem;
+    }
+
+    /* Header (now inside left col) */
+    header { text-align: left; }
+    header h1 {
+      font-size: clamp(1.2rem, 2.5vw, 1.6rem);
+      font-weight: 800; letter-spacing: -.03em;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    header p.sub { color: var(--muted); margin-top: .3rem; font-size: .8rem; line-height: 1.4; }
+    .pills { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .6rem; }
+
+    /* Stats */
+    .stats { display: flex; flex-direction: column; gap: .6rem; flex: 1; }
+    .stat {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .7rem 1rem;
+      display: flex; align-items: center; justify-content: space-between; gap: .5rem;
+    }
+    .stat .val { font-size: 1.2rem; font-weight: 700; color: var(--green); }
+    .stat .val.hi { color: #f87171; }
+    .stat .val.neu { color: var(--text); }
+    .stat .lbl { font-size: .73rem; color: var(--muted); }
+
+    /* MAP */
+    #map {
+      height: 100%; min-height: 340px; border-radius: var(--r);
+      border: 1px solid var(--border); overflow: hidden;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 250px));
+      gap: 1.1rem; max-width: 1400px; margin: 0 auto;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--r); padding: .85rem;
+      display: flex; flex-direction: column; gap: .55rem;
+      position: relative; overflow: hidden;
+      transition: transform .2s, box-shadow .2s;
+      cursor: default;
+    }
+    .card::before {
+      content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: var(--brand, #4f46e5);
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0,0,0,.5); }
+    .card.highlighted { box-shadow: 0 0 0 2px #60a5fa, 0 12px 32px rgba(0,0,0,.5); }
+
+    .rank-gold   { border-color: var(--gold);   }
+    .rank-silver { border-color: var(--silver); }
+    .rank-bronze { border-color: var(--bronze); }
+    .rank-gold::before   { background: var(--gold); height: 4px; }
+    .rank-silver::before { background: var(--silver); }
+    .rank-bronze::before { background: var(--bronze); }
+
+    .card-header { display: flex; align-items: center; justify-content: space-between; }
+    .avatar {
+      width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800; font-size: .83rem; color: #fff;
+      text-shadow: 0 1px 3px rgba(0,0,0,.4);
+    }
+    .avatar-logo {
+      background: #fff;
+      padding: 4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.3);
+    }
+    /* ── Logo Sizing ── */
+    .avatar-logo img {
+      width: 100%; height: 100%;
+      object-fit: contain; border-radius: 6px;
+    }
+    /* Specific fix for Eni logo (often appears small) */
+    .brand-eni img {
+      transform: scale(1.4);
+    }
+    /* BP logo needs scaling up */
+    .brand-bp img {
+      transform: scale(1.5);
+    }
+    .card-meta { display: flex; align-items: center; gap: .35rem; flex-wrap: wrap; justify-content: flex-end; }
+    .medal {
+      font-size: .72rem; font-weight: 700; padding: .22rem .55rem; border-radius: 999px;
+    }
+    .medal.gold   { background: rgba(251,191,36,.15); color: var(--gold);   border: 1px solid rgba(251,191,36,.3); }
+    .medal.silver { background: rgba(148,163,184,.12); color: var(--silver); border: 1px solid rgba(148,163,184,.25); }
+    .medal.bronze { background: rgba(205,127,50,.12);  color: var(--bronze); border: 1px solid rgba(205,127,50,.25); }
+    .rank-num { font-size: .78rem; color: var(--muted); font-weight: 600; }
+    .badge {
+      font-size: .67rem; font-weight: 600; padding: .2rem .5rem; border-radius: 999px;
+    }
+    .badge.open   { background: rgba(34,197,94,.15); color: #22c55e; border: 1px solid rgba(34,197,94,.3); }
+    .badge.closed { background: rgba(239,68,68,.15);  color: #ef4444; border: 1px solid rgba(239,68,68,.3); }
+    .dist {
+      font-size: .7rem; color: var(--muted); background: var(--surf2);
+      padding: .18rem .48rem; border-radius: 999px; border: 1px solid var(--border);
+    }
+    .home-dist {
+      color: #a78bfa; background: rgba(167,139,250,.1); border-color: rgba(167,139,250,.25);
+    }
+
+    .card-body { flex: 1; }
+    .station-name { font-size: .93rem; font-weight: 700; line-height: 1.3; margin-bottom: .2rem; }
+    .address {
+      font-size: .78rem; color: var(--link-color); font-weight: var(--link-weight);
+      display: flex; align-items: flex-start; gap: .32rem; line-height: 1.4;
+      text-decoration: underline; cursor: pointer;
+    }
+    .address:hover { opacity: .75; }
+    .address svg { flex-shrink: 0; margin-top: .15rem; stroke: #ef4444; }
+
+    .card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-top: .5rem; border-top: 1px solid var(--border); gap: .5rem;
+    }
+    .price-block { display: flex; flex-direction: column; gap: .22rem; min-width: 0; }
+    .price-row { display: flex; align-items: baseline; gap: .45rem; flex-wrap: wrap; }
+    .price { font-size: 1.45rem; font-weight: 800; letter-spacing: -.02em; line-height: 1; white-space: nowrap; }
+    .price small { font-size: .82rem; font-weight: 500; color: var(--muted); }
+    .savings {
+      font-size: .72rem; font-weight: 700; padding: .14rem .48rem;
+      border-radius: 999px; align-self: flex-start;
+      background: rgba(74,222,128,.12); color: #4ade80; border: 1px solid rgba(74,222,128,.22);
+    }
+    .savings.maxprice {
+      background: rgba(248,113,113,.1); color: #f87171; border-color: rgba(248,113,113,.2);
+    }
+    .price-bar-wrap {
+      height: 4px; background: var(--border); border-radius: 999px;
+      width: 110px; overflow: hidden;
+    }
+    .price-bar { height: 100%; border-radius: 999px; }
+
+    .btn-group { display: flex; gap: .4rem; flex-shrink: 0; }
+    .map-btn {
+      display: inline-flex; align-items: center; gap: .32rem;
+      font-size: .78rem; font-weight: 600; color: var(--text);
+      background: var(--surf2); border: 1px solid var(--border);
+      padding: .42rem .85rem; border-radius: 8px;
+      cursor: pointer; flex-shrink: 0; text-decoration: none;
+      transition: background .15s, border-color .15s;
+    }
+    .map-btn:hover { background: var(--border); border-color: var(--muted); }
+    .route-btn { border-color: rgba(96,165,250,.3); color: #60a5fa; }
+    .route-btn:hover { background: rgba(96,165,250,.1); border-color: #60a5fa; color: #60a5fa; }
+
+    /* Leaflet popup themed */
+    .leaflet-popup-content-wrapper {
+      background: var(--popup-bg) !important; color: var(--popup-text) !important;
+      border: 1px solid var(--popup-border) !important; border-radius: 10px !important;
+      box-shadow: 0 8px 24px rgba(0,0,0,.2) !important;
+    }
+    .leaflet-popup-tip { background: var(--popup-bg) !important; }
+    .leaflet-popup-content { font-size: .85rem; line-height: 1.5; }
+
+    footer.pf {
+      text-align: center; margin-top: 3rem; font-size: .76rem; color: var(--muted);
+    }
+    footer.pf a { color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="theme-toggle" id="theme-toggle">
+  <button onclick="setTheme('light')" title="Hell">☀️</button>
+  <button onclick="setTheme('system')" title="System">💻</button>
+  <button onclick="setTheme('dark')" title="Dunkel">🌙</button>
+</div>
+
+<div class="overview">
+  <div class="left-col">
+    <header>
+      <h1>⛽ FFB-Tanken</h1>
+      <div class="fuel-toggle">
+        <button id="btn-sup" class="fuel-btn active" onclick="switchFuel('sup')">⛽ Benzin E5</button>
+        <button id="btn-e10" class="fuel-btn" onclick="switchFuel('e10')">🌿 Benzin E10</button>
+        <button id="btn-die" class="fuel-btn" onclick="switchFuel('die')">🛢 Diesel</button>
+      </div>
+      <p class="sub" id="fuel-sub-sup">Top 80 gemeldete E5 · Super 95 · Großraum Fürstenfeldbruck / Münchner Westen · Luftlinie ab Fürstenfeldbruck Bahnhof</p>
+      <p class="sub" id="fuel-sub-e10" style="display:none">Top 74 gemeldete E10 · Super E10 · Großraum Fürstenfeldbruck / Münchner Westen · Luftlinie ab Fürstenfeldbruck Bahnhof</p>
+      <p class="sub" id="fuel-sub-die" style="display:none">Top 80 gemeldete Diesel · Großraum Fürstenfeldbruck / Münchner Westen · Luftlinie ab Fürstenfeldbruck Bahnhof</p>
+      <div class="pills">
+        <span class="pill time">Aktualisiert: 12.04.2026 13:30 Uhr</span>
+        <span class="pill note">⚠ Tageshöchstpreis aktiv</span>
+        <span class="pill time" id="geo-pill" style="color:#a78bfa">🏠 Standort wird ermittelt …</span>
+      </div>
+    </header>
+    <div class="stats" id="stats-sup">
+      <div class="stat"><div class="val">2.088 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">2.191 €</div><div class="lbl">Ø Top 80</div></div>
+      <div class="stat"><div class="val hi">2.239 €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">0.151 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+    <div class="stats" id="stats-e10" style="display:none">
+      <div class="stat"><div class="val">2.048 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">2.136 €</div><div class="lbl">Ø Top 74</div></div>
+      <div class="stat"><div class="val hi">2.179 €</div><div class="lbl">Tagesmax.</div></div>
+      <div class="stat"><div class="val">0.131 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+    <div class="stats" id="stats-die" style="display:none">
+      <div class="stat"><div class="val">2.249 €</div><div class="lbl">Günstigster Preis</div></div>
+      <div class="stat"><div class="val neu">2.321 €</div><div class="lbl">Ø Top 80</div></div>
+      <div class="stat"><div class="val hi">2.409 €</div><div class="lbl">Tageshöchstpreis</div></div>
+      <div class="stat"><div class="val">0.160 €</div><div class="lbl">Max. Ersparnis</div></div>
+    </div>
+  </div>
+  <div id="map"></div>
+  <div class="top4-panel">
+    <div class="top4-label">Top 4 &lt;10 km</div>
+    <div id="top4-sup" class="top4-grid"></div>
+    <div id="top4-e10" class="top4-grid" style="display:none"></div>
+    <div id="top4-die" class="top4-grid" style="display:none"></div>
+  </div>
+</div>
+
+<main class="grid" id="grid-sup"></main>
+<main class="grid" id="grid-e10" style="display:none"></main>
+<main class="grid" id="grid-die" style="display:none"></main>
+
+<footer class="pf">
+  Datenquelle: <a href="https://www.spritpreisrechner.at" target="_blank">E-Control Austria</a>
+  · Karte: <a href="https://leafletjs.com" target="_blank">Leaflet</a> / <a href="https://www.openstreetmap.org" target="_blank">OpenStreetMap</a>
+  · Preise in €/Liter inkl. MwSt. · Alle Angaben ohne Gewähr
+</footer>
+
+<script>
+  // ── Station data (server-rendered JSON) ──────────────────────────────────
+  const STATIONS = {"sup":{"stats":{"min":2.088,"second":2.108,"max":2.239},"top6":[8,69,47,24,15,37],"data":[{"name":"Neeb Tank","lat":48.125225067139,"lon":11.452363014221,"price":2.088,"street":"Lochhamer Schlag 13","zip":"82166","city":"Gräfelfing","open":true,"home_dist":17.2},{"name":"Reitmayr TS","lat":48.1480546,"lon":11.3450828,"price":2.108,"street":"Augsburger Str. 14","zip":"82178","city":"Puchheim","open":true,"home_dist":8.8},{"name":"Auto Walter KG","lat":48.221450805664,"lon":11.265246391296,"price":2.109,"street":"Rosen Str. 2","zip":"82216","city":"Maisach","open":true,"home_dist":5.3},{"name":"Unsin Tankstelle","lat":48.32134,"lon":11.31653,"price":2.109,"street":"Dachauer Straße 13","zip":"85253","city":"Erdweg-Großberghofen","open":true,"home_dist":17.0},{"name":"Seitz Martin Tankstellen","lat":48.331123352051,"lon":11.306722640991,"price":2.109,"street":"Hauptstraße 34","zip":"85253","city":"Erdweg","open":true,"home_dist":17.8},{"name":"Seitz Martin Tankstellen","lat":48.32597732544,"lon":11.3884973526,"price":2.109,"street":"Münchner Straße 9","zip":"85229","city":"Niederroth","open":true,"home_dist":20.0},{"name":"JET","lat":48.09357,"lon":11.41126,"price":2.119,"street":"GAUTINGER STR. 59","zip":"82152","city":"KRAILLING","open":true,"home_dist":16.1},{"name":"Freie","lat":48.17409,"lon":11.2326,"price":2.129,"street":"Heimstättenstr. 44","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":0.5},{"name":"Tankstelle Schauer Stefanie","lat":48.10849,"lon":11.08265,"price":2.129,"street":"Bahnhofstr. 15","zip":"82299","city":"Türkenfeld","open":true,"home_dist":13.7},{"name":"Freie Tankstelle Loder","lat":48.309734,"lon":11.193687,"price":2.139,"street":"Hauptstr. 1","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.9},{"name":"AGIP ENI","lat":48.101858537077,"lon":11.426278178278,"price":2.139,"street":"Bahnhofstr. 1","zip":"82152","city":"Planegg","open":true,"home_dist":16.6},{"name":"AMIDI Freie Tankstelle","lat":48.308949,"lon":11.199224,"price":2.144,"street":"Hauptstr. 17","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.7},{"name":"Easy Sprit","lat":48.234310150146,"lon":11.070441246033,"price":2.159,"street":"Münchner Strasse 21","zip":"82278","city":"Althegnenberg","open":true,"home_dist":13.7},{"name":"AVIA XPress","lat":48.23446,"lon":11.06273,"price":2.159,"street":"Augsburger Straße 1","zip":"82278","city":"Althegnenberg","open":true,"home_dist":14.2},{"name":"ORLEN Express","lat":48.176575,"lon":11.259884,"price":2.169,"street":"Münchner Str. 30","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":1.9},{"name":"BK","lat":48.1395,"lon":11.36002,"price":2.179,"street":"Augsburger Str. 13","zip":"82110","city":"Germering","open":true,"home_dist":10.2},{"name":"ALLGUTH","lat":48.12987,"lon":11.35939,"price":2.179,"street":"Obere Bahnhofstr. 58","zip":"82110","city":"Germering","open":true,"home_dist":10.7},{"name":"Bavaria Petrol","lat":48.141186,"lon":11.413955,"price":2.179,"street":"Bodenseestraße 317","zip":"81249","city":"München","open":true,"home_dist":13.9},{"name":"ALLGUTH","lat":48.142944,"lon":11.424927,"price":2.179,"street":"Bodenseestr. 231","zip":"81243","city":"München","open":true,"home_dist":14.6},{"name":"OIL!","lat":48.1807,"lon":11.4609,"price":2.179,"street":"Eversbuschstraße 33","zip":"80999","city":"München","open":true,"home_dist":16.8},{"name":"STAR","lat":48.145232,"lon":11.472481,"price":2.179,"street":"Landsberger Straße 447","zip":"81241","city":"München","open":true,"home_dist":18.0},{"name":"ALLGUTH","lat":48.17871,"lon":11.48684,"price":2.179,"street":"Von-Kahr-Straße 1","zip":"80997","city":"München","open":true,"home_dist":18.7},{"name":"super wash","lat":48.177877,"lon":11.497085,"price":2.179,"street":"Allacher Strasse 78","zip":"80997","city":"München","open":true,"home_dist":19.4},{"name":"AGIP ENI","lat":48.176428,"lon":11.25946,"price":2.189,"street":"Münchner Strasse 24/26","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":1.8},{"name":"AGIP ENI","lat":48.141191,"lon":11.369412,"price":2.189,"street":"Lise-Meitner-Strasse 2","zip":"82110","city":"Germering","open":true,"home_dist":10.8},{"name":"TOTAL","lat":48.136664,"lon":11.390956,"price":2.189,"street":"Landsberger Str. 2","zip":"82110","city":"Germering","open":true,"home_dist":12.5},{"name":"AGIP ENI","lat":48.14694,"lon":11.07282,"price":2.189,"street":"Türkenfelder Str. 2","zip":"82272","city":"Moorenweis","open":true,"home_dist":12.5},{"name":"ELAN","lat":48.303417,"lon":11.355189,"price":2.189,"street":"Augsburger Str. 4","zip":"85247","city":"Schwabhausen","open":true,"home_dist":16.5},{"name":"AVIA XPress","lat":48.11168,"lon":11.03607,"price":2.189,"street":"Bahnhofstr. 105","zip":"82269","city":"Geltendorf","open":true,"home_dist":16.5},{"name":"ESSO","lat":48.148871,"lon":11.455071,"price":2.189,"street":"LORTZINGSTR. 20","zip":"81241","city":"MUENCHEN","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.068958500025,"lon":11.388617366516,"price":2.189,"street":"Muenchner Strasse 54","zip":"82131","city":"Gauting","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.164472415704,"lon":11.459228666155,"price":2.189,"street":"Verdistrasse 141","zip":"81247","city":"München","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.17759,"lon":11.46744,"price":2.189,"street":"Von-Kahr-Str. 62","zip":"80999","city":"München","open":true,"home_dist":17.2},{"name":"OIL! (Automatenstation)","lat":48.2261,"lon":11.4847,"price":2.189,"street":"Boschstr. 12","zip":"85757","city":"Karlsfeld","open":true,"home_dist":19.3},{"name":"ESSO","lat":48.117461,"lon":11.478291,"price":2.189,"street":"WALDWIESENSTR. 39","zip":"81375","city":"MUENCHEN","open":true,"home_dist":19.3},{"name":"ESSO","lat":48.114836,"lon":11.480826,"price":2.189,"street":"WUERMTALSTR. 97","zip":"81375","city":"MUENCHEN","open":true,"home_dist":19.6},{"name":"BK","lat":48.217394,"lon":11.260684,"price":2.199,"street":"Hauptstraße 9","zip":"82216","city":"Maisach","open":true,"home_dist":4.7},{"name":"Q1","lat":48.199419,"lon":11.3361,"price":2.199,"street":"Johann-G.-Gutenberg-Straße 1","zip":"82140","city":"Olching","open":true,"home_dist":7.9},{"name":"JET","lat":48.22349,"lon":11.3368,"price":2.199,"street":"GEISELBULLACHER STR. 1","zip":"82140","city":"OLCHING","open":true,"home_dist":9.1},{"name":"ALLGUTH","lat":48.22589,"lon":11.334475,"price":2.199,"street":"Geiselbullacher Str. 7","zip":"82140","city":"Olching","open":true,"home_dist":9.1},{"name":"ALLGUTH","lat":48.09449,"lon":11.283,"price":2.199,"street":"Landsberger Straße 90","zip":"82205","city":"Gilching","open":true,"home_dist":10.0},{"name":"BK","lat":48.075495,"lon":11.249448,"price":2.199,"street":"Hauptstraße 39","zip":"82234","city":"Weßling","open":true,"home_dist":11.5},{"name":"BayWa","lat":48.054714,"lon":11.088136,"price":2.199,"street":"Landsberger Str. 10","zip":"86938","city":"Schondorf am Ammersee","open":true,"home_dist":17.6},{"name":"ALLGUTH","lat":48.22675,"lon":11.46493,"price":2.199,"street":"Münchner Str. 146","zip":"85757","city":"Karlsfeld","open":true,"home_dist":17.9},{"name":"Bavaria Petrol","lat":48.164318,"lon":11.488541,"price":2.199,"street":"Amalienburgstraße 20","zip":"81247","city":"München","open":true,"home_dist":18.9},{"name":"JET","lat":48.26241,"lon":11.46881,"price":2.199,"street":"DAIMLERSTR. 1","zip":"85221","city":"DACHAU","open":true,"home_dist":19.7},{"name":"Shell","lat":48.186668,"lon":11.246658,"price":2.209,"street":"Augsburger Str. 42","zip":"82256","city":"Fuerstenfeldbruck","open":true,"home_dist":1.3},{"name":"JET","lat":48.2167,"lon":11.27062,"price":2.209,"street":"GERTRAUD-KOELBL-STR. 2","zip":"82216","city":"MAISACH","open":true,"home_dist":5.0},{"name":"ESSO","lat":48.198251,"lon":11.301376,"price":2.209,"street":"SCHLOSSSTR. 161 A","zip":"82140","city":"OLCHING","open":true,"home_dist":5.4},{"name":"Shell","lat":48.205613,"lon":11.156861,"price":2.209,"street":"Augsburger Str. 49","zip":"82291","city":"Mammendorf","open":true,"home_dist":6.5},{"name":"Shell","lat":48.157986,"lon":11.334668,"price":2.209,"street":"Eichenauer Str. 35","zip":"82178","city":"Puchheim","open":true,"home_dist":7.7},{"name":"Shell","lat":48.105746,"lon":11.305187,"price":2.209,"street":"Am Roemerstein 16","zip":"82205","city":"Gilching","open":true,"home_dist":9.6},{"name":"Shell","lat":48.192396,"lon":11.373518,"price":2.209,"street":"Olchinger Str. 152","zip":"82194","city":"Groebenzell","open":true,"home_dist":10.4},{"name":"ESSO","lat":48.237363,"lon":11.352842,"price":2.209,"street":"Gadastr. 1","zip":"85232","city":"Bergkirchen","open":true,"home_dist":10.9},{"name":"TotalEnergies","lat":48.186099,"lon":11.384181,"price":2.209,"street":"Olchinger Str. 82","zip":"82194","city":"Groebenzell","open":true,"home_dist":11.1},{"name":"JET","lat":48.08827,"lon":11.15114,"price":2.209,"street":"BRUCKERSTR. 32 A","zip":"82266","city":"INNING AM AMMERSEE","open":true,"home_dist":11.8},{"name":"AVIA","lat":48.288327,"lon":11.267088,"price":2.209,"street":"Hauptstraße 1","zip":"85254","city":"Sulzemoos","open":true,"home_dist":12.4},{"name":"AVIA","lat":48.258871,"lon":11.366686,"price":2.209,"street":"Sonnenstraße 11","zip":"85232","city":"Bergkirchen","open":true,"home_dist":13.2},{"name":"ESSO","lat":48.257635,"lon":11.419602,"price":2.209,"street":"Brucker Str. 79","zip":"85221","city":"Dachau","open":true,"home_dist":16.3},{"name":"Shell","lat":48.146904,"lon":11.451424,"price":2.209,"street":"Bodenseestr. 40","zip":"81243","city":"Muenchen","open":true,"home_dist":16.4},{"name":"Shell","lat":48.164999,"lon":11.467211,"price":2.209,"street":"Verdistr. 96","zip":"81247","city":"Muenchen","open":true,"home_dist":17.3},{"name":"AVIA","lat":48.2518019,"lon":11.4411667,"price":2.209,"street":"Münchner Str. 45","zip":"85221","city":"Dachau","open":true,"home_dist":17.3},{"name":"ESSO","lat":48.249052,"lon":11.443683,"price":2.209,"street":"MUENCHNER STR. 63","zip":"85221","city":"DACHAU","open":true,"home_dist":17.3},{"name":"TotalEnergies","lat":48.245212,"lon":11.448775,"price":2.209,"street":"Muenchner Str 87","zip":"85221","city":"Dachau","open":true,"home_dist":17.5},{"name":"ESSO","lat":48.164865,"lon":11.471906,"price":2.209,"street":"Verdistr. 68","zip":"81247","city":"München","open":true,"home_dist":17.6},{"name":"Shell","lat":48.225518,"lon":11.468155,"price":2.209,"street":"Muenchner Str. 163","zip":"85757","city":"Karlsfeld","open":true,"home_dist":18.1},{"name":"Shell","lat":48.224737,"lon":11.468527,"price":2.209,"street":"Muenchner Str. 174","zip":"85757","city":"Karlsfeld","open":true,"home_dist":18.1},{"name":"Shell","lat":48.257508,"lon":11.462979,"price":2.209,"street":"Wuermstr. 3","zip":"85221","city":"Dachau","open":true,"home_dist":19.0},{"name":"ARAL","lat":48.177532,"lon":11.227286,"price":2.239,"street":"Zadarstrasse 11","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":0.6},{"name":"ARAL","lat":48.1381,"lon":11.299389,"price":2.239,"street":"Gilchingerstraße 31","zip":"82239","city":"Alling","open":true,"home_dist":6.6},{"name":"ARAL","lat":48.08877,"lon":11.150987,"price":2.239,"street":"Bruckerstraße 34 a","zip":"82266","city":"Inning","open":true,"home_dist":11.8},{"name":"ARAL","lat":48.17895,"lon":11.405146,"price":2.239,"street":"Lochhausener Straße 229","zip":"81249","city":"München","open":true,"home_dist":12.6},{"name":"ARAL","lat":48.30709,"lon":11.203779,"price":2.239,"street":"Rudolf-Diesel-Str. 2.","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.5},{"name":"ARAL","lat":48.06795,"lon":11.387237,"price":2.239,"street":"Münchener Straße 42","zip":"82131","city":"Gauting","open":true,"home_dist":16.7},{"name":"ARAL","lat":48.1181,"lon":11.442665,"price":2.239,"street":"Pasinger Straße 50","zip":"82166","city":"Gräfelfing","open":true,"home_dist":16.8},{"name":"ARAL","lat":48.14511,"lon":11.478615,"price":2.239,"street":"Landsberger Straße 423-425","zip":"81241","city":"München","open":true,"home_dist":18.5},{"name":"ARAL","lat":48.119007,"lon":11.478235,"price":2.239,"street":"Waldwiesenstraße 31","zip":"81375","city":"München","open":true,"home_dist":19.2},{"name":"ARAL","lat":48.259686,"lon":11.469937,"price":2.239,"street":"Alte Römerstraße 50","zip":"85221","city":"Dachau","open":true,"home_dist":19.6},{"name":"ARAL","lat":48.091408,"lon":11.468299,"price":2.239,"street":"Forstenrieder Straße 26","zip":"82061","city":"Neuried","open":true,"home_dist":19.8},{"name":"ARAL","lat":48.00234,"lon":11.181872,"price":2.239,"street":"Seefelder Straße 28","zip":"82211","city":"Herrsching","open":true,"home_dist":20.0}]},"die":{"stats":{"min":2.249,"second":2.259,"max":2.409},"top6":[38,58,59,29,10,39],"data":[{"name":"JET","lat":48.09357,"lon":11.41126,"price":2.249,"street":"GAUTINGER STR. 59","zip":"82152","city":"KRAILLING","open":true,"home_dist":16.1},{"name":"OIL!","lat":48.1807,"lon":11.4609,"price":2.249,"street":"Eversbuschstraße 33","zip":"80999","city":"München","open":true,"home_dist":16.8},{"name":"ALLGUTH","lat":48.17871,"lon":11.48684,"price":2.249,"street":"Von-Kahr-Straße 1","zip":"80997","city":"München","open":true,"home_dist":18.7},{"name":"super wash","lat":48.177877,"lon":11.497085,"price":2.249,"street":"Allacher Strasse 78","zip":"80997","city":"München","open":true,"home_dist":19.4},{"name":"AGIP ENI","lat":48.14694,"lon":11.07282,"price":2.259,"street":"Türkenfelder Str. 2","zip":"82272","city":"Moorenweis","open":true,"home_dist":12.5},{"name":"AVIA XPress","lat":48.11168,"lon":11.03607,"price":2.259,"street":"Bahnhofstr. 105","zip":"82269","city":"Geltendorf","open":true,"home_dist":16.5},{"name":"AGIP ENI","lat":48.101858537077,"lon":11.426278178278,"price":2.259,"street":"Bahnhofstr. 1","zip":"82152","city":"Planegg","open":true,"home_dist":16.6},{"name":"AGIP ENI","lat":48.068958500025,"lon":11.388617366516,"price":2.259,"street":"Muenchner Strasse 54","zip":"82131","city":"Gauting","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.17759,"lon":11.46744,"price":2.259,"street":"Von-Kahr-Str. 62","zip":"80999","city":"München","open":true,"home_dist":17.2},{"name":"ORLEN Express","lat":48.176575,"lon":11.259884,"price":2.269,"street":"Münchner Str. 30","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":1.9},{"name":"BK","lat":48.1395,"lon":11.36002,"price":2.269,"street":"Augsburger Str. 13","zip":"82110","city":"Germering","open":true,"home_dist":10.2},{"name":"ALLGUTH","lat":48.12987,"lon":11.35939,"price":2.269,"street":"Obere Bahnhofstr. 58","zip":"82110","city":"Germering","open":true,"home_dist":10.7},{"name":"Bavaria Petrol","lat":48.141186,"lon":11.413955,"price":2.269,"street":"Bodenseestraße 317","zip":"81249","city":"München","open":true,"home_dist":13.9},{"name":"ALLGUTH","lat":48.142944,"lon":11.424927,"price":2.269,"street":"Bodenseestr. 231","zip":"81243","city":"München","open":true,"home_dist":14.6},{"name":"AGIP ENI","lat":48.164472415704,"lon":11.459228666155,"price":2.269,"street":"Verdistrasse 141","zip":"81247","city":"München","open":true,"home_dist":16.7},{"name":"STAR","lat":48.145232,"lon":11.472481,"price":2.269,"street":"Landsberger Straße 447","zip":"81241","city":"München","open":true,"home_dist":18.0},{"name":"Q1","lat":48.199419,"lon":11.3361,"price":2.279,"street":"Johann-G.-Gutenberg-Straße 1","zip":"82140","city":"Olching","open":true,"home_dist":7.9},{"name":"JET","lat":48.22349,"lon":11.3368,"price":2.279,"street":"GEISELBULLACHER STR. 1","zip":"82140","city":"OLCHING","open":true,"home_dist":9.1},{"name":"ALLGUTH","lat":48.22589,"lon":11.334475,"price":2.279,"street":"Geiselbullacher Str. 7","zip":"82140","city":"Olching","open":true,"home_dist":9.1},{"name":"AGIP ENI","lat":48.141191,"lon":11.369412,"price":2.279,"street":"Lise-Meitner-Strasse 2","zip":"82110","city":"Germering","open":true,"home_dist":10.8},{"name":"TOTAL","lat":48.136664,"lon":11.390956,"price":2.279,"street":"Landsberger Str. 2","zip":"82110","city":"Germering","open":true,"home_dist":12.5},{"name":"ESSO","lat":48.148871,"lon":11.455071,"price":2.279,"street":"LORTZINGSTR. 20","zip":"81241","city":"MUENCHEN","open":true,"home_dist":16.7},{"name":"Seitz Martin Tankstellen","lat":48.331123352051,"lon":11.306722640991,"price":2.279,"street":"Hauptstraße 34","zip":"85253","city":"Erdweg","open":true,"home_dist":17.8},{"name":"ESSO","lat":48.117461,"lon":11.478291,"price":2.279,"street":"WALDWIESENSTR. 39","zip":"81375","city":"MUENCHEN","open":true,"home_dist":19.3},{"name":"ESSO","lat":48.114836,"lon":11.480826,"price":2.279,"street":"WUERMTALSTR. 97","zip":"81375","city":"MUENCHEN","open":true,"home_dist":19.6},{"name":"Seitz Martin Tankstellen","lat":48.32597732544,"lon":11.3884973526,"price":2.279,"street":"Münchner Straße 9","zip":"85229","city":"Niederroth","open":true,"home_dist":20.0},{"name":"Reitmayr TS","lat":48.1480546,"lon":11.3450828,"price":2.298,"street":"Augsburger Str. 14","zip":"82178","city":"Puchheim","open":true,"home_dist":8.8},{"name":"Neeb Tank","lat":48.125225067139,"lon":11.452363014221,"price":2.298,"street":"Lochhamer Schlag 13","zip":"82166","city":"Gräfelfing","open":true,"home_dist":17.2},{"name":"AGIP ENI","lat":48.176428,"lon":11.25946,"price":2.299,"street":"Münchner Strasse 24/26","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":1.8},{"name":"Auto Walter KG","lat":48.221450805664,"lon":11.265246391296,"price":2.299,"street":"Rosen Str. 2","zip":"82216","city":"Maisach","open":true,"home_dist":5.3},{"name":"ESSO","lat":48.198251,"lon":11.301376,"price":2.299,"street":"SCHLOSSSTR. 161 A","zip":"82140","city":"OLCHING","open":true,"home_dist":5.4},{"name":"Freie Tankstelle Loder","lat":48.309734,"lon":11.193687,"price":2.299,"street":"Hauptstr. 1","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.9},{"name":"AMIDI Freie Tankstelle","lat":48.308949,"lon":11.199224,"price":2.304,"street":"Hauptstr. 17","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.7},{"name":"ESSO","lat":48.237363,"lon":11.352842,"price":2.309,"street":"Gadastr. 1","zip":"85232","city":"Bergkirchen","open":true,"home_dist":10.9},{"name":"AVIA","lat":48.288327,"lon":11.267088,"price":2.309,"street":"Hauptstraße 1","zip":"85254","city":"Sulzemoos","open":true,"home_dist":12.4},{"name":"AVIA","lat":48.258871,"lon":11.366686,"price":2.309,"street":"Sonnenstraße 11","zip":"85232","city":"Bergkirchen","open":true,"home_dist":13.2},{"name":"Unsin Tankstelle","lat":48.32134,"lon":11.31653,"price":2.309,"street":"Dachauer Straße 13","zip":"85253","city":"Erdweg-Großberghofen","open":true,"home_dist":17.0},{"name":"Freie","lat":48.17409,"lon":11.2326,"price":2.319,"street":"Heimstättenstr. 44","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":0.5},{"name":"BK","lat":48.217394,"lon":11.260684,"price":2.319,"street":"Hauptstraße 9","zip":"82216","city":"Maisach","open":true,"home_dist":4.7},{"name":"ELAN","lat":48.303417,"lon":11.355189,"price":2.329,"street":"Augsburger Str. 4","zip":"85247","city":"Schwabhausen","open":true,"home_dist":16.5},{"name":"BayWa","lat":48.054714,"lon":11.088136,"price":2.329,"street":"Landsberger Str. 10","zip":"86938","city":"Schondorf am Ammersee","open":true,"home_dist":17.6},{"name":"OIL! (Automatenstation)","lat":48.2261,"lon":11.4847,"price":2.329,"street":"Boschstr. 12","zip":"85757","city":"Karlsfeld","open":true,"home_dist":19.3},{"name":"JET","lat":48.2167,"lon":11.27062,"price":2.339,"street":"GERTRAUD-KOELBL-STR. 2","zip":"82216","city":"MAISACH","open":true,"home_dist":5.0},{"name":"JET","lat":48.08827,"lon":11.15114,"price":2.339,"street":"BRUCKERSTR. 32 A","zip":"82266","city":"INNING AM AMMERSEE","open":true,"home_dist":11.8},{"name":"Easy Sprit","lat":48.234310150146,"lon":11.070441246033,"price":2.339,"street":"Münchner Strasse 21","zip":"82278","city":"Althegnenberg","open":true,"home_dist":13.7},{"name":"AVIA XPress","lat":48.23446,"lon":11.06273,"price":2.339,"street":"Augsburger Straße 1","zip":"82278","city":"Althegnenberg","open":true,"home_dist":14.2},{"name":"Bavaria Petrol","lat":48.164318,"lon":11.488541,"price":2.339,"street":"Amalienburgstraße 20","zip":"81247","city":"München","open":true,"home_dist":18.9},{"name":"JET","lat":48.26241,"lon":11.46881,"price":2.339,"street":"DAIMLERSTR. 1","zip":"85221","city":"DACHAU","open":true,"home_dist":19.7},{"name":"ALLGUTH","lat":48.09449,"lon":11.283,"price":2.349,"street":"Landsberger Straße 90","zip":"82205","city":"Gilching","open":true,"home_dist":10.0},{"name":"BK","lat":48.075495,"lon":11.249448,"price":2.349,"street":"Hauptstraße 39","zip":"82234","city":"Weßling","open":true,"home_dist":11.5},{"name":"ESSO","lat":48.164865,"lon":11.471906,"price":2.349,"street":"Verdistr. 68","zip":"81247","city":"München","open":true,"home_dist":17.6},{"name":"ALLGUTH","lat":48.22675,"lon":11.46493,"price":2.349,"street":"Münchner Str. 146","zip":"85757","city":"Karlsfeld","open":true,"home_dist":17.9},{"name":"TotalEnergies","lat":48.186099,"lon":11.384181,"price":2.359,"street":"Olchinger Str. 82","zip":"82194","city":"Groebenzell","open":true,"home_dist":11.1},{"name":"ESSO","lat":48.257635,"lon":11.419602,"price":2.359,"street":"Brucker Str. 79","zip":"85221","city":"Dachau","open":true,"home_dist":16.3},{"name":"AVIA","lat":48.2518019,"lon":11.4411667,"price":2.359,"street":"Münchner Str. 45","zip":"85221","city":"Dachau","open":true,"home_dist":17.3},{"name":"ESSO","lat":48.249052,"lon":11.443683,"price":2.359,"street":"MUENCHNER STR. 63","zip":"85221","city":"DACHAU","open":true,"home_dist":17.3},{"name":"TotalEnergies","lat":48.245212,"lon":11.448775,"price":2.359,"street":"Muenchner Str 87","zip":"85221","city":"Dachau","open":true,"home_dist":17.5},{"name":"ARAL","lat":48.177532,"lon":11.227286,"price":2.369,"street":"Zadarstrasse 11","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":0.6},{"name":"Shell","lat":48.186668,"lon":11.246658,"price":2.369,"street":"Augsburger Str. 42","zip":"82256","city":"Fuerstenfeldbruck","open":true,"home_dist":1.3},{"name":"Shell","lat":48.205613,"lon":11.156861,"price":2.369,"street":"Augsburger Str. 49","zip":"82291","city":"Mammendorf","open":true,"home_dist":6.5},{"name":"ARAL","lat":48.1381,"lon":11.299389,"price":2.369,"street":"Gilchingerstraße 31","zip":"82239","city":"Alling","open":true,"home_dist":6.6},{"name":"Shell","lat":48.157986,"lon":11.334668,"price":2.369,"street":"Eichenauer Str. 35","zip":"82178","city":"Puchheim","open":true,"home_dist":7.7},{"name":"Shell","lat":48.105746,"lon":11.305187,"price":2.369,"street":"Am Roemerstein 16","zip":"82205","city":"Gilching","open":true,"home_dist":9.6},{"name":"Shell","lat":48.192396,"lon":11.373518,"price":2.369,"street":"Olchinger Str. 152","zip":"82194","city":"Groebenzell","open":true,"home_dist":10.4},{"name":"ARAL","lat":48.08877,"lon":11.150987,"price":2.369,"street":"Bruckerstraße 34 a","zip":"82266","city":"Inning","open":true,"home_dist":11.8},{"name":"ARAL","lat":48.17895,"lon":11.405146,"price":2.369,"street":"Lochhausener Straße 229","zip":"81249","city":"München","open":true,"home_dist":12.6},{"name":"ARAL","lat":48.30709,"lon":11.203779,"price":2.369,"street":"Rudolf-Diesel-Str. 2.","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.5},{"name":"Shell","lat":48.146904,"lon":11.451424,"price":2.369,"street":"Bodenseestr. 40","zip":"81243","city":"Muenchen","open":true,"home_dist":16.4},{"name":"ARAL","lat":48.06795,"lon":11.387237,"price":2.369,"street":"Münchener Straße 42","zip":"82131","city":"Gauting","open":true,"home_dist":16.7},{"name":"ARAL","lat":48.1181,"lon":11.442665,"price":2.369,"street":"Pasinger Straße 50","zip":"82166","city":"Gräfelfing","open":true,"home_dist":16.8},{"name":"Shell","lat":48.164999,"lon":11.467211,"price":2.369,"street":"Verdistr. 96","zip":"81247","city":"Muenchen","open":true,"home_dist":17.3},{"name":"Shell","lat":48.225518,"lon":11.468155,"price":2.369,"street":"Muenchner Str. 163","zip":"85757","city":"Karlsfeld","open":true,"home_dist":18.1},{"name":"Shell","lat":48.224737,"lon":11.468527,"price":2.369,"street":"Muenchner Str. 174","zip":"85757","city":"Karlsfeld","open":true,"home_dist":18.1},{"name":"ARAL","lat":48.14511,"lon":11.478615,"price":2.369,"street":"Landsberger Straße 423-425","zip":"81241","city":"München","open":true,"home_dist":18.5},{"name":"Shell","lat":48.257508,"lon":11.462979,"price":2.369,"street":"Wuermstr. 3","zip":"85221","city":"Dachau","open":true,"home_dist":19.0},{"name":"ARAL","lat":48.119007,"lon":11.478235,"price":2.369,"street":"Waldwiesenstraße 31","zip":"81375","city":"München","open":true,"home_dist":19.2},{"name":"ARAL","lat":48.259686,"lon":11.469937,"price":2.369,"street":"Alte Römerstraße 50","zip":"85221","city":"Dachau","open":true,"home_dist":19.6},{"name":"ARAL","lat":48.091408,"lon":11.468299,"price":2.369,"street":"Forstenrieder Straße 26","zip":"82061","city":"Neuried","open":true,"home_dist":19.8},{"name":"ARAL","lat":48.00234,"lon":11.181872,"price":2.369,"street":"Seefelder Straße 28","zip":"82211","city":"Herrsching","open":true,"home_dist":20.0},{"name":"Tankstelle Schauer Stefanie","lat":48.10849,"lon":11.08265,"price":2.409,"street":"Bahnhofstr. 15","zip":"82299","city":"Türkenfeld","open":true,"home_dist":13.7}]},"e10":{"stats":{"min":2.048,"second":2.059,"max":2.179},"top6":[63,42,20,10,33,43],"data":[{"name":"Neeb Tank","lat":48.125225067139,"lon":11.452363014221,"price":2.048,"street":"Lochhamer Schlag 13","zip":"82166","city":"Gräfelfing","open":true,"home_dist":17.2},{"name":"JET","lat":48.09357,"lon":11.41126,"price":2.059,"street":"GAUTINGER STR. 59","zip":"82152","city":"KRAILLING","open":true,"home_dist":16.1},{"name":"Unsin Tankstelle","lat":48.32134,"lon":11.31653,"price":2.069,"street":"Dachauer Straße 13","zip":"85253","city":"Erdweg-Großberghofen","open":true,"home_dist":17.0},{"name":"AGIP ENI","lat":48.101858537077,"lon":11.426278178278,"price":2.079,"street":"Bahnhofstr. 1","zip":"82152","city":"Planegg","open":true,"home_dist":16.6},{"name":"Seitz Martin Tankstellen","lat":48.331123352051,"lon":11.306722640991,"price":2.079,"street":"Hauptstraße 34","zip":"85253","city":"Erdweg","open":true,"home_dist":17.8},{"name":"Seitz Martin Tankstellen","lat":48.32597732544,"lon":11.3884973526,"price":2.079,"street":"Münchner Straße 9","zip":"85229","city":"Niederroth","open":true,"home_dist":20.0},{"name":"AMIDI Freie Tankstelle","lat":48.308949,"lon":11.199224,"price":2.084,"street":"Hauptstr. 17","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.7},{"name":"Easy Sprit","lat":48.234310150146,"lon":11.070441246033,"price":2.099,"street":"Münchner Strasse 21","zip":"82278","city":"Althegnenberg","open":true,"home_dist":13.7},{"name":"AVIA XPress","lat":48.23446,"lon":11.06273,"price":2.099,"street":"Augsburger Straße 1","zip":"82278","city":"Althegnenberg","open":true,"home_dist":14.2},{"name":"ORLEN Express","lat":48.176575,"lon":11.259884,"price":2.109,"street":"Münchner Str. 30","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":1.9},{"name":"Tankstelle Schauer Stefanie","lat":48.10849,"lon":11.08265,"price":2.109,"street":"Bahnhofstr. 15","zip":"82299","city":"Türkenfeld","open":true,"home_dist":13.7},{"name":"BK","lat":48.1395,"lon":11.36002,"price":2.119,"street":"Augsburger Str. 13","zip":"82110","city":"Germering","open":true,"home_dist":10.2},{"name":"ALLGUTH","lat":48.12987,"lon":11.35939,"price":2.119,"street":"Obere Bahnhofstr. 58","zip":"82110","city":"Germering","open":true,"home_dist":10.7},{"name":"Bavaria Petrol","lat":48.141186,"lon":11.413955,"price":2.119,"street":"Bodenseestraße 317","zip":"81249","city":"München","open":true,"home_dist":13.9},{"name":"ALLGUTH","lat":48.142944,"lon":11.424927,"price":2.119,"street":"Bodenseestr. 231","zip":"81243","city":"München","open":true,"home_dist":14.6},{"name":"OIL!","lat":48.1807,"lon":11.4609,"price":2.119,"street":"Eversbuschstraße 33","zip":"80999","city":"München","open":true,"home_dist":16.8},{"name":"STAR","lat":48.145232,"lon":11.472481,"price":2.119,"street":"Landsberger Straße 447","zip":"81241","city":"München","open":true,"home_dist":18.0},{"name":"ALLGUTH","lat":48.17871,"lon":11.48684,"price":2.119,"street":"Von-Kahr-Straße 1","zip":"80997","city":"München","open":true,"home_dist":18.7},{"name":"super wash","lat":48.177877,"lon":11.497085,"price":2.119,"street":"Allacher Strasse 78","zip":"80997","city":"München","open":true,"home_dist":19.4},{"name":"AGIP ENI","lat":48.176428,"lon":11.25946,"price":2.129,"street":"Münchner Strasse 24/26","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":1.8},{"name":"AGIP ENI","lat":48.141191,"lon":11.369412,"price":2.129,"street":"Lise-Meitner-Strasse 2","zip":"82110","city":"Germering","open":true,"home_dist":10.8},{"name":"TOTAL","lat":48.136664,"lon":11.390956,"price":2.129,"street":"Landsberger Str. 2","zip":"82110","city":"Germering","open":true,"home_dist":12.5},{"name":"AGIP ENI","lat":48.14694,"lon":11.07282,"price":2.129,"street":"Türkenfelder Str. 2","zip":"82272","city":"Moorenweis","open":true,"home_dist":12.5},{"name":"ELAN","lat":48.303417,"lon":11.355189,"price":2.129,"street":"Augsburger Str. 4","zip":"85247","city":"Schwabhausen","open":true,"home_dist":16.5},{"name":"AVIA XPress","lat":48.11168,"lon":11.03607,"price":2.129,"street":"Bahnhofstr. 105","zip":"82269","city":"Geltendorf","open":true,"home_dist":16.5},{"name":"ESSO","lat":48.148871,"lon":11.455071,"price":2.129,"street":"LORTZINGSTR. 20","zip":"81241","city":"MUENCHEN","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.068958500025,"lon":11.388617366516,"price":2.129,"street":"Muenchner Strasse 54","zip":"82131","city":"Gauting","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.164472415704,"lon":11.459228666155,"price":2.129,"street":"Verdistrasse 141","zip":"81247","city":"München","open":true,"home_dist":16.7},{"name":"AGIP ENI","lat":48.17759,"lon":11.46744,"price":2.129,"street":"Von-Kahr-Str. 62","zip":"80999","city":"München","open":true,"home_dist":17.2},{"name":"OIL! (Automatenstation)","lat":48.2261,"lon":11.4847,"price":2.129,"street":"Boschstr. 12","zip":"85757","city":"Karlsfeld","open":true,"home_dist":19.3},{"name":"ESSO","lat":48.117461,"lon":11.478291,"price":2.129,"street":"WALDWIESENSTR. 39","zip":"81375","city":"MUENCHEN","open":true,"home_dist":19.3},{"name":"ESSO","lat":48.114836,"lon":11.480826,"price":2.129,"street":"WUERMTALSTR. 97","zip":"81375","city":"MUENCHEN","open":true,"home_dist":19.6},{"name":"BK","lat":48.217394,"lon":11.260684,"price":2.139,"street":"Hauptstraße 9","zip":"82216","city":"Maisach","open":true,"home_dist":4.7},{"name":"JET","lat":48.22349,"lon":11.3368,"price":2.139,"street":"GEISELBULLACHER STR. 1","zip":"82140","city":"OLCHING","open":true,"home_dist":9.1},{"name":"ALLGUTH","lat":48.22589,"lon":11.334475,"price":2.139,"street":"Geiselbullacher Str. 7","zip":"82140","city":"Olching","open":true,"home_dist":9.1},{"name":"ALLGUTH","lat":48.09449,"lon":11.283,"price":2.139,"street":"Landsberger Straße 90","zip":"82205","city":"Gilching","open":true,"home_dist":10.0},{"name":"BK","lat":48.075495,"lon":11.249448,"price":2.139,"street":"Hauptstraße 39","zip":"82234","city":"Weßling","open":true,"home_dist":11.5},{"name":"BayWa","lat":48.054714,"lon":11.088136,"price":2.139,"street":"Landsberger Str. 10","zip":"86938","city":"Schondorf am Ammersee","open":true,"home_dist":17.6},{"name":"ALLGUTH","lat":48.22675,"lon":11.46493,"price":2.139,"street":"Münchner Str. 146","zip":"85757","city":"Karlsfeld","open":true,"home_dist":17.9},{"name":"Bavaria Petrol","lat":48.164318,"lon":11.488541,"price":2.139,"street":"Amalienburgstraße 20","zip":"81247","city":"München","open":true,"home_dist":18.9},{"name":"JET","lat":48.26241,"lon":11.46881,"price":2.139,"street":"DAIMLERSTR. 1","zip":"85221","city":"DACHAU","open":true,"home_dist":19.7},{"name":"Shell","lat":48.186668,"lon":11.246658,"price":2.149,"street":"Augsburger Str. 42","zip":"82256","city":"Fuerstenfeldbruck","open":true,"home_dist":1.3},{"name":"JET","lat":48.2167,"lon":11.27062,"price":2.149,"street":"GERTRAUD-KOELBL-STR. 2","zip":"82216","city":"MAISACH","open":true,"home_dist":5.0},{"name":"Shell","lat":48.205613,"lon":11.156861,"price":2.149,"street":"Augsburger Str. 49","zip":"82291","city":"Mammendorf","open":true,"home_dist":6.5},{"name":"Shell","lat":48.157986,"lon":11.334668,"price":2.149,"street":"Eichenauer Str. 35","zip":"82178","city":"Puchheim","open":true,"home_dist":7.7},{"name":"Q1","lat":48.199419,"lon":11.3361,"price":2.149,"street":"Johann-G.-Gutenberg-Straße 1","zip":"82140","city":"Olching","open":true,"home_dist":7.9},{"name":"Shell","lat":48.105746,"lon":11.305187,"price":2.149,"street":"Am Roemerstein 16","zip":"82205","city":"Gilching","open":true,"home_dist":9.6},{"name":"Shell","lat":48.192396,"lon":11.373518,"price":2.149,"street":"Olchinger Str. 152","zip":"82194","city":"Groebenzell","open":true,"home_dist":10.4},{"name":"ESSO","lat":48.237363,"lon":11.352842,"price":2.149,"street":"Gadastr. 1","zip":"85232","city":"Bergkirchen","open":true,"home_dist":10.9},{"name":"TotalEnergies","lat":48.186099,"lon":11.384181,"price":2.149,"street":"Olchinger Str. 82","zip":"82194","city":"Groebenzell","open":true,"home_dist":11.1},{"name":"JET","lat":48.08827,"lon":11.15114,"price":2.149,"street":"BRUCKERSTR. 32 A","zip":"82266","city":"INNING AM AMMERSEE","open":true,"home_dist":11.8},{"name":"AVIA","lat":48.288327,"lon":11.267088,"price":2.149,"street":"Hauptstraße 1","zip":"85254","city":"Sulzemoos","open":true,"home_dist":12.4},{"name":"AVIA","lat":48.258871,"lon":11.366686,"price":2.149,"street":"Sonnenstraße 11","zip":"85232","city":"Bergkirchen","open":true,"home_dist":13.2},{"name":"ESSO","lat":48.257635,"lon":11.419602,"price":2.149,"street":"Brucker Str. 79","zip":"85221","city":"Dachau","open":true,"home_dist":16.3},{"name":"Shell","lat":48.146904,"lon":11.451424,"price":2.149,"street":"Bodenseestr. 40","zip":"81243","city":"Muenchen","open":true,"home_dist":16.4},{"name":"Shell","lat":48.164999,"lon":11.467211,"price":2.149,"street":"Verdistr. 96","zip":"81247","city":"Muenchen","open":true,"home_dist":17.3},{"name":"AVIA","lat":48.2518019,"lon":11.4411667,"price":2.149,"street":"Münchner Str. 45","zip":"85221","city":"Dachau","open":true,"home_dist":17.3},{"name":"ESSO","lat":48.249052,"lon":11.443683,"price":2.149,"street":"MUENCHNER STR. 63","zip":"85221","city":"DACHAU","open":true,"home_dist":17.3},{"name":"TotalEnergies","lat":48.245212,"lon":11.448775,"price":2.149,"street":"Muenchner Str 87","zip":"85221","city":"Dachau","open":true,"home_dist":17.5},{"name":"ESSO","lat":48.164865,"lon":11.471906,"price":2.149,"street":"Verdistr. 68","zip":"81247","city":"München","open":true,"home_dist":17.6},{"name":"Shell","lat":48.224737,"lon":11.468527,"price":2.149,"street":"Muenchner Str. 174","zip":"85757","city":"Karlsfeld","open":true,"home_dist":18.1},{"name":"Shell","lat":48.257508,"lon":11.462979,"price":2.149,"street":"Wuermstr. 3","zip":"85221","city":"Dachau","open":true,"home_dist":19.0},{"name":"ARAL","lat":48.177532,"lon":11.227286,"price":2.179,"street":"Zadarstrasse 11","zip":"82256","city":"Fürstenfeldbruck","open":true,"home_dist":0.6},{"name":"ARAL","lat":48.1381,"lon":11.299389,"price":2.179,"street":"Gilchingerstraße 31","zip":"82239","city":"Alling","open":true,"home_dist":6.6},{"name":"ARAL","lat":48.08877,"lon":11.150987,"price":2.179,"street":"Bruckerstraße 34 a","zip":"82266","city":"Inning","open":true,"home_dist":11.8},{"name":"ARAL","lat":48.17895,"lon":11.405146,"price":2.179,"street":"Lochhausener Straße 229","zip":"81249","city":"München","open":true,"home_dist":12.6},{"name":"ARAL","lat":48.30709,"lon":11.203779,"price":2.179,"street":"Rudolf-Diesel-Str. 2.","zip":"85235","city":"Odelzhausen","open":true,"home_dist":14.5},{"name":"ARAL","lat":48.06795,"lon":11.387237,"price":2.179,"street":"Münchener Straße 42","zip":"82131","city":"Gauting","open":true,"home_dist":16.7},{"name":"ARAL","lat":48.1181,"lon":11.442665,"price":2.179,"street":"Pasinger Straße 50","zip":"82166","city":"Gräfelfing","open":true,"home_dist":16.8},{"name":"ARAL","lat":48.14511,"lon":11.478615,"price":2.179,"street":"Landsberger Straße 423-425","zip":"81241","city":"München","open":true,"home_dist":18.5},{"name":"ARAL","lat":48.119007,"lon":11.478235,"price":2.179,"street":"Waldwiesenstraße 31","zip":"81375","city":"München","open":true,"home_dist":19.2},{"name":"ARAL","lat":48.259686,"lon":11.469937,"price":2.179,"street":"Alte Römerstraße 50","zip":"85221","city":"Dachau","open":true,"home_dist":19.6},{"name":"ARAL","lat":48.091408,"lon":11.468299,"price":2.179,"street":"Forstenrieder Straße 26","zip":"82061","city":"Neuried","open":true,"home_dist":19.8},{"name":"ARAL","lat":48.00234,"lon":11.181872,"price":2.179,"street":"Seefelder Straße 28","zip":"82211","city":"Herrsching","open":true,"home_dist":20.0}]}};
+
+  // ── Brand helpers ─────────────────────────────────────────────────────────
+  const BRAND_COLORS  = {"jet": "#e30613", "avanti": "#ccff00", "disk": "#005baa", "diskont": "#005baa", "eni": "#006db7", "omv": "#012606", "shell": "#c8a800", "bp": "#009a44", "esso": "#003087", "avia": "#e2001a", "oil!": "#005550", "baywa": "#007db5", "loacker": "#6db33f", "gutmann": "#070605"};
+  const BRAND_DOMAINS = {"jet": "jet-tankstellen.at", "avanti": "avanti.at", "disk": "diskonttanken.at", "diskont": "diskonttanken.at", "eni": "eni.at", "omv": "omv.at", "shell": "shell.at", "bp": "bp.com", "esso": "esso.de", "avia": "avia.at", "oil!": "oil-energy.at", "baywa": "baywa.de", "loacker": "loacker-recycling.com", "gutmann": "gutmann.at"};
+
+  function brandColor(name) {
+    const n = name.toLowerCase();
+    for (const [key, color] of Object.entries(BRAND_COLORS)) {
+      if (n.includes(key)) return color;
+    }
+    return "#4f46e5";
+  }
+
+  function brandLogo(name) {
+    const n = name.toLowerCase();
+    if (n.includes("eni")) return "https://upload.wikimedia.org/wikipedia/de/thumb/8/8a/Logo_ENI.svg/1280px-Logo_ENI.svg.png";
+    if (n.includes("bp"))  return "https://1000logos.net/wp-content/uploads/2016/10/BP-Logo.png";
+    for (const [key, domain] of Object.entries(BRAND_DOMAINS)) {
+      if (n.includes(key)) return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+    }
+    return null;
+  }
+
+  function brandInitial(name) {
+    const words = name.trim().split(/\s+/);
+    if (!words.length || !words[0]) return "?";
+    const first = words[0][0];
+    const second = words.length > 1 ? words[1][0] : (words[0].length > 1 ? words[0][1] : first);
+    return (first + second).toUpperCase();
+  }
+
+  function markerColor(rank, total) {
+    const hue = Math.round(120 * (1 - (rank - 1) / Math.max(total - 1, 1)));
+    return `hsl(${hue},80%,45%)`;
+  }
+
+  function rankInfo(rank, price, minP, secondP) {
+    const p = Math.round(price * 1000);
+    if (p === Math.round(minP * 1000))    return { cls: "rank-gold",   html: '<span class="medal gold">🥇 Günstigste</span>' };
+    if (p === Math.round(secondP * 1000)) return { cls: "rank-silver", html: '<span class="medal silver">🥈 2. Preis</span>' };
+    return { cls: "", html: `<span class="rank-num">#${rank}</span>` };
+  }
+
+  function openBadge(isOpen) {
+    if (isOpen === true)  return '<span class="badge open">Offen</span>';
+    if (isOpen === false) return '<span class="badge closed">Geschlossen</span>';
+    return "";
+  }
+
+  function savingsBadge(price, maxP) {
+    const diff = maxP - price;
+    if (diff < 0.0005) return '<span class="savings maxprice">Höchstpreis</span>';
+    return `<span class="savings">− ${diff.toFixed(3)} €</span>`;
+  }
+
+  function priceBar(price, minP, maxP) {
+    const span = maxP - minP;
+    const pct = span ? Math.round(100 * (price - minP) / span) : 0;
+    const hue = Math.round(120 * (1 - pct / 100));
+    return `<div class="price-bar-wrap"><div class="price-bar" style="width:${Math.max(4, pct)}%;background:hsl(${hue},70%,45%)"></div></div>`;
+  }
+
+  function makeAvatar(name, color, big) {
+    const logo = brandLogo(name);
+    const n = name.toLowerCase();
+    const isEni = n.includes("eni"), isBp = n.includes("bp");
+    if (logo) {
+      const ex = isEni ? "brand-eni" : (isBp ? "brand-bp" : "");
+      const cls = big ? `avatar avatar-logo ${ex}` : `mini-avatar avatar-logo ${ex}`;
+      return `<div class="${cls}" style="--brand:${color}"><img src="${logo}" alt="${name}" onerror="this.parentElement.innerHTML='<span>${brandInitial(name)}</span>'"></div>`;
+    }
+    const cls = big ? "avatar" : "mini-avatar";
+    return `<div class="${cls}" style="background:${color}">${brandInitial(name)}</div>`;
+  }
+
+  const SVG_PIN = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const SVG_PIN_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+  const SVG_ROUTE = `<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+  const SVG_ROUTE_SM = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>`;
+
+  // ── Card renderers ────────────────────────────────────────────────────────
+  function renderCard(s, rank, fkey, stats) {
+    const { min, second, max } = stats;
+    const color = brandColor(s.name);
+    const { cls, html: rankHtml } = rankInfo(rank, s.price, min, second);
+    const distStr = s.home_dist != null ? `📍 ${s.home_dist.toFixed(1)} km` : "📍 –";
+    const dest = `${s.lat},${s.lon}`;
+    const mapsHref = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+
+    const art = document.createElement('article');
+    art.className = `card ${cls}`;
+    art.id = `card-${fkey}-${rank}`;
+    art.style.cssText = `--brand:${color}`;
+    art.innerHTML = `
+      <div class="card-header">
+        ${makeAvatar(s.name, color, true)}
+        <div class="card-meta">
+          ${rankHtml}
+          ${openBadge(s.open)}
+          <span class="dist home-dist" id="dist-${fkey}-${rank}">${distStr}</span>
+        </div>
+      </div>
+      <div class="card-body">
+        <h2 class="station-name">${s.name}</h2>
+        <a class="address" onclick="focusMarker('${fkey}',${rank});return false;" href="#">
+          ${SVG_PIN} ${s.street}, ${s.zip} ${s.city}
+        </a>
+      </div>
+      <div class="card-footer">
+        <div class="price-block">
+          <div class="price-row">
+            <span class="price">${s.price.toFixed(3)} <small>€/L</small></span>
+            ${savingsBadge(s.price, max)}
+          </div>
+          ${priceBar(s.price, min, max)}
+        </div>
+        <div class="btn-group">
+          <a class="map-btn route-btn" id="route-${fkey}-${rank}"
+             href="${mapsHref}" target="_blank" rel="noopener">
+            ${SVG_ROUTE} Route
+          </a>
+        </div>
+      </div>`;
+    return art;
+  }
+
+  function renderMiniCard(s, rank, fkey, stats) {
+    const { min, second } = stats;
+    const color = brandColor(s.name);
+    const { cls, html: rankHtml } = rankInfo(rank, s.price, min, second);
+    const distStr = s.home_dist != null ? `📍 ${s.home_dist.toFixed(1)} km` : "📍 –";
+    const dest = `${s.lat},${s.lon}`;
+    const mapsHref = `https://www.google.com/maps/dir/?api=1&destination=${dest}&travelmode=driving`;
+
+    const div = document.createElement('div');
+    div.className = `mini-card ${cls}`;
+    div.style.cssText = `--brand:${color}`;
+    div.setAttribute('onclick',
+      `document.getElementById('card-${fkey}-${rank}').scrollIntoView({behavior:'smooth',block:'center'})`);
+    div.innerHTML = `
+      <div class="mini-top">
+        ${makeAvatar(s.name, color, false)}
+        <span class="mini-rank">${rankHtml}</span>
+        <span class="mini-badges">
+          ${openBadge(s.open)}
+          <span class="dist mini-dist" id="mdist-${fkey}-${rank}">${distStr}</span>
+        </span>
+      </div>
+      <div class="mini-name">${s.name}</div>
+      <a class="mini-address address" onclick="focusMarker('${fkey}',${rank});return false;" href="#">
+        ${SVG_PIN_SM} ${s.street}, ${s.zip} ${s.city}
+      </a>
+      <div class="mini-footer">
+        <div class="mini-price">${s.price.toFixed(3)} <small>€/L</small></div>
+        <a class="map-btn route-btn mini-route" id="mroute-${fkey}-${rank}"
+           href="${mapsHref}" target="_blank" rel="noopener"
+           onclick="event.stopPropagation()">
+          ${SVG_ROUTE_SM} Route
+        </a>
+      </div>`;
+    return div;
+  }
+
+  // ── Leaflet Map ───────────────────────────────────────────────────────────
+  const map = L.map('map', { zoomControl: true }).setView([48.1804, 11.3468], 11);
+
+  // Tile layer with automatic fallback: CARTO Voyager → OSM (if blocked by Brave Shields)
+  const osmAttrib = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  const osmLayer  = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: osmAttrib, subdomains: 'abc', maxZoom: 19
+  });
+  let cartoFails = 0, usingOsm = false;
+  const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    attribution: osmAttrib + ' © <a href="https://carto.com">CARTO</a>',
+    subdomains: 'abcd', maxZoom: 19
+  });
+  cartoLayer.on('tileerror', () => {
+    if (usingOsm) return;
+    cartoFails++;
+    if (cartoFails >= 2) {
+      usingOsm = true;
+      map.removeLayer(cartoLayer);
+      osmLayer.addTo(map);
+    }
+  });
+  cartoLayer.addTo(map);
+
+  const allMarkers = { sup: {}, e10: {}, die: {} };
+  let currentFuel = localStorage.getItem('fuel') || 'sup';
+
+  function makeIcon(color, label) {
+    return L.divIcon({
+      className: '',
+      html: `<div style="
+        background:${color};
+        width:32px;height:32px;border-radius:50% 50% 50% 0;
+        transform:rotate(-45deg);
+        border:2px solid rgba(255,255,255,.35);
+        box-shadow:0 3px 10px rgba(0,0,0,.5);
+        display:flex;align-items:center;justify-content:center;">
+        <span style="transform:rotate(45deg);color:#fff;font-weight:800;font-size:11px;">${label}</span>
+      </div>`,
+      iconSize: [32, 32],
+      iconAnchor: [16, 32],
+      popupAnchor: [0, -34],
+    });
+  }
+
+  function addMarker(fkey, lat, lon, popup, color, label, rank) {
+    const m = L.marker([lat, lon], { icon: makeIcon(color, label) })
+      .bindPopup(popup);
+    allMarkers[fkey][rank] = m;
+
+    m.on('click', () => {
+      const card = document.getElementById('card-' + fkey + '-' + rank);
+      if (card) {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
+        card.classList.add('highlighted');
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    });
+  }
+
+  function focusMarker(fkey, rank) {
+    const m = allMarkers[fkey][rank];
+    if (!m) return;
+    map.setView(m.getLatLng(), 15, { animate: true });
+    m.openPopup();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('highlighted'));
+    document.getElementById('card-' + fkey + '-' + rank)?.classList.add('highlighted');
+  }
+
+  function switchFuel(fuel) {
+    if (fuel === currentFuel) return;
+    const ids = ['grid', 'stats', 'fuel-sub', 'top4'];
+    ids.forEach(id => {
+      document.getElementById(id + '-' + currentFuel).style.display = 'none';
+      document.getElementById(id + '-' + fuel).style.display = '';
+    });
+    Object.values(allMarkers[currentFuel]).forEach(m => map.removeLayer(m));
+    Object.values(allMarkers[fuel]).forEach(m => m.addTo(map));
+    document.getElementById('btn-' + currentFuel).classList.remove('active');
+    document.getElementById('btn-' + fuel).classList.add('active');
+    currentFuel = fuel;
+    localStorage.setItem('fuel', fuel);
+  }
+
+  // ── initStations: renders cards + mini-cards + registers markers ──────────
+  function initStations(fkey) {
+    const fuel = STATIONS[fkey];
+    if (!fuel) return;
+    const { data, stats, top6 } = fuel;
+    const total = data.length;
+
+    // Main grid cards
+    const grid = document.getElementById('grid-' + fkey);
+    const frag = document.createDocumentFragment();
+    data.forEach((s, i) => {
+      const rank = i + 1;
+      frag.appendChild(renderCard(s, rank, fkey, stats));
+      const mColor = markerColor(rank, total);
+      const distPart = s.home_dist != null ? `<br>📍 ${s.home_dist.toFixed(1)} km ab Fürstenfeldbruck Bahnhof` : "";
+      const popup = `<b>#${rank} ${s.name}</b><br>${s.street}, ${s.zip} ${s.city}<br><span style='font-size:1.2em;font-weight:700'>${s.price.toFixed(3)} €/L</span>${distPart}`;
+      addMarker(fkey, s.lat, s.lon, popup, mColor, rank, rank);
+    });
+    grid.appendChild(frag);
+
+    // Top-6 mini-cards
+    const top4div = document.getElementById('top4-' + fkey);
+    const mfrag = document.createDocumentFragment();
+    top6.forEach(rank => {
+      mfrag.appendChild(renderMiniCard(data[rank - 1], rank, fkey, stats));
+    });
+    top4div.appendChild(mfrag);
+  }
+
+  // ── Theme ────────────────────────────────────────────────────────────────
+  function setTheme(t) {
+    const root = document.documentElement;
+    if (t === 'system') root.removeAttribute('data-theme');
+    else root.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    document.querySelectorAll('.theme-toggle button').forEach((btn, i) => {
+      btn.classList.toggle('active', ['light','system','dark'][i] === t);
+    });
+  }
+  (function() {
+    const saved = localStorage.getItem('theme') || 'system';
+    setTheme(saved);
+  })();
+
+  // ── Geolocation ──────────────────────────────────────────────────────────
+  function haversineJS(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLon/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+  }
+
+  let homeMarker = null;
+
+  function updateWithLocation(lat, lon, isLive) {
+    for (const fkey of ['sup', 'e10', 'die']) {
+      STATIONS[fkey].data.forEach((s, i) => {
+        const rank = i + 1;
+        const d = haversineJS(lat, lon, s.lat, s.lon).toFixed(1);
+        const distEl = document.getElementById('dist-' + fkey + '-' + rank);
+        if (distEl) distEl.textContent = '📍 ' + d + ' km';
+        const mDistEl = document.getElementById('mdist-' + fkey + '-' + rank);
+        if (mDistEl) mDistEl.textContent = '📍 ' + d + ' km';
+        const origin = `${lat},${lon}`;
+        const dest   = `${s.lat},${s.lon}`;
+        const href   = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=driving`;
+        const routeEl = document.getElementById('route-' + fkey + '-' + rank);
+        if (routeEl) routeEl.href = href;
+        const mRouteEl = document.getElementById('mroute-' + fkey + '-' + rank);
+        if (mRouteEl) mRouteEl.href = href;
+      });
+    }
+    map.setView([lat, lon], map.getZoom(), { animate: true });
+    if (homeMarker) map.removeLayer(homeMarker);
+    const label = isLive ? 'Ihr Standort (GPS)' : 'Fürstenfeldbruck Bahnhof (Fallback)';
+    homeMarker = L.marker([lat, lon], {
+      zIndexOffset: 1000,
+      icon: L.divIcon({
+        className: '',
+        html: `<div style="background:${isLive ? '#22c55e' : '#6366f1'};width:36px;height:36px;
+                           border-radius:50%;border:3px solid #fff;
+                           box-shadow:0 3px 10px rgba(0,0,0,.4);
+                           display:flex;align-items:center;justify-content:center;font-size:18px;">
+                 ${isLive ? '📱' : '🏠'}
+               </div>`,
+        iconSize: [36, 36], iconAnchor: [18, 18], popupAnchor: [0, -20],
+      })
+    }).addTo(map).bindPopup(`<b>${label}</b>`);
+
+    const pill = document.getElementById('geo-pill');
+    if (pill) {
+      pill.textContent = isLive ? '📱 GPS-Standort aktiv' : '🏠 Fallback: Fürstenfeldbruck Bahnhof';
+      pill.style.color = isLive ? '#22c55e' : '#a78bfa';
+    }
+  }
+
+  // ── Startup sequence ──────────────────────────────────────────────────────
+  // 1. Render all stations (creates DOM elements + registers map markers)
+  initStations('sup');
+  initStations('die');
+  initStations('e10');
+
+  // 2. Initial location render (DOM elements now exist)
+  updateWithLocation(48.1785, 11.2349, false);
+
+  // 3. Apply saved fuel preference (adds markers to map, shows correct grid)
+  (function initFuel() {
+    Object.values(allMarkers[currentFuel]).forEach(m => m.addTo(map));
+    if (currentFuel !== 'sup') {
+      ['grid', 'stats', 'fuel-sub', 'top4'].forEach(id => {
+        document.getElementById(id + '-sup').style.display = 'none';
+        document.getElementById(id + '-' + currentFuel).style.display = '';
+      });
+      document.getElementById('btn-sup').classList.remove('active');
+      document.getElementById('btn-' + currentFuel).classList.add('active');
+    }
+  })();
+
+  // 4. Try GPS (updates distances + route links if granted)
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(
+      pos => updateWithLocation(pos.coords.latitude, pos.coords.longitude, true),
+      ()  => updateWithLocation(48.1785, 11.2349, false),
+      { timeout: 8000 }
+    );
+  }
+</script>
+
+</body>
+</html>
