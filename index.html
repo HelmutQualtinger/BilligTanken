@@ -30,13 +30,6 @@
 
   /* Fuel link label */
   .bl-label.fuel { pointer-events: auto; cursor: pointer; }
-  .bl-label.fuel .nozzle {
-    font-size: 3.5rem; line-height: 1;
-    display: block; text-decoration: none;
-    filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
-    transition: transform .15s;
-  }
-  .bl-label.fuel .nozzle:hover { transform: scale(1.15); }
   .bl-label.fuel .fuel-btn {
     margin-top: 3px;
     background: #e63; color: #fff;
@@ -182,10 +175,11 @@ fetch('https://cdn.jsdelivr.net/gh/ginseng666/GeoJSON-TopoJSON-Austria@master/20
       let inner;
       if (bl.fuel) {
         inner = `
-          <a class="nozzle" href="${bl.fuel}">⛽</a>
-          <img src="${wappenUrl}" alt="${name}" onerror="this.style.display='none'">
-          <span>${name}</span>
-          <a class="fuel-btn" href="${bl.fuel}">Preise</a>
+          <a href="${bl.fuel}" style="text-decoration:none; display:flex; flex-direction:column; align-items:center; gap:3px;">
+            <img src="${wappenUrl}" alt="${name}" onerror="this.style.display='none'">
+            <span>${name}</span>
+          </a>
+          <a class="fuel-btn" href="${bl.fuel}">⛽ Preise</a>
           ${bl.webcam ? `<a class="fuel-btn webcam-btn" href="${bl.webcam}">📷 Webcams</a>` : ''}`;
       } else {
         inner = `
@@ -195,9 +189,9 @@ fetch('https://cdn.jsdelivr.net/gh/ginseng666/GeoJSON-TopoJSON-Austria@master/20
       const icon = L.divIcon({
         className: '',
         html: `<div class="bl-label${bl.fuel ? ' fuel' : ''}">${inner}</div>`,
-        iconAnchor: [0, 0]
+        iconAnchor: [32, 32]
       });
-      L.marker([bl.lat, bl.lon], { icon, interactive: false }).addTo(map);
+      L.marker([bl.lat, bl.lon], { icon, interactive: true }).addTo(map);
     });
   });
 </script>
