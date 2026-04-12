@@ -881,10 +881,26 @@ def generate_html(
   // ── Leaflet Map ───────────────────────────────────────────────────────────
   const map = L.map('map', {{ zoomControl: true }}).setView([{clat:.4f}, {clon:.4f}], 11);
 
-  L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
-    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> © <a href="https://carto.com">CARTO</a>',
+  // Tile layer with automatic fallback: CARTO Voyager → OSM (if blocked by Brave Shields)
+  const osmAttrib = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  const osmLayer  = L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
+    attribution: osmAttrib, subdomains: 'abc', maxZoom: 19
+  }});
+  let cartoFails = 0, usingOsm = false;
+  const cartoLayer = L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+    attribution: osmAttrib + ' © <a href="https://carto.com">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19
-  }}).addTo(map);
+  }});
+  cartoLayer.on('tileerror', () => {{
+    if (usingOsm) return;
+    cartoFails++;
+    if (cartoFails >= 2) {{
+      usingOsm = true;
+      map.removeLayer(cartoLayer);
+      osmLayer.addTo(map);
+    }}
+  }});
+  cartoLayer.addTo(map);
 
   const allMarkers = {{ sup: {{}}, e10: {{}}, die: {{}} }};
   let currentFuel = localStorage.getItem('fuel') || 'sup';
