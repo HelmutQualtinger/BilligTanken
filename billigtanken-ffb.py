@@ -33,29 +33,16 @@ HOME_NAME = "Fürstenfeldbruck Bahnhof"
 # Suchradius in km (max 25 bei Tankerkönig)
 SEARCH_RADIUS_KM = 25
 
-# 4×4-Raster über Großraum München (je ~20 km Abstand, 25 km Radius → volle Überlappung)
-# Abdeckung: Fürstenfeldbruck–Ebersberg (W–O) × Wolfratshausen–Freising (S–N)
+# 8×8-Raster über Großraum München (~8 km Abstand, 25 km Radius → dreifache Überlappung)
+# Abdeckung: Wolfratshausen–Freising (S–N) × Fürstenfeldbruck–Erding (W–O)
+_GRID_N    = 8
+_LAT_START, _LAT_END = 47.92, 48.46   # ~60 km N–S
+_LON_START, _LON_END = 11.22, 11.97   # ~55 km W–O
 QUERY_POINTS = [
-    #          lat      lon       Orientierung
-    (47.92,  11.22),  # SW – Gilching / Starnberg West
-    (47.92,  11.47),  # S  – Gauting / Würmtal
-    (47.92,  11.72),  # S  – München Süd / Grünwald
-    (47.92,  11.97),  # SO – Sauerlach / Brunnthal
-
-    (48.10,  11.22),  # W  – Fürstenfeldbruck
-    (48.10,  11.47),  # MW – Pasing / Dachau Süd
-    (48.10,  11.72),  # M  – München Zentrum
-    (48.10,  11.97),  # MO – München Ost / Haar
-
-    (48.28,  11.22),  # NW – Dachau / Karlsfeld
-    (48.28,  11.47),  # N  – Unterschleißheim / Oberschleißheim
-    (48.28,  11.72),  # N  – Garching / Ismaning
-    (48.28,  11.97),  # NO – Markt Schwaben / Erding West
-
-    (48.46,  11.22),  # wN – Petershausen / Odelzhausen
-    (48.46,  11.47),  # N  – Freising West
-    (48.46,  11.72),  # N  – Freising / Flughafen MUC
-    (48.46,  11.97),  # NO – Erding / Dorfen
+    (round(_LAT_START + i * (_LAT_END - _LAT_START) / (_GRID_N - 1), 4),
+     round(_LON_START + j * (_LON_END - _LON_START) / (_GRID_N - 1), 4))
+    for i in range(_GRID_N)
+    for j in range(_GRID_N)
 ]
 
 # Tankerkönig API-Key (aus .env / Umgebungsvariable)
