@@ -20,7 +20,7 @@ from billigtanken_lib import (
 )
 
 # ── Konfiguration ─────────────────────────────────────────────────────────────
-TOP_N      = 100
+TOP_N      = 300
 _web_root  = Path(os.environ.get("WEB_ROOT", "."))
 OUTPUT     = _web_root / "ffb-tanken.html"
 OUTPUT_NEW = _web_root / "ffb-tanken_new.html"
