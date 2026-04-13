@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-FFB-Tanken – Günstigste Tankstellen rund um Fürstenfeldbruck
+FFB-Tanken – Günstigste Tankstellen Großraum München
 Quelle: Tankerkönig API (creativecommons.tankerkoenig.de)
          Offizielle MTS-K Daten der Bundesnetzagentur
 """
@@ -25,13 +25,23 @@ _web_root  = Path(os.environ.get("WEB_ROOT", "."))
 OUTPUT     = _web_root / "ffb-tanken.html"
 OUTPUT_NEW = _web_root / "ffb-tanken_new.html"
 
-# Referenzpunkt: Fürstenfeldbruck Bahnhof
+# Referenzpunkt: Fürstenfeldbruck Bahnhof (Tiebreaker / Kartenzentrierung)
 HOME_LAT  = 48.1785
 HOME_LON  = 11.2349
 HOME_NAME = "Fürstenfeldbruck Bahnhof"
 
 # Suchradius in km (max 25 bei Tankerkönig)
-SEARCH_RADIUS_KM = 20
+SEARCH_RADIUS_KM = 25
+
+# Raster für Großraum München (~55 km Durchmesser):
+# Zentrum München + 4 Außenpunkte (je ~22 km versetzt) → lückenlose Abdeckung
+QUERY_POINTS = [
+    (48.1372, 11.5755),   # München Zentrum (Marienplatz)
+    (48.3200, 11.5755),   # Norden (Freising)
+    (47.9500, 11.5755),   # Süden (Wolfratshausen)
+    (48.1372, 11.2000),   # Westen (Fürstenfeldbruck)
+    (48.1372, 11.9500),   # Osten (Ebersberg)
+]
 
 # Tankerkönig API-Key (aus .env / Umgebungsvariable)
 API_KEY = os.environ.get("TANKERKOENIG_API_KEY")
@@ -46,31 +56,37 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; BilligTanken/1.0)"}
 _raw_cache: list[dict] | None = None
 
 def fetch_all_stations() -> list[dict]:
-    """Holt alle Tankstellen einmalig mit type=all (liefert e5 + diesel in einem Request)."""
+    """Holt alle Tankstellen via Raster (5 Punkte, type=all) und dedupliziert per ID."""
     global _raw_cache
     if _raw_cache is not None:
         return _raw_cache
-    print(f"⛽  Lade Tankstellendaten (alle) von Tankerkönig API …")
-    try:
-        resp = requests.get(API_URL, params={
-            "lat":    HOME_LAT,
-            "lng":    HOME_LON,
-            "rad":    SEARCH_RADIUS_KM,
-            "sort":   "dist",
-            "type":   "all",
-            "apikey": API_KEY,
-        }, headers=HEADERS, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
-        if not data.get("ok"):
-            print(f"   WARNUNG: API-Fehler: {data.get('message')}", file=sys.stderr)
-            _raw_cache = []
-        else:
-            _raw_cache = data.get("stations", [])
-            print(f"   → {len(_raw_cache)} Stationen im Umkreis {SEARCH_RADIUS_KM} km")
-    except Exception as e:
-        print(f"   FEHLER: {e}", file=sys.stderr)
-        _raw_cache = []
+    print(f"⛽  Lade Tankstellendaten (Großraum München, {len(QUERY_POINTS)} Abfragepunkte) …")
+    seen_ids: set = set()
+    combined: list[dict] = []
+    for lat, lon in QUERY_POINTS:
+        try:
+            resp = requests.get(API_URL, params={
+                "lat":    lat,
+                "lng":    lon,
+                "rad":    SEARCH_RADIUS_KM,
+                "sort":   "dist",
+                "type":   "all",
+                "apikey": API_KEY,
+            }, headers=HEADERS, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            if not data.get("ok"):
+                print(f"   WARNUNG: ({lat}, {lon}) API-Fehler: {data.get('message')}", file=sys.stderr)
+            else:
+                batch = data.get("stations", [])
+                new = [s for s in batch if s.get("id") not in seen_ids]
+                seen_ids.update(s["id"] for s in new if s.get("id"))
+                combined.extend(new)
+                print(f"   ({lat}, {lon}) → {len(batch)} Stationen, {len(new)} neu")
+        except Exception as e:
+            print(f"   FEHLER: ({lat}, {lon}): {e}", file=sys.stderr)
+    print(f"   → {len(combined)} eindeutige Stationen gesamt")
+    _raw_cache = combined
     return _raw_cache
 
 def process_de(fuel_type: str) -> list[dict]:
@@ -104,16 +120,16 @@ def process_de(fuel_type: str) -> list[dict]:
     return result[:TOP_N]
 
 # ── Region-spezifische HTML-Strings ───────────────────────────────────────────
-TITLE            = "FFB-Tanken – Günstigste Tankstellen"
-META_DESCRIPTION = ("Aktuelle Spritpreise rund um Fürstenfeldbruck. "
-                    "Günstigste Tankstellen im Landkreis FFB und Münchner Westen im Preisvergleich.")
-META_KEYWORDS    = ("Tanken, Benzinpreise, Fürstenfeldbruck, FFB, München, Bayern, "
-                    "Super 95, E5, Diesel, billig tanken, günstig tanken")
-OG_TITLE         = "FFB-Tanken – Günstigste Tankstellen"
-OG_DESCRIPTION   = "Günstigste Tankstellen rund um Fürstenfeldbruck. Echtzeit-Preise von Tankerkönig."
-H1               = "⛽ FFB-Tanken"
-SUB_E5           = "Großraum Fürstenfeldbruck / Münchner Westen"
-SUB_DIE          = "Großraum Fürstenfeldbruck / Münchner Westen"
+TITLE            = "München-Tanken – Günstigste Tankstellen"
+META_DESCRIPTION = ("Aktuelle Spritpreise im Großraum München. "
+                    "Günstigste Tankstellen in München, FFB, Dachau, Erding, Ebersberg und Umgebung.")
+META_KEYWORDS    = ("Tanken, Benzinpreise, München, Fürstenfeldbruck, FFB, Dachau, Erding, "
+                    "Ebersberg, Freising, Bayern, Super 95, E5, Diesel, billig tanken, günstig tanken")
+OG_TITLE         = "München-Tanken – Günstigste Tankstellen"
+OG_DESCRIPTION   = "Günstigste Tankstellen im Großraum München. Echtzeit-Preise von Tankerkönig."
+H1               = "⛽ München-Tanken"
+SUB_E5           = "Großraum München (FFB · Dachau · Freising · Erding · Ebersberg)"
+SUB_DIE          = "Großraum München (FFB · Dachau · Freising · Erding · Ebersberg)"
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
