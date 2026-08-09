@@ -10,6 +10,7 @@ import json
 import sys
 import math
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -58,6 +59,7 @@ def fetch_stations(fuel_type: str, query_points: list) -> list[dict]:
     print(f"⛽  Lade Tankstellendaten ({fuel_type}) von E-Control API …")
     seen_ids: set = set()
     combined: list[dict] = []
+    empty_streak = 0
     for lat, lon in query_points:
         try:
             url = (
@@ -67,10 +69,23 @@ def fetch_stations(fuel_type: str, query_points: list) -> list[dict]:
             resp = requests.get(url, headers=HEADERS, timeout=15)
             resp.raise_for_status()
             batch = resp.json()
+            # E-Control returns 200 OK with an empty list when rate-limited
+            # under bursty request patterns; back off and retry once.
+            if not batch:
+                time.sleep(1.0)
+                resp = requests.get(url, headers=HEADERS, timeout=15)
+                resp.raise_for_status()
+                batch = resp.json()
             new = [s for s in batch if s.get("id") not in seen_ids]
             seen_ids.update(s["id"] for s in new if s.get("id"))
             combined.extend(new)
             print(f"   ({lat:.3f}, {lon:.3f}) → {len(batch)} Stationen, {len(new)} neu")
+            empty_streak = empty_streak + 1 if not batch else 0
+            if empty_streak >= 5:
+                print(f"   WARNUNG: {empty_streak} leere Antworten in Folge – pausiere kurz", file=sys.stderr)
+                time.sleep(3.0)
+                empty_streak = 0
+            time.sleep(0.1)
         except Exception as e:
             print(f"   WARNUNG: ({lat}, {lon}) fehlgeschlagen: {e}", file=sys.stderr)
     print(f"   → {len(combined)} eindeutige Stationen gesamt")
@@ -151,6 +166,8 @@ def _fuel_json(stations: list[dict], stats: dict) -> dict:
     }
 
 def _stats(stations: list[dict]) -> dict:
+    if not stations:
+        return {"min_p": 0.0, "second_p": 0.0, "max_p": 0.0, "avg": 0.0, "span": 0.0, "count": 0}
     prices = sorted(set(s["price"] for s in stations))
     return {
         "min_p":    prices[0],
