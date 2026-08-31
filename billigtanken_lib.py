@@ -939,7 +939,12 @@ def generate_html(
   ({carto_api_key_present}) ? cartoLayer.addTo(map) : osmLayer.addTo(map);
 
   const allMarkers = {{ sup: {{}}, e10: {{}}, die: {{}} }};
+  const availableFuels = {_fuel_keys};
   let currentFuel = localStorage.getItem('fuel') || 'sup';
+  if (!availableFuels.includes(currentFuel)) {{
+    currentFuel = 'sup';
+    localStorage.setItem('fuel', 'sup');
+  }}
 
   function makeIcon(color, label) {{
     return L.divIcon({{
