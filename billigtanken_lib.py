@@ -230,6 +230,12 @@ def generate_html(
     clat = sum(s["lat"] for s in all_stations) / len(all_stations)
     clon = sum(s["lon"] for s in all_stations) / len(all_stations)
 
+    # CARTO Voyager tiles require a free API key since 2024 (carto.com/basemaps/apikey);
+    # without one the tiles come back watermarked "API KEY REQUIRED" instead of failing,
+    # so the OSM fallback is chosen up front rather than relying on a tileerror event.
+    carto_api_key = os.environ.get("CARTO_API_KEY", "")
+    carto_api_key_present = "true" if carto_api_key else "false"
+
     # Build absolute og:image URL
     og_image_url = f"{base_url}/screenshots/preview.png" if base_url else "screenshots/preview.png"
     page_url = base_url or ""
@@ -911,13 +917,13 @@ def generate_html(
   // ── Leaflet Map ───────────────────────────────────────────────────────────
   const map = L.map('map', {{ zoomControl: true }}).setView([{clat:.4f}, {clon:.4f}], 11);
 
-  // Tile layer with automatic fallback: CARTO Voyager → OSM (if blocked by Brave Shields)
+  // Tile layer with automatic fallback: CARTO Voyager → OSM (if blocked/rate-limited)
   const osmAttrib = '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
   const osmLayer  = L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
     attribution: osmAttrib, subdomains: 'abc', maxZoom: 19
   }});
   let cartoFails = 0, usingOsm = false;
-  const cartoLayer = L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png', {{
+  const cartoLayer = L.tileLayer('https://{{s}}.basemaps.cartocdn.com/rastertiles/voyager/{{z}}/{{x}}/{{y}}{{r}}.png?api_key={carto_api_key}', {{
     attribution: osmAttrib + ' © <a href="https://carto.com">CARTO</a>',
     subdomains: 'abcd', maxZoom: 19
   }});
@@ -930,7 +936,7 @@ def generate_html(
       osmLayer.addTo(map);
     }}
   }});
-  cartoLayer.addTo(map);
+  ({carto_api_key_present}) ? cartoLayer.addTo(map) : osmLayer.addTo(map);
 
   const allMarkers = {{ sup: {{}}, e10: {{}}, die: {{}} }};
   let currentFuel = localStorage.getItem('fuel') || 'sup';
