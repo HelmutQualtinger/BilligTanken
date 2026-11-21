@@ -62,7 +62,7 @@ All runs append to `/var/log/billigtanken.log` (cron output only; startup output
 
 **Important notes:**
 - Startup logs redirected to `/dev/null` to prevent logfile bloat (each run generates ~1,000 lines)
-- Logfile cleared at `entrypoint.sh` startup
+- Logfile is kept across restarts (trimmed to 1000 lines if >5000); crond starts before the startup runs
 - Expected log size: ~200 lines/day (5 cron runs)
 
 ## Workflow

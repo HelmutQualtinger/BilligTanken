@@ -1,8 +1,13 @@
 #!/bin/sh
 set -e
 
-# Clear logfile at startup to prevent unbounded growth
-> /var/log/billigtanken.log
+# Logfile bleibt über Neustarts erhalten (Volume); nur kappen, wenn zu groß
+if [ -f /var/log/billigtanken.log ] && [ "$(wc -l < /var/log/billigtanken.log)" -gt 5000 ]; then
+  tail -n 1000 /var/log/billigtanken.log > /var/log/billigtanken.log.tmp && mv /var/log/billigtanken.log.tmp /var/log/billigtanken.log
+fi
+
+# Cron ZUERST starten, damit ein hängender/langsamer Startup-Lauf die Cronjobs nicht blockiert
+crond
 
 echo "⛽  BilligTanken startet …"
 
@@ -16,9 +21,6 @@ WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-innsbruck.py > /dev
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-vorarlberg.py > /dev/null 2>&1 || echo "WARNUNG: vorarlberg fehlgeschlagen, überspringe"
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-schaerding.py > /dev/null 2>&1 || echo "WARNUNG: schaerding fehlgeschlagen, überspringe"
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-ffb.py > /dev/null 2>&1 || echo "WARNUNG: ffb fehlgeschlagen, überspringe"
-
-# Cron im Hintergrund
-crond
 
 # Apache im Vordergrund (hält den Container am Leben)
 exec httpd -D FOREGROUND
