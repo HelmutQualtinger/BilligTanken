@@ -20,7 +20,6 @@ WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-alterlaa.py > /dev/
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-innsbruck.py > /dev/null 2>&1 || echo "WARNUNG: innsbruck fehlgeschlagen, überspringe"
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-vorarlberg.py > /dev/null 2>&1 || echo "WARNUNG: vorarlberg fehlgeschlagen, überspringe"
 WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-schaerding.py > /dev/null 2>&1 || echo "WARNUNG: schaerding fehlgeschlagen, überspringe"
-WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-ffb.py > /dev/null 2>&1 || echo "WARNUNG: ffb fehlgeschlagen, überspringe"
 
 # Apache im Vordergrund (hält den Container am Leben)
 exec httpd -D FOREGROUND

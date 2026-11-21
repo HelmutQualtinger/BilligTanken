@@ -24,11 +24,10 @@ COPY billigtanken-alterlaa.py   /app/billigtanken-alterlaa.py
 COPY billigtanken-innsbruck.py  /app/billigtanken-innsbruck.py
 COPY billigtanken-vorarlberg.py /app/billigtanken-vorarlberg.py
 COPY billigtanken-schaerding.py /app/billigtanken-schaerding.py
-COPY billigtanken-ffb.py        /app/billigtanken-ffb.py
 COPY entrypoint.sh   /entrypoint.sh
 
-# Cron: each hour at :00, :15, :30, :45, :48
-RUN printf '0 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-alterlaa.py    >> /var/log/billigtanken.log 2>&1\n15 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-innsbruck.py   >> /var/log/billigtanken.log 2>&1\n30 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-vorarlberg.py  >> /var/log/billigtanken.log 2>&1\n45 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-schaerding.py  >> /var/log/billigtanken.log 2>&1\n48 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-ffb.py         >> /var/log/billigtanken.log 2>&1\n' > /etc/crontabs/root \
+# Cron: each hour at :00, :15, :30, :45
+RUN printf '0 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-alterlaa.py    >> /var/log/billigtanken.log 2>&1\n15 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-innsbruck.py   >> /var/log/billigtanken.log 2>&1\n30 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-vorarlberg.py  >> /var/log/billigtanken.log 2>&1\n45 * * * * WEB_ROOT=/var/www/localhost/htdocs python3 /app/billigtanken-schaerding.py  >> /var/log/billigtanken.log 2>&1\n' > /etc/crontabs/root \
  && chmod +x /entrypoint.sh
 
 ENV TZ=Europe/Vienna

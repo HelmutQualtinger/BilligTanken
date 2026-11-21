@@ -22,7 +22,7 @@ docker compose down
 
 ## Architecture
 
-Shared library (`billigtanken_lib.py`) + five regional scripts, each generating its own HTML page.
+Shared library (`billigtanken_lib.py`) + four regional scripts, each generating its own HTML page.
 
 **Regional scripts:**
 | Script | Output file | Region | API | Cron |
@@ -31,7 +31,6 @@ Shared library (`billigtanken_lib.py`) + five regional scripts, each generating 
 | `billigtanken-innsbruck.py` | `innsbruck-tanken.html` | Innsbruck | E-Control (AT) | `:15` |
 | `billigtanken-vorarlberg.py` | `index-vorarlberg.html` | Vorarlberg | E-Control (AT) | `:30` |
 | `billigtanken-schaerding.py` | `schaerding-tanken.html` | Schärding / OÖ | E-Control (AT) | `:45` |
-| `billigtanken-ffb.py` | `ffb-tanken.html` | Fürstenfeldbruck / Bayern | Tankerkönig (DE) | `:48` |
 
 **Data flow (per region):**
 1. Queries the Austrian E-Control API (`api.e-control.at/sprit/1.0/`) at multiple coordinate points (API returns max 10 stations per request)
@@ -47,7 +46,7 @@ Shared library (`billigtanken_lib.py`) + five regional scripts, each generating 
 
 **Output path** is controlled by `WEB_ROOT` environment variable. Atomic swap prevents serving a half-written file.
 
-**Docker setup:** Single Alpine container (~88 MB) with python3 + py3-requests + apache2 + dcron. Each script runs once at startup (output suppressed to prevent logfile bloat) and then on its cron schedule every hour. Apache serves static HTML on port 80. Logs at `/var/log/billigtanken.log` (cleared at startup, ~200 lines/day from cron runs).
+**Docker setup:** Single Alpine container (~88 MB) with python3 + py3-requests + apache2 + dcron. Each script runs once at startup (output suppressed to prevent logfile bloat) and then on its cron schedule every hour. Apache serves static HTML on port 80. Logs at `/var/log/billigtanken.log` (cleared at startup, ~160 lines/day from cron runs).
 
 ## Cron & Logging
 
@@ -56,14 +55,13 @@ Shared library (`billigtanken_lib.py`) + five regional scripts, each generating 
 - `:15` – innsbruck
 - `:30` – vorarlberg
 - `:45` – schaerding
-- `:48` – ffb
 
 All runs append to `/var/log/billigtanken.log` (cron output only; startup output suppressed).
 
 **Important notes:**
 - Startup logs redirected to `/dev/null` to prevent logfile bloat (each run generates ~1,000 lines)
 - Logfile is kept across restarts (trimmed to 1000 lines if >5000); crond starts before the startup runs
-- Expected log size: ~200 lines/day (5 cron runs)
+- Expected log size: ~160 lines/day (4 cron runs)
 
 ## Workflow
 
@@ -85,11 +83,6 @@ After **every** code change:
 - Only `SUP` (Super 95) and `DIE` (Diesel) are valid fuel types – E10 is not sold in Austria
 - Austria has a regulated daily maximum price; most brand stations charge exactly this price, only Diskont/Disk/Avanti/JET/BayWa stations typically undercut it
 - ~30% of stations in the area don't report prices to the system (Shell, some ENI) and are excluded
-
-**Tankerkönig API (Germany - Fürstenfeldbruck):**
-- Official MTS-K data from German Bundesnetzagentur
-- Supports Super 95 (E5), E10, and Diesel
-- Provides real-time price data for German gas stations
 
 **Frontend (embedded in generated HTML):**
 - Leaflet.js + CARTO Voyager tiles for the map

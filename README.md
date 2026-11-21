@@ -14,7 +14,6 @@ Echtzeit-Übersicht der günstigsten **E5 (Super 95)** und **Diesel** Tankstelle
 | Innsbruck | `billigtanken-innsbruck.py` | Innsbruck | E-Control (AT) | `:15` |
 | Vorarlberg (Bregenz – Feldkirch) | `billigtanken-vorarlberg.py` | Rebstein CH | E-Control (AT) | `:30` |
 | Schärding / OÖ | `billigtanken-schaerding.py` | Schärding | E-Control (AT) | `:45` |
-| Fürstenfeldbruck / Bayern 🇩🇪 | `billigtanken-ffb.py` | FFB Bahnhof | Tankerkönig (DE) | `:48` |
 
 ## Features
 
